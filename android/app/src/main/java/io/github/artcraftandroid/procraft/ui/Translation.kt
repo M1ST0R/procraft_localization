@@ -500,7 +500,7 @@ private val russianUi = mapOf(
     "Rectangle" to "Прямоугольник",
     "Ellipse" to "Эллипс",
     "Darker Color" to "Более тёмный цвет",
-    "Linear Burn" to "Линейный затемнитель",
+    "Linear Burn" to "Линейное затемнение",
     "Color Dodge" to "Осветление основы",
     "Color Burn" to "Затемнение основы",
     "Hard Light" to "Жёсткий свет",
