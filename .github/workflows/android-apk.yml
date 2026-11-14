@@ -1,0 +1,100 @@
+name: Android APK
+
+on:
+  push:
+    branches:
+      - translation/russian
+  pull_request:
+    branches:
+      - translation/russian
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: "1.99.0"
+  NDK_VERSION: "29.0.14206865"
+
+jobs:
+  build:
+    name: Build Android APK (arm64)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: aarch64-linux-android
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: android-arm64
+
+      - name: Install cargo-ndk and Android NDK
+        shell: bash
+        run: |
+          cargo install cargo-ndk --version "^4" --locked
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" >/dev/null
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      - name: Configure release signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PROCRAFT_KEYSTORE_BASE64 }}
+        shell: bash
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/procraft-release.p12"
+            echo "PROCRAFT_KEYSTORE=$RUNNER_TEMP/procraft-release.p12" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No PROCRAFT_KEYSTORE_BASE64 secret. APK will use the runner's temporary Android debug key; future builds may not install as updates."
+          fi
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        working-directory: android
+        env:
+          PROCRAFT_KEYSTORE_PASSWORD: ${{ secrets.PROCRAFT_KEYSTORE_PASSWORD }}
+          PROCRAFT_KEY_ALIAS: ${{ secrets.PROCRAFT_KEY_ALIAS }}
+          PROCRAFT_KEY_PASSWORD: ${{ secrets.PROCRAFT_KEY_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease -Pprocraft.abis=arm64-v8a
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-arm64.apk"
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          APK="dist/ProCraft-RU-arm64.apk"
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
+          "$APKSIGNER" verify --verbose "$APK"
+          sha256sum "$APK" | tee dist/SHA256SUMS.txt
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProCraft-RU-Android-arm64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/procraft-release.p12"
