@@ -303,7 +303,7 @@ private fun SliderPanel(vm: CanvasViewModel, which: CanvasViewModel.SliderPanel,
         Text(
             androidx.compose.ui.text.buildAnnotatedString {
                 pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold))
-                append(if (size) "Size" else "Opacity")
+                append(if (size) localizeUiText("Size") else localizeUiText("Opacity"))
                 pop()
                 append(" ${(value * 100f).roundToInt()}%")
             },
