@@ -357,7 +357,7 @@ internal fun localizeUiText(source: String): String {
     }
 
     return when {
-        Regex("""^([0-9]+(?:\\.[0-9]+)?)s$""").matchEntire(source)?.let { it.groupValues[1] } != null ->
+        Regex("""^([0-9]+(?:[.][0-9]+)?)s$""").matchEntire(source)?.let { it.groupValues[1] } != null ->
             source.dropLast(1).replace('.', ',') + " с"
         source.startsWith("Made by ") -> "Автор: " + source.removePrefix("Made by ")
         source.startsWith("Last reset point: ") -> "Последний сброс: " + source.removePrefix("Last reset point: ")
