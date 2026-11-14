@@ -319,7 +319,6 @@ private val russianUi = mapOf(
     "A tap lands where the finger first touched, even if it drifts before lifting." to "Касание регистрируется в точке первого контакта, даже если палец немного смещается перед отрывом.",
     "Couldn't save the file" to "Не удалось сохранить файл",
     "Size" to "Размер",
-    "Pressure" to "Нажим",
     "Brightness" to "Яркость",
     "Insert a file" to "Вставить файл",
     "Insert a private file" to "Вставить личный файл",
@@ -475,8 +474,6 @@ private val russianUi = mapOf(
     "Preview render" to "Отображение предпросмотра",
     "Preview properties" to "Параметры предпросмотра",
     "Preview size" to "Размер предпросмотра",
-    "Clear drawing pad" to "Очистить поле рисования",
-    "Reset all brush settings" to "Сбросить все настройки кисти",
     "Use stamp preview" to "Предпросмотр отпечатка",
     "Pressure Minimum" to "Минимальный нажим",
     "Pressure Scale" to "Масштаб нажима",
@@ -500,11 +497,36 @@ private val russianUi = mapOf(
     "Difference" to "Разница",
     "Exclusion" to "Исключение",
     "Luminosity" to "Свечение",
+    "New gradient" to "Новый градиент",
+    "Channel" to "Канал",
+    "Disc" to "Круг",
+    "Classic" to "Классика",
+    "Harmony" to "Гармония",
+    "Value" to "Значения",
+    "Cards" to "Карточки",
+    "Gamma" to "Гамма",
+    "Red" to "Красный",
+    "Green" to "Зелёный",
+    "Blue" to "Синий",
+    "DPI" to "Разрешение (DPI)",
+    "Aspect lock" to "Сохранять пропорции",
+    "Locked layer selection" to "Выбор заблокированного слоя",
+    "Delete these layers?" to "Удалить эти слои?",
+    "A locked layer can’t be deleted. Unlock it first." to "Заблокированный слой нельзя удалить. Сначала снимите блокировку.",
+    "Undo brings them back." to "Отмена действия восстановит их.",
+    "Delete shared layer?" to "Удалить общий слой?",
+    "Unsupported model features" to "Неподдерживаемые функции модели",
+    "QuickMenu" to "Быстрое меню",
+    "No camera app is available." to "Приложение камеры недоступно.",
+    "Back space" to "Удалить символ",
+
 )
 
 private val artworkCount = Regex("""^([0-9]+) artworks$""")
 private val quickMenuName = Regex("""^QuickMenu ([0-9]+)$""")
 private val deleteArtworkCount = Regex("""^Delete ([0-9]+) artworks?\?$""")
+private val frameNumber = Regex("""^Frame ([0-9]+)$""")
+private val sharedLayerWarning = Regex("""^“(.+)” is on every mesh of this texture set\.$""")
 
 internal fun localizeUiText(source: String): String {
     russianUi[source]?.let { return it }
@@ -513,6 +535,8 @@ internal fun localizeUiText(source: String): String {
     }
 
     quickMenuName.matchEntire(source)?.let { return "Быстрое меню ${it.groupValues[1]}" }
+    frameNumber.matchEntire(source)?.let { return "Кадр ${it.groupValues[1]}" }
+    sharedLayerWarning.matchEntire(source)?.let { return "«${it.groupValues[1]}» используется на всех сетках этого набора текстур." }
     artworkCount.matchEntire(source)?.let {
         val count = it.groupValues[1].toIntOrNull() ?: return@let
         val word = when (count % 100) {
@@ -543,7 +567,13 @@ internal fun localizeUiText(source: String): String {
             source.dropLast(1).replace('.', ',') + " с"
         source.startsWith("Version ") -> "Версия " + source.removePrefix("Version ")
         source.startsWith("Made by ") -> "Автор: " + source.removePrefix("Made by ")
-        source.startsWith("Last reset point: ") -> "Последний сброс: " + source.removePrefix("Last reset point: ")
+        source.startsWith("Last reset point: ") -> "Последняя точка сброса: " + source.removePrefix("Last reset point: ")
+        source.startsWith("Version ") -> "Версия " + source.removePrefix("Version ")
+        source.startsWith("This is ProCraft's 32-bit version") ->
+            "Это 32-разрядная версия ProCraft для старых планшетов. На этом планшете используется 64-разрядная версия, которую ожидает Android: установите APK, имя которого заканчивается на arm64.apk, поверх этой версии — ваши работы сохранятся."
+        source.startsWith("Painting on this model may not go as expected because of:\n") ->
+            "Рисование на этой модели может работать некорректно из-за:\n" +
+                source.substringAfter('\n').lines().joinToString("\n") { russianUi[it] ?: it }
         source.startsWith("Selection Threshold ") -> "Порог выделения " + source.removePrefix("Selection Threshold ")
         source.startsWith("Threshold ") -> "Порог " + source.removePrefix("Threshold ")
         source.startsWith("Delete “") && source.endsWith("”?") -> "Удалить " + source.removePrefix("Delete “").removeSuffix("”?").let { "«$it»?" }
