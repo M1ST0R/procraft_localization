@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
 import java.util.concurrent.Executors
+import io.github.artcraftandroid.procraft.ui.localizeUiText
 
 /**
  * The share sheet's "Save to device": exported files written where the person picks with the
@@ -59,7 +60,7 @@ class SaveToDeviceActivity : ComponentActivity() {
         Executors.newSingleThreadExecutor().execute {
             val saved = runCatching(work).getOrDefault(false)
             runOnUiThread {
-                if (!saved) Toast.makeText(app, "Couldn't save the file", Toast.LENGTH_LONG).show()
+                if (!saved) Toast.makeText(app, localizeUiText("Couldn't save the file"), Toast.LENGTH_LONG).show()
                 finish()
             }
         }
