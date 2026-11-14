@@ -1,3 +1,50 @@
+## Russian Android community build (this branch)
+
+This branch is a **community-maintained Russian-language Android build** of ProCraft. It is intended for Russian-speaking users who want to use the Android app before an official upstream localization is available. It is separate from the proposal for a reusable Community Language Packs system on [the main branch](https://github.com/M1ST0R/procraft_localization/tree/main).
+
+### What this project changes
+
+- Adds a Russian UI translation layer at the Android Jetpack Compose text-rendering boundary. This also catches many labels supplied by the shared Rust core, such as tool names, adjustment names, blend modes and quick actions.
+- Translates built-in brush names and common interface labels while preserving formatting for annotated text.
+- Keeps user-created artwork names and plugin-provided text unchanged unless they exactly match a built-in UI string.
+- Uses a separate Android application ID, `io.github.artcraftandroid.procraft.ru`, so the community build can coexist with the official ProCraft app.
+- Builds an ARM64 release APK with GitHub Actions and signs it with a persistent community keystore.
+
+### Install the Russian build
+
+1. Open the [latest successful Android APK workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Atranslation%2Frussian).
+2. Open the newest successful run on the `translation/russian` branch.
+3. Download the **ProCraft-RU-Android-arm64** artifact from the bottom of the run page.
+4. Extract the ZIP and install `ProCraft-RU-Android-arm64.apk` on an ARM64 Android tablet.
+5. Allow installation from the browser or file manager if Android asks.
+
+The Actions artifact is temporary (currently retained for 30 days). For a permanent download, use the repository's **Releases** page once a versioned release has been published. The Russian build has its own package ID and is installed alongside, rather than over, the official app.
+
+### Translation status and known limitations
+
+The translation is an ongoing community effort, not yet a complete official localization. Some text can remain in English when it comes from an untranslated label, a separate rendering path, a plugin, user content, or a string that has not yet been added to the dictionary. Please report the exact English wording and where it appears; a screenshot is especially useful.
+
+Russian phrases are often longer than their English originals. Some buttons, tabs or compact panels may clip or truncate translated text. Report the screen, device resolution/orientation, and a screenshot where possible. The translation layer can change wording, but fixing a layout that is too narrow may require a targeted UI layout change rather than shortening every translation.
+
+### Updating the Russian build
+
+- **New community translation build:** when a commit is pushed to `translation/russian`, GitHub Actions builds a new APK automatically. Download the artifact from the newest successful run and install it over the previous community build.
+- **Manual build:** open **Actions → Android APK → Run workflow** and select `translation/russian`.
+- **Upstream ProCraft update:** follow [the upstream merge and signing instructions](docs/UPSTREAM_AND_ANDROID_BUILDS.md). Merge upstream changes into this branch; do not replace this branch with a fresh upstream checkout.
+- Keep the same package ID and signing key for every update. Android uses the matching signing certificate and a higher version code to install updates without uninstalling the existing app.
+
+### Contributing translation fixes
+
+Open an issue in this repository or report it in the community Discord. Include:
+- the exact English text as it appears in the app;
+- the screen or menu where it appears;
+- a screenshot, if possible;
+- the suggested Russian translation, if you have one.
+
+For clipped text, include the device model, screen resolution, orientation and whether the problem occurs at the default display/font size. Avoid reporting user-created names or plugin text as missing built-in translations unless they are meant to be translated by the app.
+
+---
+
 > **Russian Android community build:** this branch carries the Russian interface variant for personal use. It is kept separate from the community-localization proposal on [main](https://github.com/M1ST0R/procraft_localization/tree/main). APKs are built by [GitHub Actions](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml); see [build and update notes](docs/UPSTREAM_AND_ANDROID_BUILDS.md).
 
 <p align="center">
