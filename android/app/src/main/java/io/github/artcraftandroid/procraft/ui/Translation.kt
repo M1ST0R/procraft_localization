@@ -318,6 +318,38 @@ private val russianUi = mapOf(
     "Tap Assistance - Initial Touch Location Support" to "Помощь при касании — фиксация начальной точки",
     "A tap lands where the finger first touched, even if it drifts before lifting." to "Касание регистрируется в точке первого контакта, даже если палец немного смещается перед отрывом.",
     "Couldn't save the file" to "Не удалось сохранить файл",
+    "Insert a file" to "Вставить файл",
+    "Insert a private file" to "Вставить личный файл",
+    "Insert a photo" to "Вставить фото",
+    "Insert a private photo" to "Вставить личное фото",
+    "Take a photo" to "Сделать фото",
+    "Take a private photo" to "Сделать личное фото",
+    "Crop & Resize" to "Обрезать и изменить размер",
+    "Edit Drawing Guide" to "Изменить направляющую",
+    "Flip horizontal" to "Отразить по горизонтали",
+    "Flip vertical" to "Отразить по вертикали",
+    "Canvas information" to "Сведения о холсте",
+    "Animated GIF" to "Анимированный GIF",
+    "Animated PNG" to "Анимированный PNG",
+    "Animated MP4" to "Анимированный MP4",
+    "Animated HEVC" to "Анимированный HEVC",
+    "Export time-lapse video" to "Экспортировать видео таймлапса",
+    "Screen" to "Экран",
+    "Canvas" to "Холст",
+    "Advanced cursor settings" to "Расширенные настройки курсора",
+    "Pressure and Smoothing" to "Нажим и сглаживание",
+    "About ProCraft" to "О приложении ProCraft",
+    "Version" to "Версия",
+    "Licences" to "Лицензии",
+    "Keyboard shortcuts" to "Сочетания клавиш",
+    "Advanced settings" to "Дополнительные настройки",
+    "Share Textures" to "Поделиться текстурами",
+    "Edit lighting & environment" to "Настроить освещение и окружение",
+    "View in AR" to "Просмотр в дополненной реальности",
+    "Turn off" to "Выключить",
+    "Turn on" to "Включить",
+    "Reset all" to "Сбросить всё",
+    "Make a set with +, then brushes in it, or bring brushes in from your files." to "Создайте набор кнопкой «+», затем добавьте в него кисти или импортируйте их из файлов.",
 )
 
 private val artworkCount = Regex("""^([0-9]+) artworks$""")
@@ -359,6 +391,7 @@ internal fun localizeUiText(source: String): String {
     return when {
         Regex("""^([0-9]+(?:[.][0-9]+)?)s$""").matchEntire(source)?.let { it.groupValues[1] } != null ->
             source.dropLast(1).replace('.', ',') + " с"
+        source.startsWith("Version ") -> "Версия " + source.removePrefix("Version ")
         source.startsWith("Made by ") -> "Автор: " + source.removePrefix("Made by ")
         source.startsWith("Last reset point: ") -> "Последний сброс: " + source.removePrefix("Last reset point: ")
         source.startsWith("Selection Threshold ") -> "Порог выделения " + source.removePrefix("Selection Threshold ")
