@@ -50,7 +50,11 @@ jobs:
         shell: bash
         run: |
           cargo install cargo-ndk --version "^4" --locked
+          # sdkmanager closes stdin once it has accepted the licence; avoid treating yes' SIGPIPE
+          # as a failed installation while preserving sdkmanager's own exit status.
+          set +o pipefail
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" >/dev/null
+          set -o pipefail
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
       # Give every CI APK a strictly increasing versionCode, starting above the copied 0.0.6-beta.
