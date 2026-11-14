@@ -1,3 +1,5 @@
+> **Russian Android community build:** this branch carries the Russian interface variant for personal use. It is kept separate from the community-localization proposal on [main](https://github.com/M1ST0R/procraft_localization/tree/main). APKs are built by [GitHub Actions](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml); see [build and update notes](docs/UPSTREAM_AND_ANDROID_BUILDS.md).
+
 <p align="center">
   <img src="assets/app-icon/procraft-1024.png" alt="ProCraft's app icon: a paintbrush in a warm-to-cool blend on a black tile" width="128">
 </p>
