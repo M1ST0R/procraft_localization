@@ -1,3 +1,5 @@
+> **Community localization proposal:** This repository proposes a built-in system for user-created language packs. Start with [LOCALIZATION_PROPOSAL.md](LOCALIZATION_PROPOSAL.md), review the [language-pack format](docs/COMMUNITY_LANGUAGE_PACKS.md), or use the [maintainer discussion message](docs/MAINTAINERS_MESSAGE.md). The Android Russian build for personal use is maintained separately in the [translation/russian branch](https://github.com/M1ST0R/procraft_localization/tree/translation/russian).
+
 <p align="center">
   <img src="assets/app-icon/procraft-1024.png" alt="ProCraft's app icon: a paintbrush in a warm-to-cool blend on a black tile" width="128">
 </p>
