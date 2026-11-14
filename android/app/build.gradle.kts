@@ -143,6 +143,8 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
+            // Keep this community build installable alongside the official ProCraft app.
+            applicationIdSuffix = ".ru"
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
