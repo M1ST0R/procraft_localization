@@ -53,6 +53,19 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" >/dev/null
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
+      # Give every CI APK a strictly increasing versionCode, starting above the copied 0.0.6-beta.
+      # Gradle derives versionCode from this version and checks the matching property.
+      - name: Resolve CI version
+        id: version
+        shell: bash
+        run: |
+          n=$((GITHUB_RUN_NUMBER + 1))
+          patch=$((6 + (n - 1) / 98))
+          pre=$(((n - 1) % 98 + 1))
+          base=$((patch * 100 + pre))
+          echo "name=0.0.${patch}-beta.${pre}" >> "$GITHUB_OUTPUT"
+          echo "code=$base" >> "$GITHUB_OUTPUT"
+
       - name: Configure release signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.PROCRAFT_KEYSTORE_BASE64 }}
@@ -62,7 +75,7 @@ jobs:
             printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/procraft-release.p12"
             echo "PROCRAFT_KEYSTORE=$RUNNER_TEMP/procraft-release.p12" >> "$GITHUB_ENV"
           else
-            echo "::warning::No PROCRAFT_KEYSTORE_BASE64 secret. APK will use the runner's temporary Android debug key; future builds may not install as updates."
+            echo "::warning::No PROCRAFT_KEYSTORE_BASE64 secret. APK will use the runner's temporary Android debug key; it will not update an install signed with a different key."
           fi
 
       - name: Set up Gradle
@@ -74,8 +87,13 @@ jobs:
           PROCRAFT_KEYSTORE_PASSWORD: ${{ secrets.PROCRAFT_KEYSTORE_PASSWORD }}
           PROCRAFT_KEY_ALIAS: ${{ secrets.PROCRAFT_KEY_ALIAS }}
           PROCRAFT_KEY_PASSWORD: ${{ secrets.PROCRAFT_KEY_PASSWORD }}
+          APP_VERSION: ${{ steps.version.outputs.name }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
-          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease -Pprocraft.abis=arm64-v8a
+          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease \
+            -Pprocraft.abis=arm64-v8a \
+            "-Pprocraft.version=$APP_VERSION" \
+            "-Pprocraft.versionCode=$APP_VERSION_CODE"
           mkdir -p "$GITHUB_WORKSPACE/dist"
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-arm64.apk"
 
