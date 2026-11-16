@@ -406,7 +406,7 @@ fun ActionsPanel(vm: CanvasViewModel, arrowX: Dp, modifier: Modifier = Modifier)
                             if (rows.any { it is Act && it.label == "Brush scaling" }) MenuPresence(scalingMenu, androidx.compose.ui.graphics.TransformOrigin(0f, 0f)) { look ->
                                 ChoiceMenu(
                                     look,
-                                    listOf("Relative to canvas", "Relative to screen"), if (vm.brushOnScreen) 1 else 0, offsetY = 82.dp,
+                                    listOf("К холсту", "К экрану"), if (vm.brushOnScreen) 1 else 0, offsetY = 82.dp,
                                     onPick = {
                                         vm.changeBrushScaling(it == 1)
                                         scalingMenu = false
@@ -559,15 +559,15 @@ private fun CursorPage(vm: CanvasViewModel, onBack: () -> Unit) {
         Box(Modifier.size(44.dp, 34.dp).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
             Icon(PcIcons.ChevronLeft, contentDescription = "Back", tint = Pc.PanelTitle, modifier = Modifier.size(22.dp))
         }
-        Text("Advanced cursor", color = Pc.PanelTitle, fontSize = 22.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Text("Расширенные настройки курсора", color = Pc.PanelTitle, fontSize = 22.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
     Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 13.dp)) {
-        Text("Brush cursor visibility", color = CursorHeading, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 6.dp, bottom = 8.dp))
-        ChoiceGroup(listOf("Show while hovering", "Show while painting", "Show both"), vm.cursorShows.ordinal) {
+        Text("Видимость курсора кисти", color = CursorHeading, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 6.dp, bottom = 8.dp))
+        ChoiceGroup(listOf("При наведении", "Во время рисования", "Всегда"), vm.cursorShows.ordinal) {
             vm.changeCursorShows(CanvasViewModel.CursorShows.entries[it])
         }
-        Text("Brush outline style", color = CursorHeading, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 28.dp, bottom = 8.dp))
-        ChoiceGroup(listOf("High contrast", "Active color", "Per brush"), vm.cursorStyle.ordinal) {
+        Text("Стиль контура кисти", color = CursorHeading, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 28.dp, bottom = 8.dp))
+        ChoiceGroup(listOf("Высокая контрастность", "Активный цвет", "Для каждой кисти"), vm.cursorStyle.ordinal) {
             vm.changeCursorStyle(CanvasViewModel.CursorStyle.entries[it])
         }
     }
@@ -606,10 +606,10 @@ private fun PluginCard(plugin: PluginInfo, vm: CanvasViewModel) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Pc.ActionsGroup)) {
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(plugin.name, color = Pc.PanelTitle, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(localizeUiText(plugin.name), color = Pc.PanelTitle, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             }
-            Text(plugin.description, color = Pc.ActionsRow, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
-            plugin.problem?.let { Text(it, color = Pc.SlideValue, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 4.dp)) }
+            Text(localizeUiText(plugin.description), color = Pc.ActionsRow, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
+            plugin.problem?.let { Text(localizeUiText(it), color = Pc.SlideValue, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 4.dp)) }
         }
         if (plugin.on && plugin.problem == null) {
             for (control in plugin.controls) {
