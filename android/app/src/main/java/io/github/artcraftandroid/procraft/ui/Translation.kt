@@ -677,7 +677,7 @@ private val russianUi = mapOf(
     "Stack" to "Стопка",
     "Brush libraries" to "Библиотеки кистей",
     "Shade" to "Тень",
-    "Tint" to "Осветление",
+    "Tint" to "Оттенок",
     "Complementary" to "Комплементарная",
     "Split Complementary" to "Раздельно-комплементарная",
     "Analogous" to "Аналогичная",
