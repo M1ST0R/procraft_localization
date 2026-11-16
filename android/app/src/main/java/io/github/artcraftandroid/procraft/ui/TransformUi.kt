@@ -62,6 +62,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -446,7 +447,11 @@ internal fun ToolbarButton(
             maxLines = 1,
             softWrap = false,
             // a long name may run past the button
-            modifier = Modifier.align(Alignment.TopCenter).offset(y = 50.dp - labelSize.value.dp * CAP_MIDDLE).wrapContentWidth(unbounded = true),
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.align(Alignment.TopCenter)
+                .offset(y = 50.dp - labelSize.value.dp * CAP_MIDDLE)
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp),
         )
     }
 }
