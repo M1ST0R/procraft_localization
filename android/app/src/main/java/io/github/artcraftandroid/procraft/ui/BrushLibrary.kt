@@ -76,6 +76,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -786,7 +787,7 @@ private fun SwipeButton(icon: ImageVector, label: String, fill: Color, ink: Colo
         // 19 across, as measured, the label where it was
         Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(19.dp))
         Spacer(Modifier.height(2.dp))
-        Text(label, color = ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(label, color = ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -818,7 +819,7 @@ internal fun MenuItem(icon: ImageVector, label: String, ink: Color = Pc.MenuInk,
             Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.requiredSize(iconSize))
         }
         // the menus' 17 pt system text is as wide as 18 here
-        Text(label, color = ink, fontSize = 18.sp, maxLines = 1, modifier = Modifier.padding(start = 2.5.dp).weight(1f))
+        Text(label, color = ink, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 2.5.dp).weight(1f))
         if (trailing != null) Icon(trailing, contentDescription = null, tint = ink, modifier = Modifier.padding(end = 7.5.dp).requiredSize(40.dp))
     }
 }
