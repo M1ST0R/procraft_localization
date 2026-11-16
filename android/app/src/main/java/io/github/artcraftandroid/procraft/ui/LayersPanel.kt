@@ -479,32 +479,32 @@ private fun LayersTitleMenu(open: Boolean, vm: CanvasViewModel, onDismiss: () ->
         onDismiss,
         overPanel = true,
     ) {
-        MenuItem(PcIcons.MenuSelectAll, "Select All") {
+        MenuItem(PcIcons.MenuSelectAll, "Выбрать всё") {
             onDismiss()
             vm.pickAllLayers()
         }
         MenuDivider()
         if (picked) {
-            MenuItem(PcIcons.MenuGroup, "Group") {
+            MenuItem(PcIcons.MenuGroup, "Сгруппировать") {
                 onDismiss()
                 vm.groupPicked()
             }
-            MenuItem(PcIcons.MenuMerge, "Merge") {
+            MenuItem(PcIcons.MenuMerge, "Объединить") {
                 onDismiss()
                 vm.mergePicked()
             }
             MenuDivider()
         }
-        MenuItem(PcIcons.MenuShare, "Share") {
+        MenuItem(PcIcons.MenuShare, "Поделиться") {
             onDismiss()
             onShare()
         }
-        MenuItem(PcIcons.MenuDuplicate, "Duplicate") {
+        MenuItem(PcIcons.MenuDuplicate, "Дублировать") {
             onDismiss()
             vm.duplicatePicked()
         }
         MenuDivider()
-        MenuItem(PcIcons.MenuTrash, "Delete", Pc.MenuDanger) {
+        MenuItem(PcIcons.MenuTrash, "Удалить", Pc.MenuDanger) {
             onDismiss()
             onDelete()
         }
