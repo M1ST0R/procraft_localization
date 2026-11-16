@@ -176,7 +176,8 @@ fun CanvasInfo(vm: CanvasViewModel) {
             askProfile = true
             return
         }
-        vm.changeArtworkInfo(name, author)
+        val savedName = if (session.name() == "Untitled Artwork" && name == "Работа без названия") session.name() else name
+        vm.changeArtworkInfo(savedName, author)
         vm.keepAbout(newPhoto, signature.map { s -> s.flatMap { listOf(it.x, it.y) } })
         if (profile != session.profile()) vm.changeProfile(profile)
         close()
