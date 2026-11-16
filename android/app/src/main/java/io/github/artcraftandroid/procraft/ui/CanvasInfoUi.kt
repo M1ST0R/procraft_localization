@@ -141,7 +141,7 @@ fun CanvasInfo(vm: CanvasViewModel) {
     val about = remember(dir) { dir?.let { File(it, "about") } }
     val info = remember { vm.artworkInfo() }
     var page by remember { mutableIntStateOf(0) }
-    var name by remember { mutableStateOf(session.name()) }
+    var name by remember { mutableStateOf(localizeUiText(session.name())) }
     var author by remember { mutableStateOf(info?.author ?: "") }
     var photo by remember { mutableStateOf<ImageBitmap?>(about?.let { File(it, "photo.jpg") }?.takeIf { it.exists() }?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }) }
     var newPhoto by remember { mutableStateOf<android.net.Uri?>(null) }
@@ -421,7 +421,7 @@ private fun AboutCard(photo: ImageBitmap?, author: String, onAuthor: (String) ->
 }
 
 private fun dateText(ms: Long): String =
-    DateFormat.getDateInstance(DateFormat.LONG).format(Date(ms)) + " at " + DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(ms))
+    DateFormat.getDateInstance(DateFormat.LONG).format(Date(ms)) + " в " + DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(ms))
 
 private fun megabytes(bytes: Long) = "%.2f MB".format(bytes / 1_000_000.0)
 
