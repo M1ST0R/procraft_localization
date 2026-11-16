@@ -670,6 +670,63 @@ private val russianUi = mapOf(
     "Soft Glow" to "Мягкое свечение",
     "Overlay Light" to "Наложение света",
     "Back space" to "Удалить символ",
+    // Additional UI strings found during screenshot QA.
+    "Automatic" to "Автоматически",
+    "Invert" to "Инвертировать",
+    "Lighter Color" to "Более светлый цвет",
+    "Vivid Light" to "Яркий свет",
+    "Linear Light" to "Линейный свет",
+    "Pin Light" to "Точечный свет",
+    "Hard Mix" to "Жёсткое смешивание",
+    "Stabilization" to "Стабилизация",
+    "Grain" to "Текстура",
+    "Wet Mix" to "Смешивание красок",
+    "Secondary Color" to "Дополнительный цвет",
+    "No filtering" to "Без фильтрации",
+    "Classic filtering" to "Классическая фильтрация",
+    "Improved filtering" to "Улучшенная фильтрация",
+    "Link tip sizes" to "Связать размеры наконечников",
+    "Sharp" to "Острый",
+    "Blunt" to "Тупой",
+    "Layer is hidden" to "Слой скрыт",
+    "Show" to "Показать",
+    "Open Layers" to "Открыть слои",
+    "Share" to "Поделиться",
+    "Prefs" to "Настройки",
+    "Help" to "Помощь",
+    "Light interface" to "Светлый интерфейс",
+    "Brush cursor" to "Курсор кисти",
+    "Rapid undo delay" to "Задержка быстрого отката",
+    "Selection mask visibility" to "Видимость маски выделения",
+    "Time-lapse Recording" to "Запись таймлапса",
+    "About this artwork" to "Об этой работе",
+    "Color profile" to "Цветовой профиль",
+    "Video settings" to "Настройки видео",
+    "Statistics" to "Статистика",
+    "Total strokes made" to "Всего мазков",
+    "Tracked time" to "Время работы",
+    "Total file size" to "Общий размер файлов",
+    "Video quality" to "Качество видео",
+    "Video resolution" to "Разрешение видео",
+    "Video file size" to "Размер видеофайла",
+    "Video codec" to "Видеокодек",
+    "Current color profile" to "Текущий цветовой профиль",
+    "Date created" to "Дата создания",
+    "Date modified" to "Дата изменения",
+    "Untitled Artwork" to "Работа без названия",
+    "2D Grid" to "Сетка 2D",
+    "Isometric" to "Изометрия",
+    "Perspective" to "Перспектива",
+    "Symmetry" to "Симметрия",
+    "Thickness" to "Толщина",
+    "Grid size" to "Размер сетки",
+    "Rotational Symmetry" to "Вращательная симметрия",
+    "Vertical" to "Вертикальная",
+    "Horizontal" to "Горизонтальная",
+    "Quadrant" to "Квадрант",
+    "Radial" to "Радиальная",
+    "Basics" to "Основные",
+    "Good" to "Хорошее",
 
 )
 
@@ -678,6 +735,8 @@ private val quickMenuName = Regex("""^QuickMenu ([0-9]+)$""")
 private val deleteArtworkCount = Regex("""^Delete ([0-9]+) artworks?\?$""")
 private val frameNumber = Regex("""^Frame ([0-9]+)$""")
 private val sharedLayerWarning = Regex("""^“(.+)” is on every mesh of this texture set\.$""")
+private val blockedLayerMessage = Regex("""^“(.+)” can't be changed while (.+)\.$""")
+private val trackedTime = Regex("""^([0-9]+)h ([0-9]+)m$""")
 
 internal fun localizeUiText(source: String): String {
     russianUi[source]?.let { return it }
@@ -688,6 +747,22 @@ internal fun localizeUiText(source: String): String {
     quickMenuName.matchEntire(source)?.let { return "Быстрое меню ${it.groupValues[1]}" }
     frameNumber.matchEntire(source)?.let { return "Кадр ${it.groupValues[1]}" }
     sharedLayerWarning.matchEntire(source)?.let { return "«${it.groupValues[1]}» используется на всех сетках этого набора текстур." }
+    blockedLayerMessage.matchEntire(source)?.let { match ->
+        val reason = when (match.groupValues[2]) {
+            "it is hidden" -> "пока он скрыт"
+            "its layer is hidden" -> "пока скрыт его слой"
+            "its group is hidden" -> "пока скрыта его группа"
+            "a layer in it is hidden" -> "пока в нём есть скрытый слой"
+            "another layer is shown alone" -> "пока отображается только другой слой"
+            "it is locked" -> "пока он заблокирован"
+            "its alpha is locked" -> "пока заблокирован его альфа-канал"
+            else -> return@let
+        }
+        return "«${match.groupValues[1]}» нельзя изменить, $reason."
+    }
+    trackedTime.matchEntire(source)?.let {
+        return "${it.groupValues[1]} ч ${it.groupValues[2]} мин"
+    }
     artworkCount.matchEntire(source)?.let {
         val count = it.groupValues[1].toIntOrNull() ?: return@let
         val word = when (count % 100) {
