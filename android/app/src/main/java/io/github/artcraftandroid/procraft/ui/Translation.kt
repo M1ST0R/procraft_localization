@@ -76,6 +76,17 @@ private val russianUi = mapOf(
     "New canvas" to "Новый холст",
     "Custom Canvas" to "Пользовательский холст",
     "Canvas Info" to "Сведения о холсте",
+    "Maximum layers" to "Максимальное количество слоёв",
+    "Layers used" to "Использовано слоёв",
+    "Layers available" to "Доступно слоёв",
+    "Assisted layers" to "Слои с рисованием по направляющим",
+    "Clipping layers" to "Обтравочные слои",
+    "Layer masks" to "Маски слоёв",
+    "Layer groups" to "Группы слоёв",
+    "Pixel width" to "Ширина в пикселях",
+    "Pixel height" to "Высота в пикселях",
+    "Physical width" to "Физическая ширина",
+    "Physical height" to "Физическая высота",
     "Image Format" to "Формат изображения",
     "More Options" to "Дополнительные параметры",
     "Tap + to start a new canvas" to "Нажмите «+», чтобы создать новый холст",
@@ -1233,6 +1244,7 @@ private val frameNumber = Regex("""^Frame ([0-9]+)$""")
 private val sharedLayerWarning = Regex("""^“(.+)” is on every mesh of this texture set\.$""")
 private val blockedLayerMessage = Regex("""^“(.+)” can't be changed while (.+)\.$""")
 private val trackedTime = Regex("""^([0-9]+)h ([0-9]+)m$""")
+private val layerSetCount = Regex("""^([0-9]+) of ([0-9]+)$""")
 
 internal fun localizeUiText(source: String): String {
     russianUi[source]?.let { return it }
@@ -1258,6 +1270,9 @@ internal fun localizeUiText(source: String): String {
     }
     trackedTime.matchEntire(source)?.let {
         return "${it.groupValues[1]} ч ${it.groupValues[2]} мин"
+    }
+    layerSetCount.matchEntire(source)?.let {
+        return "${it.groupValues[1]} из ${it.groupValues[2]}"
     }
     artworkCount.matchEntire(source)?.let {
         val count = it.groupValues[1].toIntOrNull() ?: return@let
