@@ -1050,6 +1050,160 @@ private val russianUi = mapOf(
     "Panels" to "Панели",
     "Filters for Adjustments: the lines of a scanned drawing kept off the paper, an outline, and colours held to a few flat steps." to "Фильтры коррекции: удаление бумажного фона со сканированного рисунка, добавление обводки и упрощение цветов до нескольких сплошных тонов.",
     "Picked layers take one opacity together, Paste can go into a mask, and the eyedropper can pick from the current layer alone." to "Выбранные слои можно регулировать с общей непрозрачностью, вставлять изображение в маску и брать цвет пипеткой только с текущего слоя.",
+    "Across" to "Поперёк",
+    "Action" to "Действие",
+    "Along" to "Вдоль",
+    "Anti Aliasing" to "Сглаживание",
+    "Anti-aliasing" to "Сглаживание",
+    "Basic" to "Основные",
+    "Both" to "Оба направления",
+    "Bristles" to "Щетинки",
+    "Circles" to "Круги",
+    "Colorize" to "Раскрашивание",
+    "Colour" to "Цвет",
+    "Coverage" to "Покрытие",
+    "Crosshatching" to "Перекрёстная штриховка",
+    "Dabs" to "Отпечатки",
+    "Deform" to "Деформация",
+    "Density" to "Плотность",
+    "Diameter" to "Диаметр",
+    "Direction" to "Направление",
+    "Down" to "Вниз",
+    "Drag" to "Сопротивление",
+    "Draws" to "Что рисовать",
+    "Dulling" to "Снижение насыщенности",
+    "Dyna" to "Динамическая кисть",
+    "Early" to "Раннее срабатывание",
+    "Fade" to "Затухание",
+    "Falling" to "Убывание",
+    "Filter" to "Фильтр",
+    "Gaussian" to "Гауссов",
+    "Gradient" to "Градиент",
+    "Gravity" to "Гравитация",
+    "Grid" to "Сетка",
+    "Grow" to "Увеличить",
+    "Half-size" to "Половинный размер",
+    "Hardness" to "Жёсткость",
+    "Hatching" to "Штриховка",
+    "Height" to "Высота",
+    "Ink" to "Чернила",
+    "Inverted" to "Инвертировано",
+    "Iterations" to "Итерации",
+    "Late" to "Позднее срабатывание",
+    "Line" to "Линия",
+    "Lines" to "Линии",
+    "Magnetify" to "Магнитное притяжение",
+    "Mass" to "Масса",
+    "Mirror" to "Отражение",
+    "Mix" to "Смешивание",
+    "Opaque" to "Непрозрачность",
+    "Particles" to "Частицы",
+    "Posterize" to "Постеризация",
+    "Proportional" to "Сохранять пропорции",
+    "Radius" to "Радиус",
+    "Random" to "Случайно",
+    "Randomness" to "Случайность",
+    "Ratio" to "Соотношение",
+    "Separation" to "Интервал",
+    "Shear" to "Сдвиг",
+    "Shrink" to "Уменьшить",
+    "Sketch" to "Эскиз",
+    "Smearing" to "Размазывание",
+    "Smooth" to "Сглаживание",
+    "Spikes" to "Шипы",
+    "Straight" to "Прямая",
+    "Stroke" to "Мазок",
+    "Texture" to "Текстура",
+    "Texturing" to "Текстурирование",
+    "Turn" to "Поворот",
+    "Wash" to "Размывка",
+    "Angle and crosshatching" to "Угол и перекрёстная штриховка",
+    "Back to the brush as it came" to "Восстановить исходные настройки кисти",
+    "Both ways" to "В обоих направлениях",
+    "Build up" to "Наращивание цвета",
+    "Change Color H" to "Изменение оттенка (H)",
+    "Change Color HSL S" to "Изменение насыщенности HSL",
+    "Change Color HSV S" to "Изменение насыщенности HSV",
+    "Change Color L" to "Изменение светлоты (L)",
+    "Change Color V" to "Изменение яркости (V)",
+    "Colour burn" to "Затемнение основы",
+    "Colour dodge" to "Осветление основы",
+    "Colour rate" to "Интенсивность окрашивания",
+    "Curves opacity" to "Непрозрачность кривых",
+    "Custom Input" to "Пользовательский ввод",
+    "Custom Input Slowness" to "Сглаживание пользовательского ввода",
+    "Dabs Per Actual Radius" to "Отпечатков на фактический радиус",
+    "Dabs Per Basic Radius" to "Отпечатков на базовый радиус",
+    "Dabs per Second" to "Отпечатков в секунду",
+    "Direction Filter" to "Фильтр направления",
+    "Drawing angle" to "Угол рисования",
+    "Elliptical Dab Angle" to "Угол эллиптического отпечатка",
+    "Elliptical Dab Ratio" to "Соотношение сторон эллиптического отпечатка",
+    "Eraser Mode" to "Режим ластика",
+    "Filled as the stroke ends." to "Заливка выполняется в конце мазка.",
+    "Fine Speed Gamma" to "Гамма точной скорости",
+    "Fine Speed Slowness" to "Замедление точной скорости",
+    "Gross Speed Gamma" to "Гамма общей скорости",
+    "Gross Speed Slowness" to "Замедление общей скорости",
+    "Half to whole" to "От половины до полного",
+    "Hard edge" to "Жёсткий край",
+    "Ink runs out" to "Чернила заканчиваются",
+    "Its own" to "Собственный",
+    "Linear height" to "Линейная высота",
+    "MyPaint brush" to "Кисть MyPaint",
+    "Offset By Random" to "Смещение по случайному значению",
+    "Offset By Speed" to "Смещение по скорости",
+    "Offset by Speed Filter" to "Фильтр смещения по скорости",
+    "Offset scale" to "Масштаб смещения",
+    "Opacity and flow" to "Непрозрачность и поток",
+    "Opacity falls" to "Непрозрачность уменьшается",
+    "Opaque Linearize" to "Линеаризация непрозрачности",
+    "Opaque Multiply" to "Умножение непрозрачности",
+    "Painting mode" to "Режим рисования",
+    "Posterization Levels" to "Уровни постеризации",
+    "Pressure Gain" to "Усиление нажима",
+    "Quick brush" to "Быстрая кисть",
+    "Radius and colour" to "Радиус и цвет",
+    "Radius by Random" to "Случайный радиус",
+    "Radius Logarithmic" to "Логарифмический радиус",
+    "Saturation falls" to "Насыщенность уменьшается",
+    "Scatter and mirror" to "Разброс и отражение",
+    "Separation and thickness" to "Интервал и толщина",
+    "Shape dynamics" to "Динамика формы",
+    "Size and opacity" to "Размер и непрозрачность",
+    "Slow Tracking" to "Медленное отслеживание",
+    "Slow tracking per dab" to "Медленное отслеживание для каждого отпечатка",
+    "Smoothing threshold" to "Порог сглаживания",
+    "Smudge Bucket" to "Накопление размазывания",
+    "Smudge Length" to "Длина размазывания",
+    "Smudge Length Multiplier" to "Множитель длины размазывания",
+    "Smudge radius" to "Радиус размазывания",
+    "Smudge Radius Log" to "Логарифмический радиус размазывания",
+    "Smudge Transparency" to "Прозрачность размазывания",
+    "Snap To Pixel" to "Привязка к пикселям",
+    "Soft rise" to "Мягкое нарастание",
+    "Speed amount" to "Величина влияния скорости",
+    "Spray area" to "Область распыления",
+    "Stroke Duration log" to "Логарифм длительности мазка",
+    "Stroke Holdtime" to "Время удержания мазка",
+    "Stroke Threshold" to "Порог мазка",
+    "Strong rise" to "Сильное нарастание",
+    "Tangent tilt" to "Наклон по касательной",
+    "Tracking Noise" to "Шум отслеживания",
+    "Turn and squash" to "Поворот и сжатие",
+    "Winding fill" to "Заливка по правилу обхода",
+    "A ribbon" to "Лента",
+    "Its outline" to "Её контур",
+    "A line along it" to "Линия вдоль контура",
+    "Circles' diameter" to "Диаметр кругов",
+    "A tap sets where it clones from." to "Коснитесь холста, чтобы выбрать источник клонирования.",
+    "Each particle is the brush's tip (see Tip)." to "Каждая частица использует наконечник кисти (см. «Наконечник»).",
+    "This brush's tip can't be read." to "Не удалось прочитать наконечник этой кисти.",
+    "Pick a brush that came from a Krita file, then open its studio." to "Выберите кисть из файла Krita и откройте её студию.",
+    "Filter: Gaussian blur." to "Фильтр: размытие по Гауссу.",
+    "Filter: Blur." to "Фильтр: размытие.",
+    "Filter: Unsharp mask." to "Фильтр: маска нерезкости.",
+    "Spray shape (off: the brush tip)" to "Форма распыления (выключено: наконечник кисти)",
 )
 
 private val artworkCount = Regex("""^([0-9]+) artworks$""")
@@ -1113,6 +1267,53 @@ internal fun localizeUiText(source: String): String {
     return when {
         Regex("""^([0-9]+(?:[.][0-9]+)?)s$""").matchEntire(source)?.let { it.groupValues[1] } != null ->
             source.dropLast(1).replace('.', ',') + " с"
+        source.startsWith("A picture tip: ") -> {
+            val detail = source.removePrefix("A picture tip: ").removeSuffix(".")
+            val missing = ", which the file doesn't hold. As in Krita, its default tip stands in: round, 40 px across"
+            if (detail.endsWith(missing)) {
+                "Графический наконечник «" + detail.removeSuffix(missing) + "» отсутствует в файле. Как и в Krita, используется стандартный круглый наконечник диаметром 40 px."
+            } else {
+                "Графический наконечник: " + detail + "."
+            }
+        }
+        source.startsWith("An auto tip: a ") -> {
+            val detail = source.removePrefix("An auto tip: a ").removeSuffix(".").split(", its edge ", limit = 2)
+            val shape = when (detail.firstOrNull()) {
+                "circle" -> "круг"
+                "rectangle" -> "прямоугольник"
+                else -> detail.firstOrNull().orEmpty()
+            }
+            val edge = when (detail.getOrNull(1)) {
+                "soft" -> "мягкий"
+                "Gaussian" -> "гауссовский"
+                "default" -> "стандартный"
+                else -> detail.getOrNull(1).orEmpty()
+            }
+            "Автоматический наконечник: " + shape + ", край — " + edge + "."
+        }
+        source.startsWith("Its pattern: ") ->
+            "Шаблон: " + source.removePrefix("Its pattern: ").removeSuffix(".") + "."
+        source.startsWith("Filter: ") -> when (source.removePrefix("Filter: ").removeSuffix(".")) {
+            "Gaussian blur" -> "Фильтр: размытие по Гауссу."
+            "Blur" -> "Фильтр: размытие."
+            "Unsharp mask" -> "Фильтр: маска нерезкости."
+            else -> "Фильтр: " + source.removePrefix("Filter: ")
+        }
+        source.startsWith("Filter \"") && source.endsWith("\": not drawn here.") ->
+            "Фильтр «" + source.removePrefix("Filter \"").removeSuffix("\": not drawn here.") +
+                "»: отображение пока не поддерживается."
+        source.contains(" follows ") && source.endsWith(".") -> {
+            val split = source.removeSuffix(".").split(" follows ", limit = 2)
+            val label = russianUi[split[0]] ?: split[0]
+            val sensors = split.getOrNull(1).orEmpty().split(", ").joinToString(", ") {
+                russianUi[it] ?: it
+            }
+            label + " зависит от " + sensors + "."
+        }
+        source.endsWith(" by") -> {
+            val label = source.removeSuffix(" by")
+            (russianUi[label] ?: label) + ": зависит от"
+        }
         source.startsWith("Version ") -> "Версия " + source.removePrefix("Version ")
         source.startsWith("Made by ") -> "Автор: " + source.removePrefix("Made by ")
         source.startsWith("Last reset point: ") -> "Последняя точка сброса: " + source.removePrefix("Last reset point: ")
