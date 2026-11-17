@@ -56,6 +56,8 @@ git fetch upstream
 git merge upstream/main
 ```
 
+For v0.0.7-beta, several standalone plugins were consolidated into larger plugins (including Krita Brushes, ColorDrop tools, Interface, Effects, Layer fills and Layer tools). Keep the new upstream plugin manifests and bundled plugin files; do not restore the old standalone plugin directories when carrying translation changes forward.
+
 Resolve conflicts carefully, keeping upstream functional changes and reapplying the Russian strings or UI changes where upstream touched the same code. Then run the Android build/tests, commit the merge and push:
 
 ```bash

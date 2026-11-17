@@ -57,14 +57,14 @@ jobs:
           set -o pipefail
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
 
-      # Give every CI APK a strictly increasing versionCode, starting above the copied 0.0.6-beta.
+      # Give every CI APK a strictly increasing versionCode, starting above the copied 0.0.7-beta.
       # Gradle derives versionCode from this version and checks the matching property.
       - name: Resolve CI version
         id: version
         shell: bash
         run: |
           n=$((GITHUB_RUN_NUMBER + 1))
-          patch=$((6 + (n - 1) / 98))
+          patch=$((7 + (n - 1) / 98))
           pre=$(((n - 1) % 98 + 1))
           base=$((patch * 100 + pre))
           echo "name=0.0.${patch}-beta.${pre}" >> "$GITHUB_OUTPUT"

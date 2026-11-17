@@ -1,0 +1,32 @@
+{
+  "format_version": 1,
+  "id": "ru.community",
+  "locale": "ru-RU",
+  "name": "Русский — Community",
+  "author": "Community contributor",
+  "app_version": "0.0.6-beta",
+  "catalog_version": "procraft-ui-1",
+  "base_locale": "en",
+  "strings": {
+    "settings.language.title": "Язык",
+    "gallery.title": "Галерея",
+    "gallery.empty": "Пока нет работ. Нажмите «+», чтобы создать холст.",
+    "actions.title": "Действия",
+    "adjustments.title": "Коррекция",
+    "layers.title": "Слои",
+    "layers.new": "Новый слой",
+    "layers.opacity": "Непрозрачность",
+    "brushes.title": "Кисти",
+    "brushes.search": "Поиск кистей",
+    "brushes.recent": "Недавние",
+    "selection.title": "Выделение",
+    "transform.title": "Трансформация",
+    "common.cancel": "Отмена",
+    "common.done": "Готово",
+    "common.delete": "Удалить",
+    "common.import": "Импортировать",
+    "common.export": "Экспорт",
+    "common.reset": "Сбросить",
+    "layers.count": "Слоёв: {count}"
+  }
+}

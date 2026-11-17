@@ -262,10 +262,16 @@ private fun Adjustment.icon() = when (this) {
     Adjustment.PLUGIN -> PcIcons.Adjustments
 }
 
-/** The window's width, which the adjustment toolbars and the animation bar lay themselves out by (not its shape). */
+/**
+ * The window's width, which the adjustment toolbars and the animation bar lay themselves out by (not
+ * its shape), less what the interface keeps clear of across it.
+ */
 @Composable
-internal fun windowWidth(): Dp =
-    with(androidx.compose.ui.platform.LocalDensity.current) { androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp() }
+internal fun windowWidth(): Dp {
+    val clear = LocalClearance.current
+    val width = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width - clear.left - clear.right
+    return with(androidx.compose.ui.platform.LocalDensity.current) { width.toDp() }
+}
 
 /**
  * Where each toolbar lays its sliders side by side (as measured in landscape; upright, stacked): the
@@ -795,14 +801,14 @@ fun AdjustmentMenu(vm: CanvasViewModel, screenWidth: Dp, screenHeight: Dp) {
 }
 
 private val LIQUIFY_NAMES = listOf(
-    LiquifyKind.PUSH to "Сдвиг",
-    LiquifyKind.TWIRL_RIGHT to "Завихрение вправо",
-    LiquifyKind.TWIRL_LEFT to "Завихрение влево",
-    LiquifyKind.PINCH to "Сжатие",
-    LiquifyKind.EXPAND to "Расширение",
-    LiquifyKind.CRYSTALS to "Кристаллы",
-    LiquifyKind.EDGE to "Край",
-    LiquifyKind.RECONSTRUCT to "Восстановление",
+    LiquifyKind.PUSH to "Push",
+    LiquifyKind.TWIRL_RIGHT to "Twirl Right",
+    LiquifyKind.TWIRL_LEFT to "Twirl Left",
+    LiquifyKind.PINCH to "Pinch",
+    LiquifyKind.EXPAND to "Expand",
+    LiquifyKind.CRYSTALS to "Crystals",
+    LiquifyKind.EDGE to "Edge",
+    LiquifyKind.RECONSTRUCT to "Reconstruct",
 )
 
 /** The liquify panel: the brush's size, pressure, distortion and momentum; its way, adjust and reset. */
@@ -828,7 +834,7 @@ private fun LiquifyPanelAndMenus(vm: CanvasViewModel, screenWidth: Dp, screenHei
             val centre = panelLeft + 16.dp + (654.dp - 32.dp - 16.dp) / 6
             val left = (centre - 130.dp).coerceIn(0.dp, screenWidth - 260.dp)
             MenuPopover(centre - left, left, buttonsTop) {
-                MenuTitle("Режим пластики")
+                MenuTitle("Liquify Mode")
                 Spacer(Modifier.height(10.dp))
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(MenuGroup)) {
                     LIQUIFY_NAMES.forEachIndexed { i, (kind, label) ->
@@ -850,11 +856,11 @@ private fun LiquifyPanelAndMenus(vm: CanvasViewModel, screenWidth: Dp, screenHei
             val centre = if (wide) (screenWidth - full) / 2 + (full - 921.dp) / 2 + 94.dp * 8 + 37.5.dp else screenWidth / 2
             val left = (centre - 130.dp).coerceIn(0.dp, screenWidth - 260.dp)
             MenuPopover(centre - left, left, buttonsTop) {
-                MenuTitle("Сила")
+                MenuTitle("Strength")
                 Spacer(Modifier.height(4.dp))
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(13.dp)).background(MenuGroup).padding(vertical = 8.dp)) {
-                    val amount = if (vm.liquifyAmount >= 1f) "Макс." else "${(vm.liquifyAmount * 100).roundToInt()}%"
-                    SliderRow("Сила", vm.liquifyAmount, amount) { vm.changeLiquifyAmount(it) }
+                    val amount = if (vm.liquifyAmount >= 1f) "Max" else "${(vm.liquifyAmount * 100).roundToInt()}%"
+                    SliderRow("Amount", vm.liquifyAmount, amount, onEnd = vm::letGoLiquifyAmount) { vm.changeLiquifyAmount(it) }
                 }
             }
         }
@@ -882,7 +888,7 @@ private val LiquifyDim get() = if (Pc.light) Color(0xFF989898) else Color(0xFF57
  */
 @Composable
 private fun LiquifyWide(vm: CanvasViewModel, width: Dp, modifier: Modifier) {
-    val percent = { v: Float, none: String? -> if (v >= 1f) "Макс." else if (v <= 0f && none != null) none else "${(v * 100).roundToInt()}%" }
+    val percent = { v: Float, none: String? -> if (v >= 1f) "Max" else if (v <= 0f && none != null) none else "${(v * 100).roundToInt()}%" }
     Column(
         modifier.offset(y = (-25).dp).size(width, 162.dp).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, end = 16.dp, top = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -895,15 +901,15 @@ private fun LiquifyWide(vm: CanvasViewModel, width: Dp, modifier: Modifier) {
             }
             val ink = if (canAdjust) LiquifyIdle else LiquifyDim
             val words = if (canAdjust) LiquifyLabel else LiquifyDim
-            LiquifyButton(PcIcons.AdjustKnob, "Настроить", ink, words, 39.5.dp, canAdjust) { vm.liquifyPopup = if (vm.liquifyPopup == 2) 0 else 2 }
-            LiquifyButton(PcIcons.PieReset, "Сбросить", ink, words, 23.dp, canAdjust) { vm.resetLiquify() }
+            LiquifyButton(PcIcons.AdjustKnob, "Adjust", ink, words, 39.5.dp, canAdjust) { vm.liquifyPopup = if (vm.liquifyPopup == 2) 0 else 2 }
+            LiquifyButton(PcIcons.PieReset, "Reset", ink, words, 23.dp, canAdjust) { vm.resetLiquify() }
         }
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-            Box(Modifier.weight(1f)) { SliderRow("Размер", vm.liquifySize, percent(vm.liquifySize, null)) { vm.setLiquifyValue(0, it) } }
-            Box(Modifier.weight(1f)) { SliderRow("Нажим", vm.liquifyPressure, percent(vm.liquifyPressure, null)) { vm.setLiquifyValue(1, it) } }
-            Box(Modifier.weight(1f)) { SliderRow("Искажение", vm.liquifyDistortion, percent(vm.liquifyDistortion, "Нет")) { vm.setLiquifyValue(2, it) } }
-            Box(Modifier.weight(1f)) { SliderRow("Инерция", vm.liquifyMomentum, percent(vm.liquifyMomentum, "Нет")) { vm.setLiquifyValue(3, it) } }
+            Box(Modifier.weight(1f)) { SliderRow("Size", vm.liquifySize, percent(vm.liquifySize, null)) { vm.setLiquifyValue(0, it) } }
+            Box(Modifier.weight(1f)) { SliderRow("Pressure", vm.liquifyPressure, percent(vm.liquifyPressure, null)) { vm.setLiquifyValue(1, it) } }
+            Box(Modifier.weight(1f)) { SliderRow("Distortion", vm.liquifyDistortion, percent(vm.liquifyDistortion, "None")) { vm.setLiquifyValue(2, it) } }
+            Box(Modifier.weight(1f)) { SliderRow("Momentum", vm.liquifyMomentum, percent(vm.liquifyMomentum, "None")) { vm.setLiquifyValue(3, it) } }
         }
     }
 }
@@ -951,7 +957,7 @@ private fun LiquifyUpright(vm: CanvasViewModel, modifier: Modifier) {
                 // a 50 frame shown 39.5 across, the name 2 after
                 Icon(PcIcons.AdjustKnob, contentDescription = null, tint = tint, modifier = Modifier.requiredSize(39.5.dp))
                 Spacer(Modifier.width(2.dp))
-                Text("Настроить", color = tint, fontSize = 15.sp, maxLines = 1)
+                Text("Adjust", color = tint, fontSize = 15.sp, maxLines = 1)
             }
             Row(
                 Modifier.weight(1f).height(40.dp).clip(RoundedCornerShape(20.dp)).background(PanelButton.copy(alpha = if (canAdjust) 1f else 0.5f))
@@ -963,7 +969,7 @@ private fun LiquifyUpright(vm: CanvasViewModel, modifier: Modifier) {
                 // the pie's reset, 23 across here, the name 2.5 after
                 Icon(PcIcons.PieReset, contentDescription = null, tint = tint, modifier = Modifier.requiredSize(23.dp))
                 Spacer(Modifier.width(2.5.dp))
-                Text("Сбросить", color = tint, fontSize = 15.sp, maxLines = 1)
+                Text("Reset", color = tint, fontSize = 15.sp, maxLines = 1)
             }
         }
     }
@@ -1106,10 +1112,10 @@ private val GlitchTrack get() = if (Pc.light) Color(0xFFDDDDDD) else Color(0xFF2
 private val GlitchTick get() = if (Pc.light) Color(0xFFC8C8C8) else Color(0xFF4A4A4A)
 
 private val GLITCH_KINDS = listOf(
-    Triple(GlitchKind.ARTIFACT, "Артефакт", 111.dp),
-    Triple(GlitchKind.WAVE, "Волна", 99.dp),
-    Triple(GlitchKind.SIGNAL, "Сигнал", 104.dp),
-    Triple(GlitchKind.DIVERGE, "Расхождение", 113.dp),
+    Triple(GlitchKind.ARTIFACT, "Artifact", 111.dp),
+    Triple(GlitchKind.WAVE, "Wave", 99.dp),
+    Triple(GlitchKind.SIGNAL, "Signal", 104.dp),
+    Triple(GlitchKind.DIVERGE, "Diverge", 113.dp),
 )
 
 /** The glitch toolbar: its four kinds above the kind's sliders, two to a row. */
@@ -1126,9 +1132,9 @@ fun GlitchPanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
             vm.chooseGlitchKind(GLITCH_KINDS[it].first)
         }
         val names = when (vm.glitchKind) {
-            GlitchKind.ARTIFACT, GlitchKind.SIGNAL -> listOf("Значение", "Размер блока", "Масштаб")
-            GlitchKind.WAVE -> listOf("Амплитуда", "Частота", "Масштаб")
-            GlitchKind.DIVERGE -> listOf("Сдвиг красного", "Сдвиг зелёного", "Сдвиг синего", "Масштаб")
+            GlitchKind.ARTIFACT, GlitchKind.SIGNAL -> listOf("Amount", "Block Size", "Zoom")
+            GlitchKind.WAVE -> listOf("Amplitude", "Frequency", "Zoom")
+            GlitchKind.DIVERGE -> listOf("Red shift", "Green shift", "Blue shift", "Zoom")
         }
         val values = vm.glitchValues[vm.glitchKind].orEmpty()
         Spacer(Modifier.height(12.dp))
@@ -1489,11 +1495,11 @@ fun PerspectivePanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
 fun ChromaticPanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     OptionsPanel(668.dp, 120.dp, modifier, 8.dp) {
         val kinds = listOf(ChromaticKind.PERSPECTIVE, ChromaticKind.DISPLACE)
-        KindsSwitch(428.dp, listOf(Kind(PcIcons.ChromaPerspective, "Перспектива", 204.dp), Kind(PcIcons.ChromaDisplace, "Смещение", 204.dp)), kinds.indexOf(vm.chromaKind)) {
+        KindsSwitch(428.dp, listOf(Kind(PcIcons.ChromaPerspective, "Perspective", 204.dp), Kind(PcIcons.ChromaDisplace, "Displace", 204.dp)), kinds.indexOf(vm.chromaKind)) {
             vm.chooseChromaKind(kinds[it])
         }
         Spacer(Modifier.height(12.dp))
-        val names = if (vm.chromaKind == ChromaticKind.PERSPECTIVE) listOf("Переход", "Спад") else listOf("Размытие", "Прозрачность")
+        val names = if (vm.chromaKind == ChromaticKind.PERSPECTIVE) listOf("Transition", "Fall off") else listOf("Blur", "Transparency")
         val values = vm.chromaValues[vm.chromaKind].orEmpty()
         Row(Modifier.width(620.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             names.forEachIndexed { k, name ->

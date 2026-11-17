@@ -9,6 +9,7 @@ This branch is a **community-maintained Russian-language Android build** of ProC
 - Keeps user-created artwork names and plugin-provided text unchanged unless they exactly match a built-in UI string.
 - Uses a separate Android application ID, `io.github.artcraftandroid.procraft.ru`, so the community build can coexist with the official ProCraft app.
 - Builds an ARM64 release APK with GitHub Actions and signs it with a persistent community keystore.
+- Tracks upstream **ProCraft v0.0.7-beta**: 394 new built-in brushes, the dedicated Krita brush engine and studio, consolidated plugins, updated icons, and upstream performance and stability fixes.
 
 ### Install the Russian build
 
@@ -69,7 +70,7 @@ For clipped text, include the device model, screen resolution, orientation and w
   <img alt="Rust engine" src="https://img.shields.io/badge/engine-Rust-lightblue?style=flat&logo=rust&logoColor=white">
   <img alt="GPU renderer: wgpu" src="https://img.shields.io/badge/renderer-wgpu-lightblue?style=flat">
   <img alt="Kotlin and Jetpack Compose" src="https://img.shields.io/badge/UI-Kotlin%20%C2%B7%20Jetpack%20Compose-blue?style=flat">
-  <img alt="Minimum: Android 10 (API 29)" src="https://img.shields.io/badge/min-Android%2010%20%28API%2029%29-blue?style=flat">
+  <img alt="Minimum: Android 8 (API 26)" src="https://img.shields.io/badge/min-Android%208%20%28API%2026%29-blue?style=flat">
   <img alt="Target: Android 16 (API 36)" src="https://img.shields.io/badge/target-Android%2016%20%28API%2036%29-blue?style=flat">
   <img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue?style=flat">
   <img alt="Desktop: Windows and Linux" src="https://img.shields.io/badge/desktop-Windows%20%C2%B7%20Linux-blue?style=flat">
