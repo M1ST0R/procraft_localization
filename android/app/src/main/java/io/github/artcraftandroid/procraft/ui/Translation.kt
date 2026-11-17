@@ -1048,6 +1048,8 @@ private val russianUi = mapOf(
     "Floating panels" to "Плавающие панели",
     "Top bar" to "Верхняя панель",
     "Panels" to "Панели",
+    "Filters for Adjustments: the lines of a scanned drawing kept off the paper, an outline, and colours held to a few flat steps." to "Фильтры коррекции: удаление бумажного фона со сканированного рисунка, добавление обводки и упрощение цветов до нескольких сплошных тонов.",
+    "Picked layers take one opacity together, Paste can go into a mask, and the eyedropper can pick from the current layer alone." to "Выбранные слои можно регулировать с общей непрозрачностью, вставлять изображение в маску и брать цвет пипеткой только с текущего слоя.",
 )
 
 private val artworkCount = Regex("""^([0-9]+) artworks$""")
