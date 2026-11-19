@@ -1189,14 +1189,18 @@ impl Gallery {
             }
         }
         let plus = Rect::from_min_size(pos2(screen.right() - 20.0 - 44.0, top + 10.0), vec2(44.0, 45.0));
-        let capsule_width = 69.0 + 71.0 + 66.0;
+        let labels = [("Select", 69.0), ("Import", 71.0), ("Photo", 66.0)];
+        let widths = labels.map(|(label, minimum)| {
+            minimum.max(crate::look::text_width(painter, label, 16.0, Weight::Regular) + 24.0)
+        });
+        let capsule_width: f32 = widths.iter().sum();
         let capsule =
             Rect::from_min_size(pos2(plus.left() - 12.0 - capsule_width, top + 10.0), vec2(capsule_width, 45.0));
         painter.rect_filled(capsule, 22.5, argb(CAPSULE));
         painter.rect_stroke(capsule, 22.5, Stroke::new(1.0, argb(CAPSULE_EDGE)), egui::StrokeKind::Inside);
         let mut x = capsule.left();
         let mut asked = None;
-        for (label, width) in [("Select", 69.0), ("Import", 71.0), ("Photo", 66.0)] {
+        for ((label, _), width) in labels.into_iter().zip(widths) {
             let button = Rect::from_min_size(pos2(x, capsule.top()), vec2(width, 45.0));
             text(painter, button.center(), Align2::CENTER_CENTER, label, 16.0, Weight::Regular, argb(TEXT));
             if ui.interact(button, ui.scope_id().with(label), Sense::click()).clicked() {
