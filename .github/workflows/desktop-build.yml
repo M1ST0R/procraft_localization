@@ -1,0 +1,111 @@
+name: Desktop RU builds
+
+on:
+  push:
+    branches:
+      - translation/russian
+    paths:
+      - "desktop/**"
+      - "crates/**"
+      - "plugins/**"
+      - "assets/**"
+      - "packaging/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "android/gradle.properties"
+      - ".github/workflows/desktop-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-ru-\${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_VERSION: "1.99.0"
+
+jobs:
+  windows:
+    name: Windows x64 (MSI + portable ZIP)
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: \${{ env.RUST_VERSION }}
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: desktop-ru-windows-x64
+
+      - name: Install WiX v5
+        shell: bash
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          echo "$USERPROFILE/.dotnet/tools" >> "$GITHUB_PATH"
+          "$USERPROFILE/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext/5.0.2 WixToolset.Util.wixext/5.0.2
+
+      - name: Build and package Windows desktop
+        shell: pwsh
+        run: ./packaging/windows/package.ps1
+
+      - name: List packages
+        shell: bash
+        run: ls -lh dist
+
+      - name: Upload Windows packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProCraft-RU-Windows-x64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  linux:
+    name: Linux x86_64 (AppImage + DEB + tar.gz)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: \${{ env.RUST_VERSION }}
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: desktop-ru-linux-x86_64
+
+      - name: Install packaging tools
+        run: |
+          curl -fsSL https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_Linux_x86_64.tar.gz | tar -xz -C "$RUNNER_TEMP" nfpm
+          sudo install -m755 "$RUNNER_TEMP/nfpm" /usr/local/bin/nfpm
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends desktop-file-utils
+
+      - name: Build and package Linux desktop
+        run: bash packaging/linux/package.sh
+
+      - name: List packages
+        run: ls -lh dist
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProCraft-RU-Linux-x86_64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
