@@ -823,7 +823,14 @@ impl Actions {
             look.icon(ui, icon, pos2(cell.center().x, cell.top() + 24.0), 50.0, tint);
             let ink = if lit { argb(pc::TEXT) } else { argb(TAB_IDLE) };
             let at = pos2(cell.center().x, cell.top() + 41.0);
-            text(ui.painter(), at, Align2::CENTER_TOP, label, 12.0, Weight::Medium, ink);
+            let label = crate::translation::tab_label(label);
+            let label_width = crate::look::text_width(ui.painter(), label.as_ref(), 12.0, Weight::Medium);
+            let font_size = if label_width > cell.width() - 4.0 {
+                (12.0 * (cell.width() - 4.0) / label_width).max(9.0)
+            } else {
+                12.0
+            };
+            text(ui.painter(), at, Align2::CENTER_TOP, label.as_ref(), font_size, Weight::Medium, ink);
         }
         let list = Rect::from_min_max(
             pos2(body.left() + 12.0, tabs_top + 60.0 + 20.0),
