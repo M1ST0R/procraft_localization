@@ -19,6 +19,8 @@ After a successful run, download these artifacts:
 
 Desktop artifacts are kept by GitHub for 30 days. Version-tagged runs of `.github/workflows/release.yml` can attach Windows and Linux desktop packages to a versioned GitHub Release.
 
+**Install alongside official ProCraft:** use the Windows portable ZIP or Linux AppImage / tar.gz. The MSI and `.deb` retain upstream package identities (`ProCraft` UpgradeCode on Windows and package name `procraft` on Linux), so installing either may replace the corresponding official desktop installation.
+
 The desktop translation is maintained separately in `desktop/src/translation.rs` and is applied through the shared egui text-rendering helpers. It currently covers common interface labels, canvas information, layers, colours, settings, brush libraries and Brush Studio. Unrecognised or not-yet-translated strings intentionally remain in English.
 
 
