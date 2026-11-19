@@ -426,7 +426,7 @@ pub(crate) fn layer_opacity_bar(ctx: &egui::Context, opacity: f32, top: f32) {
             painter.rect_filled(band, 0, argb(MODE_BAR));
             let ink = argb(MODE_TEXT);
             let amount = format!("{}%", (opacity * 100.0).round() as i32);
-            let measure = |s: &str, size: f32, w: Weight| painter.layout_no_wrap(s.into(), w.font(size), ink).size().x;
+            let measure = |s: &str, size: f32, w: Weight| crate::look::text_width(painter, s, size, w);
             let width = 33.0 + measure("Opacity", 17.0, Weight::Bold) + 3.0 + measure(&amount, 14.0, Weight::Regular);
             let x = band.center().x - width / 2.0;
             opacity_glyph(painter, pos2(x + 16.5, band.center().y), ink, argb(MODE_BAR));
