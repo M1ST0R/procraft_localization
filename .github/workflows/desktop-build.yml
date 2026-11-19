@@ -49,6 +49,9 @@ jobs:
         with:
           key: desktop-ru-windows-x64
 
+      - name: Test desktop translations
+        run: cargo test -p procraft-desktop translation::tests
+
       - name: Install WiX v5
         shell: bash
         run: |
@@ -88,6 +91,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: desktop-ru-linux-x86_64
+
+      - name: Test desktop translations
+        run: cargo test -p procraft-desktop translation::tests
 
       - name: Install packaging tools
         run: |
