@@ -1,14 +1,15 @@
-## Russian Android community build (this branch)
+## Russian community builds (this branch)
 
-This branch is a **community-maintained Russian-language Android build** of ProCraft. It is intended for Russian-speaking users who want to use the Android app before an official upstream localization is available. It is separate from the proposal for a reusable Community Language Packs system on [the main branch](https://github.com/M1ST0R/procraft_localization/tree/main).
+This branch is a **community-maintained Russian-language build** of ProCraft for Android, Windows and Linux. It is intended for Russian-speaking users who want a localized desktop and Android app before an official upstream localization is available. It is separate from the proposal for a reusable Community Language Packs system on [the main branch](https://github.com/M1ST0R/procraft_localization/tree/main).
 
 ### What this project changes
 
-- Adds a Russian UI translation layer at the Android Jetpack Compose text-rendering boundary. This also catches many labels supplied by the shared Rust core, such as tool names, adjustment names, blend modes and quick actions.
-- Translates built-in brush names and common interface labels while preserving formatting for annotated text.
-- Keeps user-created artwork names and plugin-provided text unchanged unless they exactly match a built-in UI string.
-- Uses a separate Android application ID, `io.github.artcraftandroid.procraft.ru`, so the community build can coexist with the official ProCraft app.
-- Builds an ARM64 release APK with GitHub Actions and signs it with a persistent community keystore.
+- Adds a Russian UI translation layer to the Android Jetpack Compose text-rendering boundary.
+- Adds a separate Russian dictionary to the desktop `egui` text-rendering boundary, covering the main menus, canvas information, layers, colours, settings, brush library and Brush Studio.
+- Translates built-in brush names and common interface labels while preserving formatting; unknown or not-yet-translated text falls back to English.
+- Keeps user-created artwork names and arbitrary plugin-provided text unchanged unless they match a built-in UI string.
+- Uses a separate Android application ID, `io.github.artcraftandroid.procraft.ru`, so the Android community build can coexist with the official ProCraft app.
+- Builds Android APKs and Windows/Linux desktop packages with separate GitHub Actions workflows.
 - Tracks upstream **ProCraft v0.0.7-beta**: 394 new built-in brushes, the dedicated Krita brush engine and studio, consolidated plugins, updated icons, and upstream performance and stability fixes.
 
 ### Install the Russian build
@@ -19,7 +20,16 @@ This branch is a **community-maintained Russian-language Android build** of ProC
 4. Extract the ZIP and install `ProCraft-RU-Android-arm64.apk` on an ARM64 Android tablet.
 5. Allow installation from the browser or file manager if Android asks.
 
-The Actions artifact is temporary (currently retained for 30 days). For a permanent download, use the repository's **Releases** page once a versioned release has been published. The Russian build has its own package ID and is installed alongside, rather than over, the official app.
+The Actions artifact is temporary (currently retained for 30 days). For a permanent download, use the repository's **Releases** page once a versioned release has been published. The Android Russian build has its own package ID and is installed alongside, rather than over, the official app.
+
+### Build desktop versions
+
+The [Desktop RU builds workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Atranslation%2Frussian) runs automatically when desktop source, the shared engine, plugins, assets or packaging files change on this branch. It can also be started manually from **Actions → Desktop RU builds → Run workflow**.
+
+- **Windows x64** — download the `ProCraft-RU-Windows-x64` artifact. It contains an `.msi` installer and a portable `.zip` with `ProCraft.exe` and the required DirectX Shader Compiler DLLs.
+- **Linux x86_64** — download the `ProCraft-RU-Linux-x86_64` artifact. It contains an `.AppImage`, a `.deb` package and a `.tar.gz` archive.
+- Desktop artifacts are retained for 30 days. Versioned releases can also include the desktop packages through the existing [Release workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/release.yml).
+
 
 ### Translation status and known limitations
 
@@ -29,8 +39,9 @@ Russian phrases are often longer than their English originals. Some buttons, tab
 
 ### Updating the Russian build
 
-- **New community translation build:** when a commit is pushed to `translation/russian`, GitHub Actions builds a new APK automatically. Download the artifact from the newest successful run and install it over the previous community build.
-- **Manual build:** open **Actions → Android APK → Run workflow** and select `translation/russian`.
+- **New community translation build:** when a commit is pushed to `translation/russian`, GitHub Actions builds a new Android APK and, when desktop source or packaging files change, new Windows/Linux packages.
+- **Manual Android build:** open **Actions → Android APK → Run workflow** and select `translation/russian`.
+- **Manual desktop build:** open **Actions → Desktop RU builds → Run workflow**.
 - **Upstream ProCraft update:** follow [the upstream merge and signing instructions](docs/UPSTREAM_AND_ANDROID_BUILDS.md). Merge upstream changes into this branch; do not replace this branch with a fresh upstream checkout.
 - Keep the same package ID and signing key for every update. Android uses the matching signing certificate and a higher version code to install updates without uninstalling the existing app.
 
@@ -46,7 +57,7 @@ For clipped text, include the device model, screen resolution, orientation and w
 
 ---
 
-> **Russian Android community build:** this branch carries the Russian interface variant for personal use. It is kept separate from the community-localization proposal on [main](https://github.com/M1ST0R/procraft_localization/tree/main). APKs are built by [GitHub Actions](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml); see [build and update notes](docs/UPSTREAM_AND_ANDROID_BUILDS.md).
+> **Russian community build:** this branch carries the Russian interface variants for Android and desktop. It is kept separate from the community-localization proposal on [main](https://github.com/M1ST0R/procraft_localization/tree/main). Android APKs and desktop packages are built by [GitHub Actions](https://github.com/M1ST0R/procraft_localization/actions); see [build and update notes](docs/UPSTREAM_AND_ANDROID_BUILDS.md).
 
 <p align="center">
   <img src="assets/app-icon/procraft-1024.png" alt="ProCraft's app icon: a paintbrush in a warm-to-cool blend on a black tile" width="128">
