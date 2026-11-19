@@ -72,12 +72,18 @@ pub fn show(ctx: &egui::Context, look: &mut Look, can_paste: bool) -> Option<Cho
             let ink = if enabled { argb(BUTTON_INK) } else { argb(BUTTON_INK).gamma_multiply(0.4) };
             // the icon 28 across, centred 17 down; the name from 33
             look.icon(ui, icon, pos2(rect.center().x, rect.top() + 17.0), 28.0, ink);
+            let label_width = crate::look::text_width(ui.painter(), label, 13.0, Weight::Regular);
+            let font_size = if label_width > rect.width() - 6.0 {
+                (13.0 * (rect.width() - 6.0) / label_width).max(9.0)
+            } else {
+                13.0
+            };
             text(
                 ui.painter(),
                 pos2(rect.center().x, rect.top() + 33.0),
                 Align2::CENTER_TOP,
                 label,
-                13.0,
+                font_size,
                 Weight::Regular,
                 ink,
             );
