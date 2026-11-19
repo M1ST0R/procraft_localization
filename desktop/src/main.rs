@@ -59,6 +59,7 @@ mod stroke_sound;
 mod studio;
 mod system_clipboard;
 mod text;
+mod translation;
 mod timelapse;
 mod tool_header;
 mod touch_keyboard;
