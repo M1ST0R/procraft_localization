@@ -1427,7 +1427,15 @@ impl Studio {
                         ui.painter().rect_filled(cell, 15, argb(pc::ACCENT));
                     }
                     let ink = if on { Color32::WHITE } else { argb(DIM) };
-                    let galley = ui.painter().layout_no_wrap((*label).to_owned(), Weight::Regular.font(13.0), ink);
+                    let translated = crate::translation::translate(label).into_owned();
+                    let base_width = crate::look::text_width(ui.painter(), label, 13.0, Weight::Regular);
+                    let max_text_width = (cell.width() - 40.0).max(1.0);
+                    let font_size = if base_width > max_text_width {
+                        (13.0 * max_text_width / base_width).max(9.0)
+                    } else {
+                        13.0
+                    };
+                    let galley = ui.painter().layout_no_wrap(translated, Weight::Regular.font(font_size), ink);
                     let left = cell.center().x - (30.0 + 2.0 + galley.size().x) / 2.0;
                     look.icon(ui, icon, pos2(left + 15.0, cell.center().y), 30.0, ink);
                     ui.painter().galley(pos2(left + 32.0, cell.center().y - galley.size().y / 2.0), galley, ink);
@@ -1655,8 +1663,8 @@ impl Studio {
         let response = ui.interact(area, ui.scope_id().with("pad"), Sense::click_and_drag());
         self.pad_input(ui, &response, area);
         // Drawing Pad
-        let galley =
-            ui.painter().layout_no_wrap("Drawing Pad".to_owned(), Weight::SemiBold.font(16.0), argb(BUTTON_INK));
+        let drawing_pad = crate::translation::translate("Drawing Pad").into_owned();
+        let galley = ui.painter().layout_no_wrap(drawing_pad, Weight::SemiBold.font(16.0), argb(BUTTON_INK));
         let button =
             Rect::from_min_size(area.min + vec2(21.0, 21.0), vec2(9.0 + 26.0 + 6.0 + galley.size().x + 13.0, 43.0));
         ui.painter().rect_filled(button, 21.5, argb(BUTTON));
@@ -1679,8 +1687,8 @@ impl Studio {
         text(ui.painter(), cancel.center(), Align2::CENTER_CENTER, "Cancel", 17.0, Weight::Regular, argb(BUTTON_INK));
         // a plugin's: the brush set at random
         if randomises {
-            let galley =
-                ui.painter().layout_no_wrap("Randomise".to_owned(), Weight::Regular.font(17.0), argb(BUTTON_INK));
+            let randomise = crate::translation::translate("Randomise").into_owned();
+            let galley = ui.painter().layout_no_wrap(randomise, Weight::Regular.font(17.0), argb(BUTTON_INK));
             let width = galley.size().x + 32.0;
             let button = Rect::from_min_size(pos2(cancel.left() - 13.0 - width, cancel.top()), vec2(width, 43.0));
             ui.painter().rect_filled(button, 21.5, argb(BUTTON));
@@ -2078,6 +2086,7 @@ fn studio_slider(
     } else {
         argb(VALUE_OFF)
     };
+    let shown = crate::translation::translate(&shown).into_owned();
     let galley = ui.painter().layout_no_wrap(shown, Weight::Regular.font(16.0), ink);
     let pill_w = (galley.size().x + 26.0).max(73.0);
     let pill = Rect::from_min_size(pos2(line.right() - pill_w, line.top()), vec2(pill_w, 28.0));
@@ -2096,7 +2105,7 @@ fn studio_slider(
     let room = pill.left() - 12.0 - line.left();
     let mut size = 17.0;
     while size > 17.0 * 0.6
-        && ui.painter().layout_no_wrap(label.to_owned(), Weight::Regular.font(size), Color32::WHITE).size().x > room
+        && crate::look::text_width(ui.painter(), label, size, Weight::Regular) > room
     {
         size -= 0.5;
     }

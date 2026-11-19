@@ -160,7 +160,7 @@ impl Liquify {
         {
             let b = cell(k);
             ui.painter().rect_filled(b, 20, fill);
-            let words = ui.painter().layout_no_wrap(label.into(), Weight::Regular.font(15.0), tint).size().x;
+            let words = crate::look::text_width(ui.painter(), label, 15.0, Weight::Regular);
             let left = b.center().x - (size + gap + words) / 2.0;
             look.icon(ui, glyph, pos2(left + size / 2.0, b.center().y), size, tint);
             text(
@@ -300,12 +300,18 @@ fn button(
 ) -> bool {
     let cell = Rect::from_min_size(at, vec2(75.0, 60.0));
     look.icon(ui, glyph, pos2(cell.center().x, cell.top() + 9.0), size, argb(ink));
+    let label_width = crate::look::text_width(ui.painter(), label, 13.0, Weight::Regular);
+    let font_size = if label_width > cell.width() - 6.0 {
+        (13.0 * (cell.width() - 6.0) / label_width).max(9.0)
+    } else {
+        13.0
+    };
     text(
         ui.painter(),
         pos2(cell.center().x, cell.top() + 22.0),
         Align2::CENTER_TOP,
         label,
-        13.0,
+        font_size,
         Weight::Regular,
         argb(words),
     );

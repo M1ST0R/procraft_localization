@@ -13,6 +13,31 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "New Canvas" => "Новый холст",
         "Canvas" => "Холст",
         "Canvas Info" => "Сведения о холсте",
+        "Randomise" => "Случайно",
+        "Exporting" => "Экспорт",
+        "Max Resolution" => "Максимальное разрешение",
+        "Web Ready" => "Для веба",
+        "Artifact" => "Артефакт",
+        "Wave" => "Волна",
+        "Signal" => "Сигнал",
+        "Diverge" => "Расхождение",
+        "Clouds" => "Облака",
+        "Billows" => "Завихрения",
+        "Ridges" => "Гребни",
+        "Newspaper" => "Газета",
+        "Displace" => "Смещение",
+        "Positional" => "Позиционный",
+        "Directional" => "Направленный",
+        "Twirl Right" => "Завихрение вправо",
+        "Twirl Left" => "Завихрение влево",
+        "Push" => "Сдвиг",
+        "Pinch" => "Сжатие",
+        "Expand" => "Раздувание",
+        "Crystals" => "Кристаллы",
+        "Edge" => "Край",
+        "Reconstruct" => "Восстановить",
+        "Liquify Mode" => "Режим пластики",
+        "Strength" => "Сила",
         "Actions" => "Действия",
         "Adjustments" => "Коррекция",
         "Video" => "Видео",
@@ -802,6 +827,22 @@ mod tests {
         assert_eq!(super::tab_label("Share"), "Экспорт");
         assert_eq!(super::tab_label("Prefs"), "Настр.");
         assert_eq!(super::tab_label("Help"), "Справка");
+    }
+
+    #[test]
+    fn desktop_tool_headers_and_studio_controls_are_translated() {
+        for (source, expected) in [
+            ("Drawing Pad", "Поле рисования"),
+            ("Randomise", "Случайно"),
+            ("Exporting", "Экспорт"),
+            ("Max Resolution", "Максимальное разрешение"),
+            ("Web Ready", "Для веба"),
+            ("Twirl Right", "Завихрение вправо"),
+            ("Twirl Left", "Завихрение влево"),
+            ("Reconstruct", "Восстановить"),
+        ] {
+            assert_eq!(translate(source), expected, "{source}");
+        }
     }
 
     #[test]

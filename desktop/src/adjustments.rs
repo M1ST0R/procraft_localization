@@ -391,7 +391,7 @@ fn bar_in(ui: &Ui, look: &mut Look, shown: &AdjustShown, a: Adjustment, band: Re
     let swiped = procraft_core::adjustment_swiped(a);
     let paintable = procraft_core::adjustment_paintable(a);
     let amount = format!("{}%", (shown.amount * 100.0).round() as i32);
-    let measure = |s: &str, size: f32, w: Weight| painter.layout_no_wrap(s.into(), w.font(size), ink).size().x;
+    let measure = |s: &str, size: f32, w: Weight| crate::look::text_width(painter, s, size, w);
     let width = 33.0
         + measure(&label, 17.0, Weight::Bold)
         + if swiped { 3.0 + measure(&amount, 14.0, Weight::Regular) } else { 0.0 }
