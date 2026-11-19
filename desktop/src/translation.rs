@@ -13,6 +13,34 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "New Canvas" => "Новый холст",
         "Canvas" => "Холст",
         "Canvas Info" => "Сведения о холсте",
+        "Actions" => "Действия",
+        "Adjustments" => "Коррекция",
+        "Video" => "Видео",
+        "Prefs" => "Настройки",
+        "Help" => "Справка",
+        "Cut" => "Вырезать",
+        "Copy" => "Копировать",
+        "Paste" => "Вставить",
+        "Copy All" => "Копировать всё",
+        "Cut & Paste" => "Вырезать и вставить",
+        "Duplicate" => "Дублировать",
+        "Select" => "Выбрать",
+        "Photo" => "Фото",
+        "Plugins" => "Плагины",
+        "Disc" => "Диск",
+        "Classic" => "Классика",
+        "Harmony" => "Гармония",
+        "Complementary" => "Дополнительная",
+        "Analogous" => "Аналоговая",
+        "Triadic" => "Триадная",
+        "Tetradic" => "Тетрадная",
+        "Tap + to start a new canvas" => "Нажмите «+», чтобы создать холст",
+        "QuickMenu" => "Быстрое меню",
+        "Licences" => "Лицензии",
+        "Lock" => "Заблокировать",
+        "Unlock" => "Разблокировать",
+        "Max" => "Макс.",
+        "Screen" => "Экран",
         "About this artwork" => "Об этой работе",
         "Dimensions" => "Размеры",
         "Layers" => "Слои",
@@ -613,6 +641,20 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
     Cow::Borrowed(translated)
 }
 
+/// Short labels for the six narrow tabs in the Actions panel.
+/// These are deliberately shorter than the full translations so they fit without touching.
+pub fn tab_label<'a>(source: &'a str) -> Cow<'a, str> {
+    match source {
+        "Add" => Cow::Borrowed("Добавить"),
+        "Canvas" => Cow::Borrowed("Холст"),
+        "Share" => Cow::Borrowed("Экспорт"),
+        "Video" => Cow::Borrowed("Видео"),
+        "Prefs" => Cow::Borrowed("Настр."),
+        "Help" => Cow::Borrowed("Справка"),
+        _ => translate(source),
+    }
+}
+
 fn translate_lowercase_heading(source: &str) -> Option<&'static str> {
     Some(match source {
         "accessibility" => "СПЕЦИАЛЬНЫЕ ВОЗМОЖНОСТИ",
@@ -730,6 +772,36 @@ mod tests {
         assert_eq!(translate("Maximum layers"), "Максимальное количество слоёв");
         assert_eq!(translate("Pixel width"), "Ширина в пикселях");
         assert_eq!(translate("6 of 230"), "6 из 230");
+    }
+
+    #[test]
+    fn desktop_navigation_and_tool_labels_are_translated() {
+        for (source, expected) in [
+            ("Actions", "Действия"),
+            ("Adjustments", "Коррекция"),
+            ("Video", "Видео"),
+            ("Prefs", "Настройки"),
+            ("Help", "Справка"),
+            ("Cut", "Вырезать"),
+            ("Copy", "Копировать"),
+            ("Disc", "Диск"),
+            ("Classic", "Классика"),
+            ("Harmony", "Гармония"),
+            ("Complementary", "Дополнительная"),
+            ("Photo", "Фото"),
+            ("Select", "Выбрать"),
+        ] {
+            assert_eq!(translate(source), expected, "{source}");
+        }
+        assert_eq!(translate("Tap + to start a new canvas"), "Нажмите «+», чтобы создать холст");
+        assert_eq!(translate("Made by "), "Автор: ");
+    }
+
+    #[test]
+    fn narrow_actions_tabs_use_compact_russian_labels() {
+        assert_eq!(super::tab_label("Share"), "Экспорт");
+        assert_eq!(super::tab_label("Prefs"), "Настр.");
+        assert_eq!(super::tab_label("Help"), "Справка");
     }
 
     #[test]
