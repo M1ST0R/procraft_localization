@@ -594,6 +594,12 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Color models" => "Цветовые модели",
         "Save new selection" => "Сохранить новое выделение",
         "Save selection" => "Сохранить выделение",
+        "This file could not be read." => "Не удалось прочитать этот файл.",
+        "Brushes will be added to the library when a canvas opens." => "Кисти будут добавлены в библиотеку при открытии холста.",
+        "Can't share" => "Не удалось поделиться",
+        "Can't keep the brushes" => "Не удалось сохранить кисти",
+        "The brush library couldn't be kept. The disk may be full: brushes brought in or changed since are lost when ProCraft closes, unless some room is made." => "Не удалось сохранить библиотеку кистей. Возможно, на диске закончилось место: добавленные или изменённые кисти будут потеряны после закрытия ProCraft, если не освободить место.",
+        "Sounds" => "Звуки",
         _ => {
             if source == source.to_uppercase() && source.chars().any(char::is_alphabetic) {
                 let lower = source.to_ascii_lowercase();
@@ -616,6 +622,9 @@ fn translate_lowercase_heading(source: &str) -> Option<&'static str> {
 }
 
 fn translate_dynamic<'a>(source: &'a str) -> Cow<'a, str> {
+    if let Some(rest) = source.strip_prefix("Share ") {
+        return Cow::Owned(format!("Поделиться {}", translate(rest).as_ref()));
+    }
     if let Some(rest) = source.strip_prefix("Version ") {
         return Cow::Owned(format!("Версия {rest}"));
     }
