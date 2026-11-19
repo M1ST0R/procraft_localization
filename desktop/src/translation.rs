@@ -507,6 +507,93 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "MP4" => "MP4",
         "GIF" => "GIF",
         "No space" => "Недостаточно места",
+        "Insert a private file" => "Вставить приватный файл",
+        "Insert a private photo" => "Вставить приватное фото",
+        "Take a private photo" => "Сделать приватное фото",
+        "Relative to canvas" => "Относительно холста",
+        "Relative to screen" => "Относительно экрана",
+        "Nothing imported yet. Import a .procraft-plugin file to add one." => "Пока ничего не импортировано. Импортируйте файл .procraft-plugin, чтобы добавить плагин.",
+        "This sound couldn't be used. On the computer, pick a WAV file." => "Не удалось использовать этот звук. Выберите WAV-файл на компьютере.",
+        "This couldn't be removed." => "Не удалось удалить.",
+        "Those meshes aren't in the same texture set" => "Эти сетки не входят в один набор текстур.",
+        "Delete shared layer?" => "Удалить общий слой?",
+        "The photo couldn't be kept." => "Не удалось сохранить фотографию.",
+        "The signature couldn't be kept." => "Не удалось сохранить подпись.",
+        "clear signature" => "очистить подпись",
+        "author photo" => "фото автора",
+        "Low quality" => "Низкое качество",
+        "Good quality" => "Хорошее качество",
+        "Studio quality" => "Студийное качество",
+        "Brush maker" => "Автор кисти",
+        "Edit source" => "Изменить источник",
+        "Source" => "Источник",
+        "Tip" => "Наконечник",
+        "Basic" => "Основной",
+        "Both" => "Оба",
+        "Bristles" => "Щетина",
+        "Circles" => "Круги",
+        "Coverage" => "Покрытие",
+        "Crosshatching" => "Перекрёстная штриховка",
+        "Dabs" => "Отпечатки",
+        "Deform" => "Деформация",
+        "Density" => "Плотность",
+        "Diameter" => "Диаметр",
+        "Direction" => "Направление",
+        "Down" => "Вниз",
+        "Drag" => "Перетаскивание",
+        "Draws" => "Рисует",
+        "Dulling" => "Приглушение",
+        "Early" => "Ранний",
+        "Fade" => "Затухание",
+        "Falling" => "Уменьшение",
+        "Filter" => "Фильтр",
+        "Gaussian" => "Гауссовский",
+        "Gradient" => "Градиент",
+        "Gravity" => "Гравитация",
+        "Grid" => "Сетка",
+        "Grow" => "Увеличить",
+        "Half-size" => "Половинный размер",
+        "Hatching" => "Штриховка",
+        "Height" => "Высота",
+        "Ink" => "Чернила",
+        "Inverted" => "Инвертированный",
+        "Iterations" => "Итерации",
+        "Late" => "Поздний",
+        "Line" => "Линия",
+        "Lines" => "Линии",
+        "Magnetify" => "Магнитное притяжение",
+        "Mass" => "Масса",
+        "Mirror" => "Отражение",
+        "Mix" => "Смешивание",
+        "Opaque" => "Непрозрачность",
+        "Particles" => "Частицы",
+        "Posterize" => "Постеризация",
+        "Proportional" => "С сохранением пропорций",
+        "Radius" => "Радиус",
+        "Random" => "Случайно",
+        "Randomness" => "Случайность",
+        "Ratio" => "Соотношение",
+        "Separation" => "Интервал",
+        "Shear" => "Сдвиг",
+        "Shrink" => "Уменьшить",
+        "Sketch" => "Эскиз",
+        "Smearing" => "Размазывание",
+        "Smooth" => "Сглаживание",
+        "Spikes" => "Шипы",
+        "Straight" => "Прямая",
+        "Stroke" => "Мазок",
+        "Texture" => "Текстура",
+        "Texturing" => "Текстурирование",
+        "Turn" => "Поворот",
+        "Wash" => "Размывка",
+        "Action" => "Действие",
+        "Along" => "Вдоль",
+        "Anti Aliasing" => "Сглаживание краёв",
+        "Colour" => "Цвет",
+        "Color model" => "Цветовая модель",
+        "Color models" => "Цветовые модели",
+        "Save new selection" => "Сохранить новое выделение",
+        "Save selection" => "Сохранить выделение",
         _ => {
             if source == source.to_uppercase() && source.chars().any(char::is_alphabetic) {
                 let lower = source.to_ascii_lowercase();
@@ -581,6 +668,23 @@ fn translate_dynamic<'a>(source: &'a str) -> Cow<'a, str> {
     }
     if source.starts_with("Selection Threshold ") {
         return Cow::Owned(format!("Порог выделения {}", source.trim_start_matches("Selection Threshold ")));
+    }
+    if let Some(rest) = source.strip_prefix("This canvas holds at most ") {
+        if let Some(count) = rest.strip_suffix(" layers.") {
+            if count.chars().all(|c| c.is_ascii_digit()) {
+                return Cow::Owned(format!("На этом холсте можно создать не более {count} слоёв."));
+            }
+        }
+    }
+    if let Some(rest) = source.strip_prefix("Delete “") {
+        if let Some(name) = rest.strip_suffix("”?") {
+            return Cow::Owned(format!("Удалить «{name}»?"));
+        }
+    }
+    if let Some(number) = source.strip_prefix("Selection ") {
+        if !number.is_empty() && number.chars().all(|c| c.is_ascii_digit()) {
+            return Cow::Owned(format!("Выделение {number}"));
+        }
     }
     if source.starts_with("Threshold ") {
         return Cow::Owned(format!("Порог {}", source.trim_start_matches("Threshold ")));
