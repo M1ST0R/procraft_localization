@@ -20,7 +20,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-ru-${{ github.ref }}
+  group: desktop-ru-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 env:
