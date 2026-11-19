@@ -1,4 +1,4 @@
-# Maintaining the Russian Android build
+# Maintaining the Russian community builds
 
 ## Build an APK
 
@@ -7,6 +7,20 @@ The workflow `.github/workflows/android-apk.yml` builds an ARM64 release APK whe
 
 After a successful run, download **ProCraft-RU-Android-arm64** from the run's Artifacts section.
 GitHub keeps this artifact for 30 days.
+
+## Build desktop packages
+
+The workflow `.github/workflows/desktop-build.yml` builds the desktop app for Windows x64 and Linux x86_64 when relevant desktop, engine, plugin, asset or packaging files change on `translation/russian`. It can also be started manually from **Actions → Desktop RU builds → Run workflow**.
+
+After a successful run, download these artifacts:
+
+- **ProCraft-RU-Windows-x64** — an `.msi` installer and a portable `.zip`. The ZIP contains `ProCraft.exe`, the required DirectX Shader Compiler DLLs and licence notices; extract it before launching the executable.
+- **ProCraft-RU-Linux-x86_64** — an `.AppImage`, a `.deb` package and a `.tar.gz` archive. The packages are built on Ubuntu 22.04 for x86_64 Linux systems with glibc 2.35 or newer.
+
+Desktop artifacts are kept by GitHub for 30 days. Version-tagged runs of `.github/workflows/release.yml` can attach Windows and Linux desktop packages to a versioned GitHub Release.
+
+The desktop translation is maintained separately in `desktop/src/translation.rs` and is applied through the shared egui text-rendering helpers. It currently covers common interface labels, canvas information, layers, colours, settings, brush libraries and Brush Studio. Unrecognised or not-yet-translated strings intentionally remain in English.
+
 
 The community build uses the package ID
 `io.github.artcraftandroid.procraft.ru`, so it can be installed alongside the official app.
