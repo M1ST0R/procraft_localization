@@ -100,7 +100,8 @@ pub fn app_dir() -> PathBuf {
 
 /// Shows a passing message with an OK button.
 pub fn say(text: &str) {
-    message().set_level(MessageLevel::Info).set_title("ProCraft").set_description(text).show();
+    let text = crate::translation::translate(text);
+    message().set_level(MessageLevel::Info).set_title("ProCraft").set_description(text.as_ref()).show();
 }
 
 /// Whether the file at `path` holds brushes, by its name (a zip by what it holds): ours (a brush,
@@ -161,18 +162,20 @@ pub fn take_pending_brushes() -> Vec<(Vec<u8>, String)> {
 /// Shows a message with an OK button; it reaches the log and the terminal as well, for a system
 /// with no way of showing it.
 pub fn tell(title: &str, text: &str) {
+    let title = crate::translation::translate(title);
+    let text = crate::translation::translate(text);
     log::error!("{title}: {text}");
     eprintln!("{title}: {text}");
     if cfg!(target_os = "linux") && !has_program("zenity") {
         // what shows the app's dialogs on Linux isn't there: the first that is of the others
-        let shown = other_dialogs(title, text).iter().any(|(program, args)| {
+        let shown = other_dialogs(title.as_ref(), text.as_ref()).iter().any(|(program, args)| {
             std::process::Command::new(program).args(args).status().is_ok_and(|done| done.success())
         });
         if shown {
             return;
         }
     }
-    message().set_level(MessageLevel::Error).set_title(title).set_description(text).show();
+    message().set_level(MessageLevel::Error).set_title(title.as_ref()).set_description(text.as_ref()).show();
 }
 
 /// Whether `program` can be run here.
