@@ -1189,7 +1189,7 @@ impl Gallery {
             }
         }
         let plus = Rect::from_min_size(pos2(screen.right() - 20.0 - 44.0, top + 10.0), vec2(44.0, 45.0));
-        let labels = [("Select", 69.0), ("Import", 71.0), ("Photo", 66.0)];
+        let labels: [(&str, f32); 3] = [("Select", 69.0), ("Import", 71.0), ("Photo", 66.0)];
         let widths = labels.map(|(label, minimum)| {
             minimum.max(crate::look::text_width(painter, label, 16.0, Weight::Regular) + 24.0)
         });
