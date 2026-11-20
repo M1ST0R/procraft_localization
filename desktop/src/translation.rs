@@ -844,8 +844,8 @@ mod tests {
             ("Backspace", "Удалить"), ("Next", "Далее"), ("Lossless", "Без потерь"),
             ("Automatic", "Авто"), ("Freehand", "От руки"), ("Rectangle", "Прямоуг."),
             ("Ellipse", "Эллипс"), ("Invert", "Инверт."), ("Feather", "Растуш."),
-            ("Save & Load", "Сохран./загр."), ("Color Fill", "Заливка"),
-            ("Flip Horizontal", "Горизонт."), ("Flip Vertical", "Вертик."),
+            ("Save & Load", "Сохр."), ("Color Fill", "Залив."),
+            ("Flip Horizontal", "Гориз."), ("Flip Vertical", "Вертик."),
         ] { assert_eq!(translate(source), expected, "{source}"); }
     }
 
