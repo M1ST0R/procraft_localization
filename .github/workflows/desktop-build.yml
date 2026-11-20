@@ -51,6 +51,9 @@ jobs:
 
       - name: Test desktop translations
         run: cargo test -p procraft-desktop translation::tests
+ 
+      - name: Test PNG export helpers
+        run: cargo test -p procraft-core --lib project::signature_tests
 
       - name: Install WiX v5
         shell: bash
@@ -94,6 +97,9 @@ jobs:
 
       - name: Test desktop translations
         run: cargo test -p procraft-desktop translation::tests
+ 
+      - name: Test PNG export helpers
+        run: cargo test -p procraft-core --lib project::signature_tests
 
       - name: Install packaging tools
         run: |
