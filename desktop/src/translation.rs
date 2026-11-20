@@ -128,6 +128,12 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Invert" => "Инверт.",
         "Feather" => "Растуш.",
         "Snapping" => "Привязка",
+        "Freeform" => "Свободно",
+        "Uniform" => "Равномерно",
+        "Distort" => "Искажение",
+        "Warp" => "Деформация",
+        "Fit to Canvas" => "Вписать",
+        "Advanced Mesh" => "Сетка",
         "Close" => "Закрыть",
         "Back" => "Назад",
         "Save" => "Сохранить",
@@ -838,6 +844,15 @@ mod tests {
         }
         assert_eq!(translate("Tap + to start a new canvas"), "Нажмите «+», чтобы создать холст");
         assert_eq!(translate("Made by "), "Автор: ");
+        for (source, expected) in [
+            ("Snapping", "Привязка"), ("Width", "Ширина"), ("Millimeters", "Миллиметры"),
+            ("Centimeters", "Сантиметры"), ("Inches", "Дюймы"), ("Pixels", "Пиксели"),
+            ("Backspace", "Удалить"), ("Next", "Далее"), ("Lossless", "Без потерь"),
+            ("Automatic", "Авто"), ("Freehand", "От руки"), ("Rectangle", "Прямоуг."),
+            ("Ellipse", "Эллипс"), ("Invert", "Инверт."), ("Feather", "Растуш."),
+            ("Save & Load", "Сохран./загр."), ("Color Fill", "Заливка"),
+            ("Flip Horizontal", "Горизонт."), ("Flip Vertical", "Вертик."),
+        ] { assert_eq!(translate(source), expected, "{source}"); }
     }
 
     #[test]
