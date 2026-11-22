@@ -386,7 +386,7 @@ private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (active) "●" else "○", color = if (active) Blue else PackDim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
+        Text(if (active) "●" else "○", color = if (active) PackBlue else PackDim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
         Text(label, color = PackInk, fontSize = 15.sp)
     }
 }
@@ -702,7 +702,7 @@ private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (active) "●" else "○", color = if (active) Blue else PackDim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
+        Text(if (active) "●" else "○", color = if (active) PackBlue else PackDim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
         Text(label, color = PackInk, fontSize = 15.sp)
     }
 }
