@@ -148,6 +148,40 @@ fn save_pack(pack: &LanguagePack) -> Result<(), String> {
     std::fs::write(pack_path(&pack.id), content).map_err(|e| e.to_string())
 }
 
+fn export_pack(pack: &LanguagePack, reveal: bool) -> Result<(), String> {
+    let Some(path) = rfd::FileDialog::new()
+        .add_filter("ProCraft language pack", &["procraft-lang"])
+        .set_file_name(format!("{}.procraft-lang", pack.id))
+        .save_file()
+    else {
+        return Ok(());
+    };
+    let content = serde_json::to_string_pretty(pack).map_err(|e| e.to_string())?;
+    std::fs::write(&path, content).map_err(|e| e.to_string())?;
+    if reveal {
+        reveal_pack(&path);
+    }
+    Ok(())
+}
+
+fn reveal_pack(path: &Path) {
+    #[cfg(windows)]
+    {
+        let target = format!("/select,{}", path.display());
+        let _ = std::process::Command::new("explorer").arg(target).spawn();
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open").arg("-R").arg(path).spawn();
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        if let Some(parent) = path.parent() {
+            let _ = std::process::Command::new("xdg-open").arg(parent).spawn();
+        }
+    }
+}
+
 fn installed() -> Vec<LanguagePack> {
     let Ok(entries) = std::fs::read_dir(packs_dir()) else { return Vec::new() };
     let mut packs: Vec<LanguagePack> = entries.filter_map(Result::ok).filter_map(|entry| {
@@ -381,11 +415,15 @@ pub fn show(ctx: &egui::Context) {
                         }
                         if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Export"))).clicked() {
                             if let Some(pack) = selected.as_ref() {
-                                if let Some(path) = rfd::FileDialog::new().add_filter("ProCraft language pack", &["procraft-lang"])
-                                    .set_file_name(format!("{}.procraft-lang", pack.id)).save_file() {
-                                    if let Err(error) = std::fs::write(path, serde_json::to_string_pretty(pack).unwrap_or_default()) {
-                                        state.error = Some(error.to_string());
-                                    }
+                                if let Err(error) = export_pack(pack, false) {
+                                    state.error = Some(error);
+                                }
+                            }
+                        }
+                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Share"))).clicked() {
+                            if let Some(pack) = selected.as_ref() {
+                                if let Err(error) = export_pack(pack, true) {
+                                    state.error = Some(error);
                                 }
                             }
                         }
