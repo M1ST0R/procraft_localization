@@ -104,7 +104,7 @@ fn current() -> Active {
             match id {
                 "builtin:en" => Some(Active::English),
                 "" | "builtin:ru" => Some(Active::Russian),
-                _ if valid_id(id) => read_pack(&pack_path(id)).ok().map(|pack| Active::Custom(Arc::new(pack))),
+                _ if valid_id(id) => read_pack(&pack_path(id)).ok().map(active_custom),
                 _ => None,
             }
         })
