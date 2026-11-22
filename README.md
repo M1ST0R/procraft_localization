@@ -11,6 +11,7 @@ This branch includes an in-app, file-based translation manager on Android and De
 - Shared source catalog: `assets/localization/ui-catalog.json`
 - Importable sample: [`examples/ru-community.procraft-lang`](examples/ru-community.procraft-lang)
 - Detailed behavior and limitations: [`docs/COMMUNITY_LANGUAGE_PACKS.md`](docs/COMMUNITY_LANGUAGE_PACKS.md)
+- Maintainer handoff and end-to-end acceptance checklist: [`docs/DEMO_HANDOFF.md`](docs/DEMO_HANDOFF.md)
 
 Format v1 uses exact English UI strings as keys so it works with the current UI rendering boundary. The separate [`LOCALIZATION_PROPOSAL.md`](LOCALIZATION_PROPOSAL.md) describes a future stable-message-ID architecture.
 
