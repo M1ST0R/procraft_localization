@@ -27,17 +27,26 @@ Format v1 uses exact English UI strings as keys so it works with the current UI 
 
 ### Install the Russian build
 
-1. Open the [latest successful Android APK workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Atranslation%2Frussian).
-2. Open the newest successful run on the `translation/russian` branch.
+1. Open the [Community Language Packs Android workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Ademo%2Fcommunity-language-packs).
+2. Open the newest successful run on the `demo/community-language-packs` branch.
 3. Download the **ProCraft-RU-Android-arm64** artifact from the bottom of the run page.
 4. Extract the ZIP and install `ProCraft-RU-Android-arm64.apk` on an ARM64 Android tablet.
 5. Allow installation from the browser or file manager if Android asks.
 
-The Actions artifact is temporary (currently retained for 30 days). For a permanent download, use the repository's **Releases** page once a versioned release has been published. The Android Russian build has its own package ID and is installed alongside, rather than over, the official app.
+The Actions artifact is temporary (currently retained for 30 days). The feature demo APK is distributed from this branch's workflow artifacts; the older `0.0.3` release predates the in-app Language Packs manager and does **not** contain this feature. The Android community build has its own package ID and is installed alongside, rather than over, the official app.
+
+### Current feature-demo builds
+
+The current demo build runs are available here:
+
+- [Android ARM64 APK — run 141](https://github.com/M1ST0R/procraft_localization/actions/runs/45055585910)
+- [Windows x64 and Linux x86_64 — run 40](https://github.com/M1ST0R/procraft_localization/actions/runs/45055766062)
+
+Download the artifacts only after the corresponding run has completed successfully. Each artifact is available from the run page under **Artifacts**.
 
 ### Build desktop versions
 
-The [Desktop RU builds workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Atranslation%2Frussian) runs automatically when desktop source, the shared engine, plugins, assets or packaging files change on this branch. It can also be started manually from **Actions → Desktop RU builds → Run workflow**.
+The [Desktop RU builds workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Ademo%2Fcommunity-language-packs) runs automatically when desktop source, the shared engine, plugins, assets or packaging files change on this branch. It can also be started manually from **Actions → Desktop RU builds → Run workflow**.
 
 - **Windows x64** — download the `ProCraft-RU-Windows-x64` artifact. It contains an `.msi` installer and a portable `.zip` with `ProCraft.exe` and the required DirectX Shader Compiler DLLs.
 - **Linux x86_64** — download the `ProCraft-RU-Linux-x86_64` artifact. It contains an `.AppImage`, a `.deb` package and a `.tar.gz` archive.
@@ -52,9 +61,9 @@ Russian phrases are often longer than their English originals. Some buttons, tab
 
 ### Updating the Russian build
 
-- **New community translation build:** when a commit is pushed to `translation/russian`, GitHub Actions builds a new Android APK and, when desktop source or packaging files change, new Windows/Linux packages.
-- **Manual Android build:** open **Actions → Android APK → Run workflow** and select `translation/russian`.
-- **Manual desktop build:** open **Actions → Desktop RU builds → Run workflow**.
+- **New community demo build:** when app or shared source files change on `demo/community-language-packs`, GitHub Actions builds a new Android APK and Windows/Linux packages.
+- **Manual Android build:** open **Actions → Android APK → Run workflow** and select `demo/community-language-packs`.
+- **Manual desktop build:** open **Actions → Desktop RU builds → Run workflow** for `demo/community-language-packs`.
 - **Upstream ProCraft update:** follow [the upstream merge and signing instructions](docs/UPSTREAM_AND_ANDROID_BUILDS.md). Merge upstream changes into this branch; do not replace this branch with a fresh upstream checkout.
 - Keep the same package ID and signing key for every update. Android uses the matching signing certificate and a higher version code to install updates without uninstalling the existing app.
 
