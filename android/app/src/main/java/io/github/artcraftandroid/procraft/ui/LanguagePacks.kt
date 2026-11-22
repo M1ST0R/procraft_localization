@@ -113,7 +113,15 @@ internal object LanguagePacks {
                 cursor = placeholder.range.last + 1
             }
             append(Regex.escape(pattern.substring(cursor)))
-            append('
+            append('$')
+        }
+        val match = Regex(expression).matchEntire(source) ?: return null
+        var result = translated
+        placeholders.forEachIndexed { index, placeholder ->
+            result = result.replace(placeholder.value, match.groupValues[index + 1])
+        }
+        return result
+    }
     fun currentId(): String = activeId
 
     fun activate(context: Context, id: String) {
