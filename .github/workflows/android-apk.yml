@@ -116,7 +116,6 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-Demo-arm64.apk"
 
       - name: Build demo APK (debug-signed; no signing secrets)
-        working-directory: android
         if: ${{ !(github.ref == 'refs/heads/translation/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
         working-directory: android
         env:
@@ -133,7 +132,8 @@ jobs:
       - name: Verify APK
         shell: bash
         run: |
-          APK="dist/ProCraft-RU-arm64.apk"
+          APK="$(find dist -maxdepth 1 -type f -name 'ProCraft-RU*.apk' -print -quit)"
+          test -n "$APK"
           APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
           "$APKSIGNER" verify --verbose "$APK"
           sha256sum "$APK" | tee dist/SHA256SUMS.txt
