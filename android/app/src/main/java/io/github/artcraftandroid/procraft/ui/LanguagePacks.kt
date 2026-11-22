@@ -54,7 +54,7 @@ private val PackIdPattern = Regex("[a-z0-9][a-z0-9._-]{2,95}")
 private val PackLocalePattern = Regex("[A-Za-z]{2,8}([_-][A-Za-z0-9]{2,8})*")
 private val PackPlaceholderPattern = Regex("""\{([A-Za-z][A-Za-z0-9_]*)\}""")
 
-private data class CompiledPackTemplate(
+internal data class CompiledPackTemplate(
     val literals: List<String>,
     val placeholders: List<String>,
     val translated: String,
@@ -369,7 +369,7 @@ internal object LanguagePacks {
             .orEmpty()
     }
 
-    private fun compileTemplate(pattern: String, translated: String): CompiledPackTemplate? {
+    internal fun compileTemplate(pattern: String, translated: String): CompiledPackTemplate? {
         val matches = PackPlaceholderPattern.findAll(pattern).toList()
         if (matches.isEmpty()) return null
         val literals = ArrayList<String>(matches.size + 1)
@@ -388,7 +388,7 @@ internal object LanguagePacks {
         )
     }
 
-    private fun renderTemplate(source: String, template: CompiledPackTemplate): String? {
+    internal fun renderTemplate(source: String, template: CompiledPackTemplate): String? {
         var remaining = source
         val values = linkedMapOf<String, String>()
         template.placeholders.forEachIndexed { index, placeholder ->
