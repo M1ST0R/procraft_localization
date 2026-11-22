@@ -144,15 +144,23 @@ fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<S
     for (index, (name, start, end)) in spans.iter().enumerate() {
         let literal = pattern.get(cursor..*start)?;
         remaining = remaining.strip_prefix(literal)?;
+        let is_last = index + 1 == spans.len();
         let next_start = spans.get(index + 1).map_or(pattern.len(), |next| next.1);
         let delimiter = pattern.get(*end..next_start)?;
-        let value_end = if delimiter.is_empty() {
-            remaining.len()
+        let value_end = if is_last {
+            let suffix = pattern.get(*end..)?;
+            if !remaining.ends_with(suffix) {
+                return None;
+            }
+            remaining.len().checked_sub(suffix.len())?
         } else {
             remaining.find(delimiter)?
         };
         let value = remaining.get(..value_end)?;
         values.insert(name.clone(), value.to_owned());
+        if is_last {
+            remaining = remaining.get(value_end..)?;
+        }
         cursor = *end;
     }
     let suffix = pattern.get(cursor..)?;
