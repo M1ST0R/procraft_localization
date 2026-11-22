@@ -51,6 +51,9 @@ env:
 jobs:
   apk:
     name: APK
+    # Only owner-created tags or an owner-dispatched run from the trusted Russian branch may
+    # access the Android release signing key. Feature-branch dry runs stay debug-signed.
+    if: ${{ github.actor == github.repository_owner && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/translation/russian')) }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -222,7 +225,7 @@ jobs:
   macos:
     name: Desktop (macos-universal)
     # only once the Mac app is to ship: the repository's variable RELEASE_MAC set to true
-    if: ${{ !github.event.repository.private && vars.RELEASE_MAC == 'true' }}
+    if: ${{ !github.event.repository.private && vars.RELEASE_MAC == 'true' && github.actor == github.repository_owner && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/translation/russian')) }}
     continue-on-error: true
     runs-on: macos-15
     env:
