@@ -95,8 +95,7 @@ fn read_pack(path: &Path) -> Result<LanguagePack, String> {
     if raw.len() as u64 > MAX_PACK_BYTES {
         return Err("Language pack is larger than 5 MB.".to_owned());
     }
-    let pack: LanguagePack =
-        serde_json::from_str(&raw).map_err(|e| format!("Invalid language pack: {e}"))?;
+    let pack: LanguagePack = serde_json::from_str(&raw).map_err(|e| format!("Invalid language pack: {e}"))?;
     validate(&pack)?;
     Ok(pack)
 }
@@ -132,17 +131,9 @@ pub fn translate_override<'a>(source: &'a str) -> Option<Cow<'a, str>> {
         Active::Unloaded | Active::Russian => None,
         Active::English => Some(Cow::Borrowed(source)),
         Active::Custom(pack, templates) => {
-            let exact = pack
-                .strings
-                .get(source)
-                .filter(|value| !value.trim().is_empty())
-                .cloned();
+            let exact = pack.strings.get(source).filter(|value| !value.trim().is_empty()).cloned();
             let translated = exact
-                .or_else(|| {
-                    templates
-                        .iter()
-                        .find_map(|(pattern, value)| translate_template(source, pattern, value))
-                })
+                .or_else(|| templates.iter().find_map(|(pattern, value)| translate_template(source, pattern, value)))
                 .unwrap_or_else(|| source.to_owned());
             Some(Cow::Owned(translated))
         }
@@ -289,9 +280,7 @@ fn installed() -> Vec<LanguagePack> {
         .filter_map(Result::ok)
         .filter_map(|entry| {
             let path = entry.path();
-            (path.extension().is_some_and(|ext| ext == "procraft-lang"))
-                .then(|| read_pack(&path).ok())
-                .flatten()
+            (path.extension().is_some_and(|ext| ext == "procraft-lang")).then(|| read_pack(&path).ok()).flatten()
         })
         .collect();
     packs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
@@ -312,9 +301,7 @@ fn valid_locale(locale: &str) -> bool {
     let Some(language) = parts.next() else { return false };
     (2..=8).contains(&language.len())
         && language.chars().all(|ch| ch.is_ascii_alphabetic())
-        && parts.all(|part| {
-            (2..=8).contains(&part.len()) && part.chars().all(|ch| ch.is_ascii_alphanumeric())
-        })
+        && parts.all(|part| (2..=8).contains(&part.len()) && part.chars().all(|ch| ch.is_ascii_alphanumeric()))
 }
 
 fn placeholders(text: &str) -> Vec<String> {
@@ -373,9 +360,7 @@ fn empty_pack(name: &str, locale: &str, author: &str) -> Result<LanguagePack, St
     let id = format!(
         "{}.{}",
         locale.to_ascii_lowercase().replace('_', "-"),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(1, |duration| duration.as_nanos())
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(1, |duration| duration.as_nanos())
     );
     let pack = LanguagePack {
         format_version: FORMAT_VERSION,
@@ -595,7 +580,6 @@ pub fn show(ctx: &egui::Context) {
         state.open = open;
     });
 }
-
 
 #[cfg(test)]
 mod tests {
