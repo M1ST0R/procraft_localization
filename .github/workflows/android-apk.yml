@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - translation/russian
+      - demo/community-language-packs
   pull_request:
     branches:
       - translation/russian
