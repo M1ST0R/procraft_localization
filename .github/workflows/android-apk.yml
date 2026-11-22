@@ -5,6 +5,14 @@ on:
     branches:
       - translation/russian
       - demo/community-language-packs
+    paths:
+      - "android/**"
+      - "crates/**"
+      - "plugins/**"
+      - "assets/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/android-apk.yml"
   pull_request:
     branches:
       - translation/russian
