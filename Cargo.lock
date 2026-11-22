@@ -3084,6 +3084,8 @@ dependencies = [
  "procraft-gpu",
  "resvg",
  "rfd",
+ "serde",
+ "serde_json",
  "rustix 1.1.5",
  "swash",
  "wayland-backend",
