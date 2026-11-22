@@ -228,6 +228,8 @@ pub struct Interface {
     pub studio: crate::studio::Studio,
     /// Advanced settings' page is up.
     settings: bool,
+    /// The in-app community translation editor is open.
+    language_packs: bool,
     /// The single touch gestures companion, with Advanced settings' switch on.
     companion: crate::companion::Companion,
     /// How many onion skin frames there were before the QuickMenu last turned them off.
@@ -325,6 +327,7 @@ impl Interface {
             time_lapse: crate::timelapse::TimeLapseUi::default(),
             studio: crate::studio::Studio::default(),
             settings: false,
+            language_packs: false,
             named: None,
             model: false,
             lighting: crate::lighting::LightingStudio::default(),
@@ -1058,6 +1061,9 @@ impl Interface {
     /// Advanced settings' page, while it is up: a change is kept and the artwork follows it.
     fn advanced_settings(&mut self, ctx: &egui::Context, session: &CanvasSession) {
         use crate::settings::Said;
+        if self.language_packs {
+            crate::language_packs::show(ctx);
+        }
         if !self.settings {
             return;
         }
@@ -1070,6 +1076,7 @@ impl Interface {
                 }
             }
             Some(Said::Licences) => self.licences = true,
+            Some(Said::LanguagePacks) => { self.language_packs = true; crate::language_packs::open(); }
             Some(Said::Done) => self.settings = false,
             None => {}
         }
