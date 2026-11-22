@@ -32,9 +32,10 @@ class LanguagePacksTest {
 
     @Test
     fun repeatedPlaceholderMustCaptureTheSameValue() {
-        val template = LanguagePacks.compileTemplate("{item} then {item}", "repeat {item}")
-        assertNotNull(template)
-        assertEquals("repeat a", LanguagePacks.renderTemplate("a then a", template!!))
+        val template = requireNotNull(
+            LanguagePacks.compileTemplate("{item} then {item}", "repeat {item}")
+        )
+        assertEquals("repeat a", LanguagePacks.renderTemplate("a then a", template))
         assertNull(LanguagePacks.renderTemplate("a then b", template))
     }
 
