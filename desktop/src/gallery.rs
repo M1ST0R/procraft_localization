@@ -710,7 +710,7 @@ impl Gallery {
             minimum.max(crate::look::text_width(painter, label, 16.0, Weight::Regular) + 24.0)
         };
         let done = Rect::from_min_size(pos2(screen.right() - 20.0 - 44.0, top + 10.0), vec2(44.0, 45.0));
-        let width: f32 = actions.iter().map(|(_, label, minimum)| action_width(*label, *minimum)).sum();
+        let width: f32 = actions.iter().map(|(_, label, minimum)| action_width(label, *minimum)).sum();
         let capsule = Rect::from_min_size(pos2(done.left() - 13.0 - width, top + 10.0), vec2(width, 45.0));
 
         // Keep the gallery title clear of the action capsule on narrow windows.
