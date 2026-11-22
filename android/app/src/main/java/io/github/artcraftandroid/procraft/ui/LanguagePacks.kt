@@ -54,6 +54,12 @@ private val PackIdPattern = Regex("[a-z0-9][a-z0-9._-]{2,95}")
 private val PackLocalePattern = Regex("[A-Za-z]{2,8}([_-][A-Za-z0-9]{2,8})*")
 private val PackPlaceholderPattern = Regex("""\{([A-Za-z][A-Za-z0-9_]*)\}""")
 
+private data class CompiledPackTemplate(
+    val regex: Regex,
+    val placeholders: List<String>,
+    val translated: String,
+)
+
 internal data class TranslationPack(
     val id: String,
     val locale: String,
@@ -69,7 +75,7 @@ internal data class TranslationPack(
  * Data-only .procraft-lang reader, editor storage and runtime.
  *
  * Version 1 uses exact English UI text as keys. Imported files never execute code and are bounded
- * by size/count/field limits before they can be installed.
+ * by size, nesting, entry-count and field-length limits before they can be installed.
  */
 internal object LanguagePacks {
     private const val FORMAT_VERSION = 1
@@ -77,11 +83,11 @@ internal object LanguagePacks {
     private const val ACTIVE = "active_id"
 
     private val revisionState = mutableIntStateOf(0)
-    private var activeId: String = "builtin:ru"
+    private var activeId = "builtin:ru"
     private var activeStrings: Map<String, String>? = null
     private var activeTemplates: List<CompiledPackTemplate> = emptyList()
 
-    /** Read by the Compose Text wrapper to recompose labels when the active pack changes. */
+    /** Compose Text reads this state so changing the active pack redraws existing labels. */
     val revision: Int get() = revisionState.intValue
 
     fun load(context: Context) {
@@ -112,11 +118,8 @@ internal object LanguagePacks {
             "builtin:en" -> source
             "builtin:ru" -> null
             else -> {
-                val strings = activeStrings
-                strings?.get(source)?.takeIf(String::isNotBlank)
-                    ?: activeTemplates.firstNotNullOfOrNull { template ->
-                        renderTemplate(source, template)
-                    }
+                activeStrings?.get(source)?.takeIf { it.isNotBlank() }
+                    ?: activeTemplates.firstNotNullOfOrNull { renderTemplate(source, it) }
                     ?: source
             }
         }
@@ -142,8 +145,7 @@ internal object LanguagePacks {
     }
 
     fun installed(context: Context): List<TranslationPack> {
-        val directory = packsDirectory(context)
-        return directory.listFiles().orEmpty()
+        return packsDirectory(context).listFiles().orEmpty()
             .filter { it.isFile && it.extension == "procraft-lang" }
             .mapNotNull { file -> runCatching { readPack(file) }.getOrNull() }
             .sortedBy { it.name.lowercase(Locale.ROOT) }
@@ -175,16 +177,19 @@ internal object LanguagePacks {
     fun save(context: Context, pack: TranslationPack): TranslationPack {
         validate(pack)
         val directory = packsDirectory(context)
-        require(directory.exists() || directory.mkdirs()) { "Could not create the language-pack folder." }
+        require(directory.exists() || directory.mkdirs()) {
+            "Could not create the language-pack folder."
+        }
+
         val atomic = AtomicFile(packFile(context, pack.id))
-        var stream: java.io.FileOutputStream? = null
+        var output: java.io.FileOutputStream? = null
         try {
-            val output = atomic.startWrite()
-            stream = output
-            output.write(encode(pack).toByteArray(Charsets.UTF_8))
-            atomic.finishWrite(output)
+            val stream = atomic.startWrite()
+            output = stream
+            stream.write(encode(pack).toByteArray(Charsets.UTF_8))
+            atomic.finishWrite(stream)
         } catch (error: Throwable) {
-            stream?.let(atomic::failWrite)
+            output?.let { atomic.failWrite(it) }
             throw error
         }
         revisionState.intValue++
@@ -196,6 +201,14 @@ internal object LanguagePacks {
             ?: error("Could not read the selected file.")
         val bytes = input.use { readBounded(it, MAX_PACK_BYTES) }
         val pack = decode(bytes.toString(Charsets.UTF_8))
+        val destination = packFile(context, pack.id)
+        if (destination.exists()) {
+            val existing = readPack(destination)
+            require(existing == pack) {
+                "A different language pack with this ID is already installed."
+            }
+            return existing
+        }
         return save(context, pack)
     }
 
@@ -231,7 +244,8 @@ internal object LanguagePacks {
     }
 
     fun catalog(context: Context): List<String> = runCatching {
-        val raw = context.assets.open("localization/ui-catalog.json").bufferedReader().use { it.readText() }
+        val raw = context.assets.open("localization/ui-catalog.json")
+            .bufferedReader().use { it.readText() }
         val array = org.json.JSONArray(raw)
         (0 until array.length()).mapNotNull { index ->
             array.optString(index).takeIf(String::isNotBlank)
@@ -269,15 +283,21 @@ internal object LanguagePacks {
             val keys = root.keys()
             while (keys.hasNext()) add(keys.next())
         }
-        require(actualFields.all { it in allowedFields }) { "The pack contains unsupported fields." }
+        require(actualFields.all { it in allowedFields }) {
+            "The pack contains unsupported fields."
+        }
+
         val formatVersion = root.get("format_version") as? Number
             ?: error("The pack format version must be an integer.")
         require(formatVersion.toDouble() == FORMAT_VERSION.toDouble()) {
             "Unsupported language-pack format version."
         }
 
-        val stringsObject = root.optJSONObject("strings") ?: error("The pack has no strings dictionary.")
-        require(stringsObject.length() <= MAX_PACK_STRINGS) { "The pack contains too many strings." }
+        val stringsObject = root.optJSONObject("strings")
+            ?: error("The pack has no strings dictionary.")
+        require(stringsObject.length() <= MAX_PACK_STRINGS) {
+            "The pack contains too many strings."
+        }
 
         val strings = linkedMapOf<String, String>()
         val keys = stringsObject.keys()
@@ -288,7 +308,9 @@ internal object LanguagePacks {
             require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) {
                 "A string exceeds the format limits."
             }
-            require(placeholders(key) == placeholders(value)) { "Placeholder mismatch in: $key" }
+            require(placeholders(key) == placeholders(value)) {
+                "Placeholder mismatch in: $key"
+            }
             if (value.isNotBlank()) strings[key] = value
         }
 
@@ -309,404 +331,60 @@ internal object LanguagePacks {
         require(PackLocalePattern.matches(pack.locale) && pack.locale.length <= 35) {
             "Invalid language locale."
         }
-        require(pack.name.isNotBlank() && pack.name.length <= 80) { "Invalid language-pack name." }
+        require(pack.name.isNotBlank() && pack.name.length <= 80) {
+            "Invalid language-pack name."
+        }
+        val templateCount = pack.strings.keys.count { it.contains('{') }
         require(
             pack.author.length <= 120 &&
                 pack.appVersion.length <= 40 &&
                 pack.catalogVersion.length <= 80 &&
                 pack.baseLocale.length <= 35 &&
                 pack.strings.size <= MAX_PACK_STRINGS &&
-                pack.strings.keys.count { PackPlaceholderPattern.containsMatchIn(it) } <= MAX_TEMPLATE_STRINGS
-        ) { "Pack metadata or string count is too large." }
+                templateCount <= MAX_TEMPLATE_STRINGS
+        ) {
+            "Pack metadata, string count or dynamic-template count exceeds the format limits."
+        }
         pack.strings.forEach { (key, value) ->
             require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) {
                 "A string exceeds the format limits."
             }
-            require(placeholders(key) == placeholders(value)) { "Placeholder mismatch in: $key" }
+            require(placeholders(key) == placeholders(value)) {
+                "Placeholder mismatch in: $key"
+            }
         }
     }
 
     private fun placeholders(value: String): List<String> =
-        Regex("\\{[^{}]+}").findAll(value).map { it.value }.sorted().toList()
+        Regex("\\\\{[^{}]+}").findAll(value).map { it.value }.sorted().toList()
 
     private fun refreshTemplates() {
         activeTemplates = activeStrings?.entries
-            ?.filter { PackPlaceholderPattern.containsMatchIn(it.key) && it.value.isNotBlank() }
+            ?.filter { it.key.contains('{') && it.value.isNotBlank() }
             ?.mapNotNull { (pattern, translated) -> compileTemplate(pattern, translated) }
             ?.sortedByDescending { it.regex.pattern.length }
             .orEmpty()
     }
 
     private fun compileTemplate(pattern: String, translated: String): CompiledPackTemplate? {
-        val placeholders = PackPlaceholderPattern.findAll(pattern).map { it.value }.toList()
-        if (placeholders.isEmpty()) return null
-        val ranges = PackPlaceholderPattern.findAll(pattern).toList()
+        val matches = PackPlaceholderPattern.findAll(pattern).toList()
+        if (matches.isEmpty()) return null
         val expression = buildString {
             append('^')
             var cursor = 0
-            ranges.forEach { placeholder ->
+            matches.forEach { placeholder ->
                 append(Regex.escape(pattern.substring(cursor, placeholder.range.first)))
                 append("(.+?)")
                 cursor = placeholder.range.last + 1
             }
             append(Regex.escape(pattern.substring(cursor)))
-            append('
-    private fun readPack(file: File): TranslationPack {
-        val bytes = AtomicFile(file).openRead().use { readBounded(it, MAX_PACK_BYTES) }
-        return decode(bytes.toString(Charsets.UTF_8))
-    }
-
-    private fun readBounded(input: InputStream, limit: Int): ByteArray {
-        val output = ByteArrayOutputStream(minOf(limit, 64 * 1024))
-        val buffer = ByteArray(8 * 1024)
-        var total = 0
-        while (true) {
-            val count = input.read(buffer)
-            if (count < 0) break
-            total += count
-            require(total <= limit) { "Language pack is larger than 5 MB." }
-            output.write(buffer, 0, count)
+            append('$')
         }
-        return output.toByteArray()
-    }
-
-    private fun packsDirectory(context: Context) = File(context.filesDir, "language-packs")
-
-    private fun packFile(context: Context, id: String): File {
-        require(PackIdPattern.matches(id)) { "Invalid language-pack ID." }
-        return File(packsDirectory(context), "$id.procraft-lang")
-    }
-}
-
-@Composable
-internal fun LanguagePacksPage(onBack: () -> Unit) {
-    val context = LocalContext.current
-    var packs by remember { mutableStateOf(LanguagePacks.installed(context)) }
-    var selected by remember { mutableStateOf(LanguagePacks.currentId()) }
-    var editing by remember { mutableStateOf<TranslationPack?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var createDialog by remember { mutableStateOf(false) }
-    var newName by remember { mutableStateOf("") }
-    var newLocale by remember { mutableStateOf("") }
-    var newAuthor by remember { mutableStateOf("") }
-
-    val importPicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri != null) {
-            runCatching {
-                val pack = LanguagePacks.import(context, uri)
-                LanguagePacks.activate(context, pack.id)
-                packs = LanguagePacks.installed(context)
-                selected = pack.id
-            }.onFailure { error = it.message ?: "Import failed." }
-        }
-    }
-    val exportPicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri ->
-        if (uri != null) {
-            packs.firstOrNull { it.id == selected }?.let { pack ->
-                runCatching { LanguagePacks.export(context, uri, pack) }
-                    .onFailure { error = it.message ?: "Export failed." }
-            }
-        }
-    }
-
-    if (editing != null) {
-        PackEditorPage(
-            pack = requireNotNull(editing),
-            onBack = { editing = null },
-            onSave = { changed ->
-                runCatching {
-                    LanguagePacks.save(context, changed)
-                    LanguagePacks.activate(context, changed.id)
-                    packs = LanguagePacks.installed(context)
-                    selected = changed.id
-                    editing = null
-                }.onFailure { error = it.message ?: "Could not save the pack." }
-            },
+        return CompiledPackTemplate(
+            regex = Regex(expression),
+            placeholders = matches.map { it.value },
+            translated = translated,
         )
-        error?.let {
-            AlertDialog(
-                onDismissRequest = { error = null },
-                title = { Text("Language pack") },
-                text = { Text(it) },
-                confirmButton = { Button(onClick = { error = null }) { Text("OK") } },
-            )
-        }
-        return
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF000000)).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "‹ Settings",
-                color = PackBlue,
-                fontSize = 17.sp,
-                modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
-            )
-            Text(
-                "Language packs",
-                color = PackInk,
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Text(
-            "Create, edit, import and export translations. Missing strings fall back to English.",
-            color = PackDim,
-            fontSize = 13.sp,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { createDialog = true }) { Text("New") }
-            Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
-        }
-        Text("BUILT-IN", color = PackDim, fontSize = 12.sp)
-        PackChoice("English (source strings)", selected == "builtin:en") {
-            runCatching { LanguagePacks.activate(context, "builtin:en") }
-                .onSuccess { selected = "builtin:en" }
-                .onFailure { error = it.message ?: "Could not activate language." }
-        }
-        PackChoice("Русский — встроенный", selected == "builtin:ru") {
-            runCatching { LanguagePacks.activate(context, "builtin:ru") }
-                .onSuccess { selected = "builtin:ru" }
-                .onFailure { error = it.message ?: "Could not activate language." }
-        }
-        Text("INSTALLED PACKS", color = PackDim, fontSize = 12.sp)
-        if (packs.isEmpty()) {
-            Text(
-                "No custom packs yet. Create one or import a .procraft-lang file.",
-                color = PackDim,
-                fontSize = 14.sp,
-            )
-        }
-        LazyColumn(
-            modifier = Modifier.weight(1f, fill = true),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            items(packs, key = { it.id }) { pack ->
-                PackChoice(
-                    "${pack.name} · ${pack.locale} · ${pack.strings.size} strings",
-                    selected == pack.id,
-                ) {
-                    runCatching { LanguagePacks.activate(context, pack.id) }
-                        .onSuccess { selected = pack.id }
-                        .onFailure { error = it.message ?: "Could not activate pack." }
-                }
-            }
-        }
-
-        val selectedPack = packs.firstOrNull { it.id == selected }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = { selectedPack?.let { editing = it.copy(strings = LinkedHashMap(it.strings)) } },
-                enabled = selectedPack != null,
-            ) { Text("Edit") }
-            Button(
-                onClick = { selectedPack?.let { exportPicker.launch("${it.id}.procraft-lang") } },
-                enabled = selectedPack != null,
-            ) { Text("Export") }
-            Button(
-                onClick = {
-                    selectedPack?.let { pack ->
-                        runCatching { LanguagePacks.share(context, pack) }
-                            .onFailure { error = it.message ?: "Could not share pack." }
-                    }
-                },
-                enabled = selectedPack != null,
-            ) { Text("Share") }
-            Button(
-                onClick = {
-                    selectedPack?.let { pack ->
-                        runCatching { LanguagePacks.delete(context, pack) }
-                            .onSuccess {
-                                packs = LanguagePacks.installed(context)
-                                selected = LanguagePacks.currentId()
-                            }
-                            .onFailure { error = it.message ?: "Could not delete pack." }
-                    }
-                },
-                enabled = selectedPack != null,
-            ) { Text("Delete") }
-        }
-
-        error?.let {
-            AlertDialog(
-                onDismissRequest = { error = null },
-                title = { Text("Language pack") },
-                text = { Text(it) },
-                confirmButton = { Button(onClick = { error = null }) { Text("OK") } },
-            )
-        }
-    }
-
-    if (createDialog) {
-        AlertDialog(
-            onDismissRequest = { createDialog = false },
-            title = { Text("Create translation") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = newName,
-                        onValueChange = { newName = it },
-                        label = { Text("Name") },
-                        singleLine = true,
-                    )
-                    OutlinedTextField(
-                        value = newLocale,
-                        onValueChange = { newLocale = it },
-                        label = { Text("Language code (e.g. es-ES)") },
-                        singleLine = true,
-                    )
-                    OutlinedTextField(
-                        value = newAuthor,
-                        onValueChange = { newAuthor = it },
-                        label = { Text("Author (optional)") },
-                        singleLine = true,
-                    )
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    runCatching { LanguagePacks.create(newName, newLocale, newAuthor) }
-                        .onSuccess { pack ->
-                            runCatching {
-                                LanguagePacks.save(context, pack)
-                                packs = LanguagePacks.installed(context)
-                                selected = pack.id
-                                LanguagePacks.activate(context, pack.id)
-                                editing = pack
-                                createDialog = false
-                                newName = ""
-                                newLocale = ""
-                                newAuthor = ""
-                            }.onFailure { error = it.message ?: "Could not create the pack." }
-                        }
-                        .onFailure { error = it.message ?: "Could not create the pack." }
-                }) { Text("Create") }
-            },
-            dismissButton = {
-                Button(onClick = { createDialog = false }) { Text("Cancel") }
-            },
-        )
-    }
-}
-
-@Composable
-private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (active) Color(0xFF222C3D) else Color(0xFF1C1C1E),
-                RoundedCornerShape(10.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            if (active) "●" else "○",
-            color = if (active) PackBlue else PackDim,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(end = 12.dp),
-        )
-        Text(label, color = PackInk, fontSize = 15.sp)
-    }
-}
-
-@Composable
-private fun PackEditorPage(
-    pack: TranslationPack,
-    onBack: () -> Unit,
-    onSave: (TranslationPack) -> Unit,
-) {
-    val context = LocalContext.current
-    var changed by remember(pack.id) { mutableStateOf(LinkedHashMap(pack.strings)) }
-    var search by remember { mutableStateOf("") }
-    val catalog = remember { LanguagePacks.catalog(context) }
-    val visible = remember(search, catalog, changed) {
-        if (search.isBlank()) {
-            catalog
-        } else {
-            catalog.filter {
-                it.contains(search, ignoreCase = true) ||
-                    changed[it]?.contains(search, ignoreCase = true) == true
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF000000))
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "‹ Packs",
-                color = PackBlue,
-                fontSize = 16.sp,
-                modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(pack.name, color = PackInk, fontSize = 21.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    "${pack.locale} · ${changed.size} translated strings",
-                    color = PackDim,
-                    fontSize = 12.sp,
-                )
-            }
-            Button(onClick = { onSave(pack.copy(strings = LinkedHashMap(changed))) }) {
-                Text("Save")
-            }
-        }
-        OutlinedTextField(
-            value = search,
-            onValueChange = { search = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Search source strings") },
-            singleLine = true,
-        )
-        Text(
-            "Translate the English source below. Leave a field empty to use English fallback.",
-            color = PackDim,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(vertical = 6.dp),
-        )
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(visible, key = { it }) { source ->
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                        .background(Color(0xFF1C1C1E), RoundedCornerShape(10.dp))
-                        .padding(10.dp),
-                ) {
-                    Text(source, color = Color(0xFFD0D0D0), fontSize = 13.sp)
-                    OutlinedTextField(
-                        value = changed[source] ?: "",
-                        onValueChange = { value ->
-                            changed = LinkedHashMap(changed).apply {
-                                if (value.isBlank()) remove(source) else put(source, value)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Translation") },
-                        minLines = 1,
-                    )
-                }
-            }
-        }
-    }
-}
-)
-        }
-        return CompiledPackTemplate(Regex(expression), placeholders, translated)
     }
 
     private fun renderTemplate(source: String, template: CompiledPackTemplate): String? {
@@ -734,7 +412,7 @@ private fun PackEditorPage(
             if (inString) {
                 when {
                     escaped -> escaped = false
-                    character == '\\' -> escaped = true
+                    character == '\\\\' -> escaped = true
                     character == '"' -> inString = false
                 }
                 continue
@@ -743,7 +421,9 @@ private fun PackEditorPage(
                 '"' -> inString = true
                 '{', '[' -> {
                     depth++
-                    require(depth <= MAX_PACK_JSON_DEPTH) { "The language pack JSON is nested too deeply." }
+                    require(depth <= MAX_PACK_JSON_DEPTH) {
+                        "The language pack JSON is nested too deeply."
+                    }
                 }
                 '}', ']' -> {
                     depth--
@@ -765,6 +445,7 @@ private fun PackEditorPage(
         while (true) {
             val count = input.read(buffer)
             if (count < 0) break
+            if (count == 0) continue
             total += count
             require(total <= limit) { "Language pack is larger than 5 MB." }
             output.write(buffer, 0, count)
