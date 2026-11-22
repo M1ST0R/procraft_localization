@@ -51,6 +51,7 @@ import io.github.artcraftandroid.procraft.canvas.wideColorByDefault
 import io.github.artcraftandroid.procraft.ui.Pc
 import io.github.artcraftandroid.procraft.ui.Switch
 import io.github.artcraftandroid.procraft.ui.fittedInterfaceSize
+import io.github.artcraftandroid.procraft.ui.LanguagePacksPage
 
 /**
  * The app's own settings, apart from the canvas: what Android's page for the app links to as its
