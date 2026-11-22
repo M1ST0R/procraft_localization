@@ -251,7 +251,10 @@ internal object LanguagePacks {
 
     private fun validate(pack: TranslationPack) {
         require(pack.id.matches(Regex("[a-z0-9][a-z0-9._-]{2,95}"))) { "Invalid pack ID." }
-        require(pack.locale.length in 2..35 && pack.name.isNotBlank() && pack.name.length <= 80) { "Invalid pack metadata." }
+        require(
+            Regex("[A-Za-z]{2,8}([_-][A-Za-z0-9]{2,8})*").matches(pack.locale) &&
+                pack.name.isNotBlank() && pack.name.length <= 80
+        ) { "Invalid pack metadata." }
         require(
             pack.author.length <= 120 && pack.appVersion.length <= 40 &&
                 pack.catalogVersion.length <= 80 && pack.baseLocale.length <= 35 &&
