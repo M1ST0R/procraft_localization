@@ -599,13 +599,11 @@ pub fn show(ctx: &egui::Context) {
                         }
                         if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Delete"))).clicked()
                             && let Some(pack) = selected.as_ref()
-                        {
-                            if let Err(error) = std::fs::remove_file(pack_path(&pack.id))
+                            && let Err(error) = std::fs::remove_file(pack_path(&pack.id))
                                 .map_err(|error| error.to_string())
                                 .and_then(|()| activate_builtin("builtin:ru"))
-                            {
-                                state.error = Some(error);
-                            }
+                        {
+                            state.error = Some(error);
                         }
                     });
                 }
