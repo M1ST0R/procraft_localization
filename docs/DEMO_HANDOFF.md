@@ -91,7 +91,7 @@ This demo is built to work now on the existing text-rendering boundary, so v1 us
 
 - When upstream changes an English phrase, a corresponding pack entry may need updating.
 - Some generated/parameterized text, plugin content and UI text outside the two rendering wrappers may not be editable yet.
-- The pack manager uses a shared catalog of 1,335 source strings derived from the current Android and Desktop translation dictionaries.
+- The pack manager uses a shared catalog of 1,364 source strings derived from the current Android and Desktop translation dictionaries.
 - Sharing is file-based, not a hosted translation marketplace. A user exports the pack and sends the file.
 - The bundled Russian dictionary remains a built-in option; users can create/import their own packs and choose which one is active.
 - There is no auto-update marketplace, moderation or remote sync.
