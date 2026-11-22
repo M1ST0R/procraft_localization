@@ -178,6 +178,9 @@ fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<S
         let is_last = index + 1 == spans.len();
         let next_start = spans.get(index + 1).map_or(pattern.len(), |next| next.1);
         let delimiter = pattern.get(*end..next_start)?;
+        if !is_last && delimiter.is_empty() {
+            return None;
+        }
         let value_end = if is_last {
             let suffix = pattern.get(*end..)?;
             if !remaining.ends_with(suffix) {
@@ -188,7 +191,14 @@ fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<S
             remaining.find(delimiter)?
         };
         let value = remaining.get(..value_end)?;
-        values.insert(name.clone(), value.to_owned());
+        if value.is_empty() {
+            return None;
+        }
+        if let Some(previous) = values.insert(name.clone(), value.to_owned()) {
+            if previous != value {
+                return None;
+            }
+        }
         if is_last {
             let suffix = pattern.get(*end..)?;
             remaining = remaining.get(value_end + suffix.len()..)?;
@@ -637,6 +647,13 @@ mod tests {
         assert!(validate(&pack).is_err());
         pack.strings.insert("Layer {count}".to_owned(), "Capa {count}".to_owned());
         assert!(validate(&pack).is_ok());
+    }
+
+    #[test]
+    fn ambiguous_or_conflicting_placeholders_are_not_applied() {
+        assert_eq!(translate_template("ab", "{first}{second}", "{first}-{second}"), None);
+        assert_eq!(translate_template("a b", "{item} {item}", "{item}!"), None);
+        assert_eq!(translate_template("a a", "{item} {item}", "{item}!"), Some("a!".to_owned()));
     }
 
     #[test]
