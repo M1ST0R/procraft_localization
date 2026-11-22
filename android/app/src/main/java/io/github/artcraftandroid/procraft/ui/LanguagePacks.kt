@@ -55,7 +55,7 @@ private val PackLocalePattern = Regex("[A-Za-z]{2,8}([_-][A-Za-z0-9]{2,8})*")
 private val PackPlaceholderPattern = Regex("""\{([A-Za-z][A-Za-z0-9_]*)\}""")
 
 private data class CompiledPackTemplate(
-    val regex: Regex,
+    val literals: List<String>,
     val placeholders: List<String>,
     val translated: String,
 )
@@ -119,8 +119,11 @@ internal object LanguagePacks {
             "builtin:ru" -> null
             else -> {
                 activeStrings?.get(source)?.takeIf { it.isNotBlank() }
-                    ?: activeTemplates.firstNotNullOfOrNull { renderTemplate(source, it) }
-                    ?: source
+                    ?: if (source.length <= 4096) {
+                        activeTemplates.firstNotNullOfOrNull { renderTemplate(source, it) } ?: source
+                    } else {
+                        source
+                    }
             }
         }
     }
@@ -362,37 +365,57 @@ internal object LanguagePacks {
         activeTemplates = activeStrings?.entries
             ?.filter { it.key.contains('{') && it.value.isNotBlank() }
             ?.mapNotNull { (pattern, translated) -> compileTemplate(pattern, translated) }
-            ?.sortedByDescending { it.regex.pattern.length }
+            ?.sortedByDescending { template -> template.literals.sumOf { it.length } }
             .orEmpty()
     }
 
     private fun compileTemplate(pattern: String, translated: String): CompiledPackTemplate? {
         val matches = PackPlaceholderPattern.findAll(pattern).toList()
         if (matches.isEmpty()) return null
-        val expression = buildString {
-            append('^')
-            var cursor = 0
-            matches.forEach { placeholder ->
-                append(Regex.escape(pattern.substring(cursor, placeholder.range.first)))
-                append("(.+?)")
-                cursor = placeholder.range.last + 1
-            }
-            append(Regex.escape(pattern.substring(cursor)))
-            append('$')
+        val literals = ArrayList<String>(matches.size + 1)
+        var cursor = 0
+        matches.forEach { placeholder ->
+            val literal = pattern.substring(cursor, placeholder.range.first)
+            if (literals.isNotEmpty() && literal.isEmpty()) return null
+            literals.add(literal)
+            cursor = placeholder.range.last + 1
         }
+        literals.add(pattern.substring(cursor))
         return CompiledPackTemplate(
-            regex = Regex(expression),
+            literals = literals,
             placeholders = matches.map { it.value },
             translated = translated,
         )
     }
 
     private fun renderTemplate(source: String, template: CompiledPackTemplate): String? {
-        val match = template.regex.matchEntire(source) ?: return null
-        var result = template.translated
+        var remaining = source
+        val values = linkedMapOf<String, String>()
         template.placeholders.forEachIndexed { index, placeholder ->
-            result = result.replace(placeholder, match.groupValues[index + 1])
+            val prefix = template.literals[index]
+            if (!remaining.startsWith(prefix)) return null
+            remaining = remaining.substring(prefix.length)
+
+            val suffix = template.literals[index + 1]
+            val isLast = index == template.placeholders.lastIndex
+            val valueEnd = if (isLast) {
+                if (!remaining.endsWith(suffix)) return null
+                remaining.length - suffix.length
+            } else {
+                if (suffix.isEmpty()) return null
+                remaining.indexOf(suffix)
+            }
+            if (valueEnd <= 0) return null
+            val value = remaining.substring(0, valueEnd)
+            val name = placeholder.substring(1, placeholder.length - 1)
+            val previous = values.put(name, value)
+            if (previous != null && previous != value) return null
+            remaining = remaining.substring(valueEnd + suffix.length)
         }
+        if (remaining.isNotEmpty()) return null
+
+        var result = template.translated
+        values.forEach { (name, value) -> result = result.replace("{${name}}", value) }
         return result
     }
 
