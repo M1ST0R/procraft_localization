@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 const FORMAT_VERSION: u32 = 1;
 const MAX_PACK_BYTES: u64 = 5 * 1024 * 1024;
 const MAX_STRINGS: usize = 20_000;
+const MAX_TEMPLATE_STRINGS: usize = 128;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -45,10 +46,20 @@ enum Active {
     Unloaded,
     Russian,
     English,
-    Custom(Arc<LanguagePack>),
+    Custom(Arc<LanguagePack>, Arc<Vec<(String, String)>>),
 }
 
 static ACTIVE: OnceLock<RwLock<Active>> = OnceLock::new();
+
+fn active_custom(pack: LanguagePack) -> Active {
+    let templates = pack
+        .strings
+        .iter()
+        .filter(|(source, translated)| source.contains('{') && !translated.trim().is_empty())
+        .map(|(source, translated)| (source.clone(), translated.clone()))
+        .collect();
+    Active::Custom(Arc::new(pack), Arc::new(templates))
+}
 
 fn active_lock() -> &'static RwLock<Active> {
     ACTIVE.get_or_init(|| RwLock::new(Active::Unloaded))
@@ -110,7 +121,7 @@ pub fn translate_override<'a>(source: &'a str) -> Option<Cow<'a, str>> {
     match current() {
         Active::Unloaded | Active::Russian => None,
         Active::English => Some(Cow::Borrowed(source)),
-        Active::Custom(pack) => {
+        Active::Custom(pack, templates) => {
             let exact = pack
                 .strings
                 .get(source)
@@ -118,9 +129,8 @@ pub fn translate_override<'a>(source: &'a str) -> Option<Cow<'a, str>> {
                 .cloned();
             let translated = exact
                 .or_else(|| {
-                    pack.strings
+                    templates
                         .iter()
-                        .filter(|(pattern, value)| pattern.contains('{') && !value.trim().is_empty())
                         .find_map(|(pattern, value)| translate_template(source, pattern, value))
                 })
                 .unwrap_or_else(|| source.to_owned());
@@ -194,7 +204,7 @@ fn active_id() -> String {
     match current() {
         Active::English => "builtin:en".to_owned(),
         Active::Russian | Active::Unloaded => "builtin:ru".to_owned(),
-        Active::Custom(pack) => pack.id,
+        Active::Custom(pack, _) => pack.id.clone(),
     }
 }
 
@@ -215,7 +225,7 @@ fn activate_pack(pack: &LanguagePack) -> Result<(), String> {
     save_pack(pack)?;
     std::fs::write(active_id_path(), &pack.id).map_err(|e| e.to_string())?;
     if let Ok(mut state) = active_lock().write() {
-        *state = Active::Custom(pack.clone());
+        *state = active_custom(pack.clone());
     }
     Ok(())
 }
@@ -328,6 +338,9 @@ fn validate(pack: &LanguagePack) -> Result<(), String> {
     }
     if pack.author.len() > 120 || pack.strings.len() > MAX_STRINGS {
         return Err("Language-pack metadata or string count exceeds the format limits.".to_owned());
+    }
+    if pack.strings.keys().filter(|source| source.contains('{')).count() > MAX_TEMPLATE_STRINGS {
+        return Err("Language pack has too many dynamic templates (maximum 128).".to_owned());
     }
     for (source, translated) in &pack.strings {
         if source.is_empty() || source.len() > 160 || translated.len() > 4000 {
