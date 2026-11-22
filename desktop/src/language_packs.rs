@@ -37,9 +37,19 @@ struct LanguagePack {
     strings: BTreeMap<String, String>,
 }
 
-fn tr(source: &str) -> String {\n    crate::translation::translate(source).into_owned()\n}
+fn tr(source: &str) -> String {
+    crate::translation::translate(source).into_owned()
+}
 
-fn unknown_version() -> String {\n    "unknown".to_owned()\n}\nfn catalog_version() -> String {\n    "procraft-ui-source-1".to_owned()\n}\nfn english() -> String {\n    "en".to_owned()\n}
+fn unknown_version() -> String {
+    "unknown".to_owned()
+}
+fn catalog_version() -> String {
+    "procraft-ui-source-1".to_owned()
+}
+fn english() -> String {
+    "en".to_owned()
+}
 
 #[derive(Clone)]
 enum Active {
@@ -448,11 +458,16 @@ pub fn show(ctx: &egui::Context) {
                     let search = state.query.to_lowercase();
                     let entries = catalog();
                     egui::ScrollArea::vertical().max_height(510.0).show(ui, |ui| {
-                        for source in\n                            entries.iter().filter(|source| search.is_empty() || source.to_lowercase().contains(&search))\n                        {
+                        for source in
+                            entries.iter().filter(|source| search.is_empty() || source.to_lowercase().contains(&search))
+                        {
                             ui.horizontal(|ui| {
                                 ui.add_sized([310.0, 28.0], egui::Label::new(source));
                                 let mut value = pack.strings.get(source).cloned().unwrap_or_default();
-                                if ui\n                                    .add_sized([ui.available_width(), 28.0], egui::TextEdit::singleline(&mut value))\n                                    .changed()\n                                {
+                                if ui
+                                    .add_sized([ui.available_width(), 28.0], egui::TextEdit::singleline(&mut value))
+                                    .changed()
+                                {
                                     if value.trim().is_empty() {
                                         pack.strings.remove(source);
                                     } else {
@@ -463,7 +478,9 @@ pub fn show(ctx: &egui::Context) {
                         }
                     });
                     ui.label(format!("{} translated strings", pack.strings.len()));
-                    if !close_editor {\n                        state.editor = Some(pack);\n                    }
+                    if !close_editor {
+                        state.editor = Some(pack);
+                    }
                 } else {
                     ui.label(tr("Create, edit, import and export translations. Missing strings fall back to English."));
                     ui.horizontal_wrapped(|ui| {
@@ -471,27 +488,40 @@ pub fn show(ctx: &egui::Context) {
                             state.making_new = !state.making_new;
                         }
                         if ui.button(tr("Import .procraft-lang")).clicked() {
-                            if let Some(path) = rfd::FileDialog::new()\n                                .add_filter("ProCraft language pack", &["procraft-lang"])\n                                .pick_file()\n                            {
-                                match read_pack(&path).and_then(|pack| {\n                                    activate_pack(&pack)?;\n                                    Ok(pack)\n                                }) {
+                            if let Some(path) = rfd::FileDialog::new()
+                                .add_filter("ProCraft language pack", &["procraft-lang"])
+                                .pick_file()
+                            {
+                                match read_pack(&path).and_then(|pack| {
+                                    activate_pack(&pack)?;
+                                    Ok(pack)
+                                }) {
                                     Ok(pack) => state.editor = None,
                                     Err(error) => state.error = Some(error),
                                 }
                             }
                         }
                         if ui.button(tr("English (source strings)")).clicked() {
-                            if let Err(error) = activate_builtin("builtin:en") {\n                                state.error = Some(error);\n                            }
+                            if let Err(error) = activate_builtin("builtin:en") {
+                                state.error = Some(error);
+                            }
                         }
                         if ui.button(tr("Русский — встроенный")).clicked() {
-                            if let Err(error) = activate_builtin("builtin:ru") {\n                                state.error = Some(error);\n                            }
+                            if let Err(error) = activate_builtin("builtin:ru") {
+                                state.error = Some(error);
+                            }
                         }
                     });
                     if state.making_new {
                         ui.horizontal(|ui| {
-                            ui.label(tr("Name"));\n                            ui.text_edit_singleline(&mut state.new_name);
-                            ui.label(tr("Language code (e.g. es-ES)"));\n                            ui.text_edit_singleline(&mut state.new_locale);
+                            ui.label(tr("Name"));
+                            ui.text_edit_singleline(&mut state.new_name);
+                            ui.label(tr("Language code (e.g. es-ES)"));
+                            ui.text_edit_singleline(&mut state.new_locale);
                         });
                         ui.horizontal(|ui| {
-                            ui.label(tr("Author (optional)"));\n                            ui.text_edit_singleline(&mut state.new_author);
+                            ui.label(tr("Author (optional)"));
+                            ui.text_edit_singleline(&mut state.new_author);
                             if ui.button(tr("Create and edit")).clicked() {
                                 match empty_pack(&state.new_name, &state.new_locale, &state.new_author) {
                                     Ok(pack) => {
@@ -554,7 +584,9 @@ pub fn show(ctx: &egui::Context) {
                         if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Delete"))).clicked() {
                             if let Some(pack) = selected.as_ref() {
                                 let _ = std::fs::remove_file(pack_path(&pack.id));
-                                if let Err(error) = activate_builtin("builtin:ru") {\n                                    state.error = Some(error);\n                                }
+                                if let Err(error) = activate_builtin("builtin:ru") {
+                                    state.error = Some(error);
+                                }
                             }
                         }
                     });
