@@ -260,9 +260,20 @@ fn installed() -> Vec<LanguagePack> {
 fn valid_id(id: &str) -> bool {
     let mut chars = id.chars();
     let Some(first) = chars.next() else { return false };
-    (first.is_ascii_lowercase() || first.is_ascii_digit())
+    id.len() >= 3
         && id.len() <= 96
+        && (first.is_ascii_lowercase() || first.is_ascii_digit())
         && chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '.' | '_' | '-'))
+}
+
+fn valid_locale(locale: &str) -> bool {
+    let mut parts = locale.split(|ch| ch == '-' || ch == '_');
+    let Some(language) = parts.next() else { return false };
+    (2..=8).contains(&language.len())
+        && language.chars().all(|ch| ch.is_ascii_alphabetic())
+        && parts.all(|part| {
+            (2..=8).contains(&part.len()) && part.chars().all(|ch| ch.is_ascii_alphanumeric())
+        })
 }
 
 fn placeholders(text: &str) -> Vec<String> {
@@ -291,7 +302,7 @@ fn validate(pack: &LanguagePack) -> Result<(), String> {
     if !valid_id(&pack.id) {
         return Err("Invalid language-pack ID.".to_owned());
     }
-    if !(2..=35).contains(&pack.locale.len()) || pack.name.trim().is_empty() || pack.name.len() > 80 {
+    if !valid_locale(&pack.locale) || pack.name.trim().is_empty() || pack.name.len() > 80 {
         return Err("Invalid language-pack name or locale.".to_owned());
     }
     if pack.author.len() > 120 || pack.strings.len() > MAX_STRINGS {
@@ -312,7 +323,7 @@ fn empty_pack(name: &str, locale: &str, author: &str) -> Result<LanguagePack, St
     if name.trim().is_empty() || name.len() > 80 {
         return Err("Name must contain 1–80 characters.".to_owned());
     }
-    if !(2..=35).contains(&locale.len()) || !locale.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_')) {
+    if !valid_locale(locale) || locale.len() > 35 {
         return Err("Enter a locale such as es-ES or de-DE.".to_owned());
     }
     let id = format!("{}.{}", locale.to_ascii_lowercase().replace('_', "-"), std::time::SystemTime::now()
@@ -551,6 +562,17 @@ mod tests {
             translate_template("4 of 8", "{used} of {maximum}", "{used} de {maximum}"),
             Some("4 de 8".to_owned()),
         );
+    }
+
+    #[test]
+    fn language_codes_and_pack_ids_follow_the_shared_schema() {
+        assert!(valid_id("es.community"));
+        assert!(!valid_id("a"));
+        assert!(!valid_id("../bad"));
+        assert!(valid_locale("es-ES"));
+        assert!(valid_locale("zh-Hant"));
+        assert!(!valid_locale("e-ES"));
+        assert!(!valid_locale("es-INVALIDCODE"));
     }
 
     #[test]
