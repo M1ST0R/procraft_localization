@@ -329,7 +329,7 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
     var changed by remember(pack.id) { mutableStateOf(LinkedHashMap(pack.strings)) }
     var search by remember { mutableStateOf("") }
     val catalog = remember { LanguagePacks.catalog() }
-    val visible = remember(search, catalog) {
+    val visible = remember(search, catalog, changed) {
         if (search.isBlank()) catalog else catalog.filter { it.contains(search, ignoreCase = true) || changed[it]?.contains(search, ignoreCase = true) == true }
     }
     Column(Modifier.fillMaxSize().background(Color(0xFF000000)).padding(horizontal = 16.dp, vertical = 10.dp)) {
@@ -353,7 +353,9 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
                     OutlinedTextField(
                         value = changed[source] ?: "",
                         onValueChange = { value ->
-                            if (value.isBlank()) changed.remove(source) else changed[source] = value
+                            changed = LinkedHashMap(changed).apply {
+                                if (value.isBlank()) remove(source) else put(source, value)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         label = { MaterialText("Translation") },
