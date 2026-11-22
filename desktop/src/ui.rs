@@ -1061,24 +1061,24 @@ impl Interface {
     /// Advanced settings' page, while it is up: a change is kept and the artwork follows it.
     fn advanced_settings(&mut self, ctx: &egui::Context, session: &CanvasSession) {
         use crate::settings::Said;
+        if self.settings {
+            match crate::settings::show(ctx, &mut self.prefs) {
+                Some(Said::Changed) => {
+                    self.prefs.apply(session);
+                    // the companion put away, its Zoom or Move goes off
+                    if !self.prefs.touch_companion {
+                        self.companion.mode = crate::companion::Mode::None;
+                    }
+                }
+                Some(Said::Licences) => self.licences = true,
+                Some(Said::LanguagePacks) => { self.language_packs = true; crate::language_packs::open(); }
+                Some(Said::Done) => self.settings = false,
+                None => {}
+            }
+        }
+        // Draw the manager after the settings page so its native window remains on top.
         if self.language_packs {
             crate::language_packs::show(ctx);
-        }
-        if !self.settings {
-            return;
-        }
-        match crate::settings::show(ctx, &mut self.prefs) {
-            Some(Said::Changed) => {
-                self.prefs.apply(session);
-                // the companion put away, its Zoom or Move goes off
-                if !self.prefs.touch_companion {
-                    self.companion.mode = crate::companion::Mode::None;
-                }
-            }
-            Some(Said::Licences) => self.licences = true,
-            Some(Said::LanguagePacks) => { self.language_packs = true; crate::language_packs::open(); }
-            Some(Said::Done) => self.settings = false,
-            None => {}
         }
     }
 
