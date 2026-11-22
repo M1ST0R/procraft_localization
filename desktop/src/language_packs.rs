@@ -195,9 +195,9 @@ fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<S
             return None;
         }
         if let Some(previous) = values.insert(name.clone(), value.to_owned())
-            && previous != value {
-                return None;
-            }
+            && previous != value
+        {
+            return None;
         }
         if is_last {
             let suffix = pattern.get(*end..)?;
