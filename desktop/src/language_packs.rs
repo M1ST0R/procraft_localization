@@ -194,8 +194,8 @@ fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<S
         if value.is_empty() {
             return None;
         }
-        if let Some(previous) = values.insert(name.clone(), value.to_owned()) {
-            if previous != value {
+        if let Some(previous) = values.insert(name.clone(), value.to_owned())
+            && previous != value {
                 return None;
             }
         }
@@ -323,7 +323,7 @@ fn installed() -> Vec<LanguagePack> {
             (path.extension().is_some_and(|ext| ext == "procraft-lang")).then(|| read_pack(&path).ok()).flatten()
         })
         .collect();
-    packs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    packs.sort_by_key(|pack| pack.name.to_lowercase());
     packs
 }
 
@@ -337,7 +337,7 @@ fn valid_id(id: &str) -> bool {
 }
 
 fn valid_locale(locale: &str) -> bool {
-    let mut parts = locale.split(|ch| ch == '-' || ch == '_');
+    let mut parts = locale.split(['-', '_']);
     let Some(language) = parts.next() else { return false };
     (2..=8).contains(&language.len())
         && language.chars().all(|ch| ch.is_ascii_alphabetic())
@@ -350,13 +350,11 @@ fn placeholders(text: &str) -> Vec<String> {
     for (index, ch) in text.char_indices() {
         if ch == '{' {
             start = Some(index);
-        } else if ch == '}' {
-            if let Some(begin) = start.take() {
-                let end = index.saturating_add(ch.len_utf8());
-                if let Some(value) = text.get(begin..end) {
-                    values.push(value.to_owned());
-                }
-            }
+        } else if ch == '}' 
+            && let Some(begin) = start.take()
+            && let Some(value) = text.get(begin..index.saturating_add(ch.len_utf8()))
+        {
+            values.push(value.to_owned());
         }
     }
     values.sort();
@@ -512,26 +510,25 @@ pub fn show(ctx: &egui::Context) {
                         if ui.button(tr("New translation")).clicked() {
                             state.making_new = !state.making_new;
                         }
-                        if ui.button(tr("Import .procraft-lang")).clicked() {
-                            if let Some(path) = rfd::FileDialog::new()
+                        if ui.button(tr("Import .procraft-lang")).clicked()
+                            && let Some(path) = rfd::FileDialog::new()
                                 .add_filter("ProCraft language pack", &["procraft-lang"])
                                 .pick_file()
-                            {
-                                match import_pack(&path) {
-                                    Ok(pack) => state.editor = None,
-                                    Err(error) => state.error = Some(error),
-                                }
+                        {
+                            match import_pack(&path) {
+                                Ok(_) => state.editor = None,
+                                Err(error) => state.error = Some(error),
                             }
                         }
-                        if ui.button(tr("English (source strings)")).clicked() {
-                            if let Err(error) = activate_builtin("builtin:en") {
-                                state.error = Some(error);
-                            }
+                        if ui.button(tr("English (source strings)")).clicked()
+                            && let Err(error) = activate_builtin("builtin:en")
+                        {
+                            state.error = Some(error);
                         }
-                        if ui.button(tr("Русский — встроенный")).clicked() {
-                            if let Err(error) = activate_builtin("builtin:ru") {
-                                state.error = Some(error);
-                            }
+                        if ui.button(tr("Русский — встроенный")).clicked()
+                            && let Err(error) = activate_builtin("builtin:ru")
+                        {
+                            state.error = Some(error);
                         }
                     });
                     if state.making_new {
@@ -574,10 +571,9 @@ pub fn show(ctx: &egui::Context) {
                                         format!("{} · {} · {} strings", pack.name, pack.locale, pack.strings.len()),
                                     )
                                     .clicked()
+                                    && let Err(error) = activate_pack(pack)
                                 {
-                                    if let Err(error) = activate_pack(pack) {
-                                        state.error = Some(error);
-                                    }
+                                    state.error = Some(error);
                                 }
                             });
                         }
@@ -589,26 +585,26 @@ pub fn show(ctx: &egui::Context) {
                             state.editor = selected.clone();
                             state.query.clear();
                         }
-                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Export"))).clicked() {
-                            if let Some(pack) = selected.as_ref() {
-                                if let Err(error) = export_pack(pack, false) {
-                                    state.error = Some(error);
-                                }
-                            }
+                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Export"))).clicked()
+                            && let Some(pack) = selected.as_ref()
+                            && let Err(error) = export_pack(pack, false)
+                        {
+                            state.error = Some(error);
                         }
-                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Share"))).clicked() {
-                            if let Some(pack) = selected.as_ref() {
-                                if let Err(error) = export_pack(pack, true) {
-                                    state.error = Some(error);
-                                }
-                            }
+                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Share"))).clicked()
+                            && let Some(pack) = selected.as_ref()
+                            && let Err(error) = export_pack(pack, true)
+                        {
+                            state.error = Some(error);
                         }
-                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Delete"))).clicked() {
-                            if let Some(pack) = selected.as_ref() {
-                                let _ = std::fs::remove_file(pack_path(&pack.id));
-                                if let Err(error) = activate_builtin("builtin:ru") {
-                                    state.error = Some(error);
-                                }
+                        if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Delete"))).clicked()
+                            && let Some(pack) = selected.as_ref()
+                        {
+                            if let Err(error) = std::fs::remove_file(pack_path(&pack.id))
+                                .map_err(|error| error.to_string())
+                                .and_then(|()| activate_builtin("builtin:ru"))
+                            {
+                                state.error = Some(error);
                             }
                         }
                     });
