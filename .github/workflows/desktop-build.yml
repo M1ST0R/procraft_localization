@@ -51,8 +51,9 @@ jobs:
           key: desktop-ru-windows-x64
 
       - name: Test desktop translations
-        run: cargo test -p procraft-desktop translation::tests
-        run: cargo test -p procraft-desktop language_packs::tests
+        run: |
+          cargo test -p procraft-desktop translation::tests
+          cargo test -p procraft-desktop language_packs::tests
  
       - name: Test PNG export helpers
         run: cargo test -p procraft-core --lib project::signature_tests
@@ -98,7 +99,9 @@ jobs:
           key: desktop-ru-linux-x86_64
 
       - name: Test desktop translations
-        run: cargo test -p procraft-desktop translation::tests
+        run: |
+          cargo test -p procraft-desktop translation::tests
+          cargo test -p procraft-desktop language_packs::tests
  
       - name: Test PNG export helpers
         run: cargo test -p procraft-core --lib project::signature_tests
