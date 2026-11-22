@@ -49,6 +49,7 @@ val appVersionCode: Int = run {
 // but it can't update a published release; or, with -Pprocraft.unsigned=true, not signed at all.
 val releaseKeystore: String? = providers.environmentVariable("PROCRAFT_KEYSTORE").orNull
 val unsignedRelease: Boolean = providers.gradleProperty("procraft.unsigned").orNull == "true"
+val demoBuild: Boolean = providers.gradleProperty("procraft.demoBuild").orNull == "true"
 
 /** rustup's `cargo` (Android Studio may not see rustup's PATH), else `cargo` from PATH; `CARGO` overrides. */
 val cargoExecutable: String = run {
@@ -165,8 +166,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            // Keep the Russian community build installable alongside the official ProCraft app.
-            applicationIdSuffix = ".ru"
+            // The demo is debug-signed and therefore gets its own ID; it can coexist with
+            // an already installed release-signed Russian community build.
+            applicationIdSuffix = if (demoBuild) ".ru.demo" else ".ru"
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
