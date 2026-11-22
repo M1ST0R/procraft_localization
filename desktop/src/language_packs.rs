@@ -350,7 +350,7 @@ fn placeholders(text: &str) -> Vec<String> {
     for (index, ch) in text.char_indices() {
         if ch == '{' {
             start = Some(index);
-        } else if ch == '}' 
+        } else if ch == '}'
             && let Some(begin) = start.take()
             && let Some(value) = text.get(begin..index.saturating_add(ch.len_utf8()))
         {
