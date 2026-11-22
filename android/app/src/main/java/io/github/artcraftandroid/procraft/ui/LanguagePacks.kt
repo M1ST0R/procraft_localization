@@ -257,7 +257,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
                 }
                 .onFailure { error = it.message ?: "Could not save the pack." }
         })
-        error?.let { AlertDialog(onDismissRequest = { error = null }, title = { Text("Language pack") }, text = { MaterialText(it) }, confirmButton = { Button(onClick = { error = null }) { MaterialText("OK") } }) }
+        error?.let { AlertDialog(onDismissRequest = { error = null }, title = { Text("Language pack") }, text = { Text(it) }, confirmButton = { Button(onClick = { error = null }) { Text("OK") } }) }
         return
     }
 
@@ -271,8 +271,8 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         }
         Text("Create, edit, import and export translations. Missing strings fall back to English.", color = Dim, fontSize = 13.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { create = true }) { MaterialText("New") }
-            Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { MaterialText("Import") }
+            Button(onClick = { create = true }) { Text("New") }
+            Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
         }
         Text("BUILT-IN", color = Dim, fontSize = 12.sp)
         PackChoice("English (source strings)", selected == "builtin:en") {
@@ -297,30 +297,30 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         val selectedPack = packs.firstOrNull { it.id == selected }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { selectedPack?.let { editing = it.copy(strings = LinkedHashMap(it.strings)) } }, enabled = selectedPack != null) {
-                MaterialText("Edit")
+                Text("Edit")
             }
             Button(onClick = { selectedPack?.let { exportPicker.launch("${it.id}.procraft-lang") } }, enabled = selectedPack != null) {
-                MaterialText("Export")
+                Text("Export")
             }
             Button(onClick = { selectedPack?.let { runCatching { LanguagePacks.share(context, it) }.onFailure { error = it.message ?: "Could not share pack." } } }, enabled = selectedPack != null) {
-                MaterialText("Share")
+                Text("Share")
             }
             Button(onClick = {
                 selectedPack?.let { LanguagePacks.delete(context, it); packs = LanguagePacks.installed(context); selected = LanguagePacks.currentId() }
-            }, enabled = selectedPack != null) { MaterialText("Delete") }
+            }, enabled = selectedPack != null) { Text("Delete") }
         }
-        error?.let { AlertDialog(onDismissRequest = { error = null }, title = { MaterialText("Language pack") }, text = { MaterialText(it) }, confirmButton = { Button(onClick = { error = null }) { MaterialText("OK") } }) }
+        error?.let { AlertDialog(onDismissRequest = { error = null }, title = { Text("Language pack") }, text = { Text(it) }, confirmButton = { Button(onClick = { error = null }) { Text("OK") } }) }
     }
 
     if (create) {
         AlertDialog(
             onDismissRequest = { create = false },
-            title = { MaterialText("Create translation") },
+            title = { Text("Create translation") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(newName, { newName = it }, label = { MaterialText("Name") }, singleLine = true)
-                    OutlinedTextField(newLocale, { newLocale = it }, label = { MaterialText("Language code (e.g. es-ES)") }, singleLine = true)
-                    OutlinedTextField(newAuthor, { newAuthor = it }, label = { MaterialText("Author (optional)") }, singleLine = true)
+                    OutlinedTextField(newName, { newName = it }, label = { Text("Name") }, singleLine = true)
+                    OutlinedTextField(newLocale, { newLocale = it }, label = { Text("Language code (e.g. es-ES)") }, singleLine = true)
+                    OutlinedTextField(newAuthor, { newAuthor = it }, label = { Text("Author (optional)") }, singleLine = true)
                 }
             },
             confirmButton = {
@@ -328,9 +328,9 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
                     runCatching { LanguagePacks.create(newName, newLocale, newAuthor) }
                         .onSuccess { val saved = LanguagePacks.save(context, it); packs = LanguagePacks.installed(context); selected = saved.id; LanguagePacks.activate(context, saved.id); editing = saved; create = false; newName = ""; newLocale = ""; newAuthor = "" }
                         .onFailure { error = it.message ?: "Could not create the pack." }
-                }) { MaterialText("Create") }
+                }) { Text("Create") }
             },
-            dismissButton = { Button(onClick = { create = false }) { MaterialText("Cancel") } },
+            dismissButton = { Button(onClick = { create = false }) { Text("Cancel") } },
         )
     }
 }
@@ -363,17 +363,17 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
                 Text(pack.name, color = Ink, fontSize = 21.sp, fontWeight = FontWeight.Bold)
                 Text("${pack.locale} · ${changed.size} translated strings", color = Dim, fontSize = 12.sp)
             }
-            Button(onClick = { onSave(pack.copy(strings = changed)) }) { MaterialText("Save") }
+            Button(onClick = { onSave(pack.copy(strings = changed)) }) { Text("Save") }
         }
         OutlinedTextField(
             value = search, onValueChange = { search = it }, modifier = Modifier.fillMaxWidth(),
-            label = { MaterialText("Search source strings") }, singleLine = true,
+            label = { Text("Search source strings") }, singleLine = true,
         )
         Text("Translate the English source below. Leave a field empty to use English fallback.", color = Dim, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(visible, key = { it }) { source ->
                 Column(Modifier.fillMaxWidth().background(Color(0xFF1C1C1E), RoundedCornerShape(10.dp)).padding(10.dp)) {
-                    MaterialText(source, color = Color(0xFFD0D0D0), fontSize = 13.sp)
+                    Text(source, color = Color(0xFFD0D0D0), fontSize = 13.sp)
                     OutlinedTextField(
                         value = changed[source] ?: "",
                         onValueChange = { value ->
@@ -382,7 +382,7 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { MaterialText("Translation") },
+                        label = { Text("Translation") },
                         minLines = 1,
                     )
                 }
