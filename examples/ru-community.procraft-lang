@@ -20,6 +20,8 @@
     "Import": "Импортировать",
     "Export": "Экспорт",
     "Cancel": "Отмена",
-    "Done": "Готово"
+    "Done": "Готово",
+    "{count} artworks": "{count} работ",
+    "Delete {count} artworks?": "Удалить работы ({count})?"
   }
 }
