@@ -159,12 +159,13 @@ fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<S
         let value = remaining.get(..value_end)?;
         values.insert(name.clone(), value.to_owned());
         if is_last {
-            remaining = remaining.get(value_end..)?;
+            let suffix = pattern.get(*end..)?;
+            remaining = remaining.get(value_end + suffix.len()..)?;
+        } else {
+            remaining = remaining.get(value_end + delimiter.len()..)?;
+            cursor = next_start;
         }
-        cursor = *end;
     }
-    let suffix = pattern.get(cursor..)?;
-    remaining = remaining.strip_prefix(suffix)?;
     if !remaining.is_empty() {
         return None;
     }
