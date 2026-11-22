@@ -59,7 +59,7 @@ internal object LanguagePacks {
     private var activeId: String = "builtin:ru"
     private var activeStrings: Map<String, String>? = null
     private var activeTemplates: List<Pair<String, String>> = emptyList()
-    private val packPlaceholder = Regex("""\\{([A-Za-z][A-Za-z0-9_]*)\\}""")
+    private val packPlaceholder = Regex("""\{([A-Za-z][A-Za-z0-9_]*)\}""")
 
     /** Read by the Compose text wrapper so selecting a pack invalidates displayed labels. */
     val revision: Int get() = revisionState.intValue
