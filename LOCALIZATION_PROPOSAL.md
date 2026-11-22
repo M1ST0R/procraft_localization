@@ -4,6 +4,9 @@
 **Target:** Android (Kotlin + Jetpack Compose) and Desktop (Rust + egui)  
 **Motivation:** let users translate ProCraft, maintain their own terminology, and share language packs without maintaining separate application forks.
 
+> **Implementation note (demo branch):** the running MVP currently uses format v1 with exact English UI strings as keys, because it can be wired into the existing text-rendering boundary without a full catalog refactor. This document describes the longer-term stable-message-ID design; it is not the format currently consumed by the demo editor. See [the working demo format and UI](COMMUNITY_LANGUAGE_PACKS.md).
+
+
 ## The problem
 
 ProCraft has a large interface, and its Android and desktop front ends share part of the functionality through the Rust core. A translation added only to Android string resources would therefore leave many tool names, adjustment names, brush labels, actions, and dynamic messages untranslated. Keeping a full fork for every language also makes translations difficult to maintain when upstream changes.
