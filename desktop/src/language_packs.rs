@@ -104,11 +104,68 @@ pub fn translate_override<'a>(source: &'a str) -> Option<Cow<'a, str>> {
     match current() {
         Active::Unloaded | Active::Russian => None,
         Active::English => Some(Cow::Borrowed(source)),
-        Active::Custom(pack) => Some(Cow::Owned(
-            pack.strings.get(source).filter(|value| !value.trim().is_empty()).cloned()
-                .unwrap_or_else(|| source.to_owned())
-        )),
+        Active::Custom(pack) => {
+            let exact = pack.strings.get(source).filter(|value| !value.trim().is_empty()).cloned();
+            let translated = exact.or_else(|| {
+                pack.strings.iter()
+                    .filter(|(pattern, value)| pattern.contains('{') && !value.trim().is_empty())
+                    .find_map(|(pattern, value)| translate_template(source, pattern, value))
+            }).unwrap_or_else(|| source.to_owned());
+            Some(Cow::Owned(translated))
+        }
     }
+}
+
+/// Matches a source string against a template such as "{count} artworks" and substitutes the
+/// captured values into the translated template. Placeholders are matched by name, not position.
+fn translate_template(source: &str, pattern: &str, translated: &str) -> Option<String> {
+    let mut spans = Vec::<(String, usize, usize)>::new();
+    let mut open = None;
+    for (index, ch) in pattern.char_indices() {
+        if ch == '{' {
+            open = Some(index);
+        } else if ch == '}' {
+            let start = open.take()?;
+            let end = index + ch.len_utf8();
+            let name = pattern.get(start + 1..index)?.to_owned();
+            if name.is_empty() || !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                return None;
+            }
+            spans.push((name, start, end));
+        }
+    }
+    if spans.is_empty() || open.is_some() {
+        return None;
+    }
+
+    let mut remaining = source;
+    let mut cursor = 0;
+    let mut values = BTreeMap::<String, String>::new();
+    for (index, (name, start, end)) in spans.iter().enumerate() {
+        let literal = pattern.get(cursor..*start)?;
+        remaining = remaining.strip_prefix(literal)?;
+        let next_start = spans.get(index + 1).map_or(pattern.len(), |next| next.1);
+        let delimiter = pattern.get(*end..next_start)?;
+        let value_end = if delimiter.is_empty() {
+            remaining.len()
+        } else {
+            remaining.find(delimiter)?
+        };
+        let value = remaining.get(..value_end)?;
+        values.insert(name.clone(), value.to_owned());
+        cursor = *end;
+    }
+    let suffix = pattern.get(cursor..)?;
+    remaining = remaining.strip_prefix(suffix)?;
+    if !remaining.is_empty() {
+        return None;
+    }
+
+    let mut output = translated.to_owned();
+    for (name, value) in values {
+        output = output.replace(&format!("{{{name}}}"), &value);
+    }
+    Some(output)
 }
 
 fn active_id() -> String {
@@ -470,6 +527,22 @@ mod tests {
         assert!(validate(&pack).is_err());
         pack.strings.insert("Layer {count}".to_owned(), "Capa {count}".to_owned());
         assert!(validate(&pack).is_ok());
+    }
+
+    #[test]
+    fn named_placeholders_are_substituted_in_runtime_templates() {
+        assert_eq!(
+            translate_template("3 artworks", "{count} artworks", "{count} obras"),
+            Some("3 obras".to_owned()),
+        );
+        assert_eq!(
+            translate_template("Delete 12 artworks?", "Delete {count} artworks?", "¿Eliminar {count} obras?"),
+            Some("¿Eliminar 12 obras?".to_owned()),
+        );
+        assert_eq!(
+            translate_template("4 of 8", "{used} of {maximum}", "{used} de {maximum}"),
+            Some("4 de 8".to_owned()),
+        );
     }
 
     #[test]
