@@ -399,3 +399,55 @@ pub fn show(ctx: &egui::Context) {
         state.open = open;
     });
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shared_android_sample_is_a_valid_desktop_language_pack() {
+        let pack: LanguagePack = serde_json::from_str(include_str!("../../examples/ru-community.procraft-lang"))
+            .expect("sample JSON must parse");
+        validate(&pack).expect("sample pack must satisfy v1 validation");
+        assert_eq!(pack.locale, "ru-RU");
+        assert_eq!(pack.strings.get("Gallery").map(String::as_str), Some("Галерея"));
+    }
+
+    #[test]
+    fn a_pack_cannot_drop_or_change_named_placeholders() {
+        let mut pack = LanguagePack {
+            format_version: FORMAT_VERSION,
+            id: "es.demo".to_owned(),
+            locale: "es-ES".to_owned(),
+            name: "Español Demo".to_owned(),
+            author: "Test".to_owned(),
+            app_version: "0.0.7-beta".to_owned(),
+            catalog_version: catalog_version(),
+            base_locale: english(),
+            strings: BTreeMap::from([("Layer {count}".to_owned(), "Capa".to_owned())]),
+        };
+        assert!(validate(&pack).is_err());
+        pack.strings.insert("Layer {count}".to_owned(), "Capa {count}".to_owned());
+        assert!(validate(&pack).is_ok());
+    }
+
+    #[test]
+    fn v1_pack_id_and_size_limits_are_checked() {
+        let mut pack = LanguagePack {
+            format_version: FORMAT_VERSION,
+            id: "../bad".to_owned(),
+            locale: "es-ES".to_owned(),
+            name: "Español".to_owned(),
+            author: String::new(),
+            app_version: "0.0.7-beta".to_owned(),
+            catalog_version: catalog_version(),
+            base_locale: english(),
+            strings: BTreeMap::new(),
+        };
+        assert!(validate(&pack).is_err());
+        pack.id = "es.community".to_owned();
+        pack.strings.insert("X".to_owned(), "x".repeat(4001));
+        assert!(validate(&pack).is_err());
+    }
+}
