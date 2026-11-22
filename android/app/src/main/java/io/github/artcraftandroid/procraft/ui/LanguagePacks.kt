@@ -177,11 +177,12 @@ internal object LanguagePacks {
         val atomic = AtomicFile(packFile(context, pack.id))
         var stream: java.io.FileOutputStream? = null
         try {
-            stream = atomic.startWrite()
-            stream.write(encode(pack).toByteArray(Charsets.UTF_8))
-            atomic.finishWrite(stream)
+            val output = atomic.startWrite()
+            stream = output
+            output.write(encode(pack).toByteArray(Charsets.UTF_8))
+            atomic.finishWrite(output)
         } catch (error: Throwable) {
-            if (stream != null) atomic.failWrite(stream)
+            stream?.let(atomic::failWrite)
             throw error
         }
         revisionState.intValue++
