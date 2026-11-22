@@ -274,20 +274,21 @@ pub fn show(ctx: &egui::Context) {
                     ui.colored_label(egui::Color32::LIGHT_RED, error);
                 }
                 if let Some(mut pack) = state.editor.take() {
+                    let mut close_editor = false;
                     ui.horizontal(|ui| {
                         if ui.button("← Packs").clicked() {
-                            state.editor = None;
+                            close_editor = true;
                         }
                         ui.heading(format!("{} · {}", pack.name, pack.locale));
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if ui.button("Save").clicked() {
                                 match activate_pack(&pack) {
-                                    Ok(()) => state.editor = None,
+                                    Ok(()) => close_editor = true,
                                     Err(error) => state.error = Some(error),
                                 }
                             }
                             if ui.button("Cancel").clicked() {
-                                state.editor = None;
+                                close_editor = true;
                             }
                         });
                     });
@@ -311,7 +312,7 @@ pub fn show(ctx: &egui::Context) {
                         }
                     });
                     ui.label(format!("{} translated strings", pack.strings.len()));
-                    state.editor = Some(pack);
+                    if !close_editor { state.editor = Some(pack); }
                 } else {
                     ui.label("Create, edit, import and export translations. Missing strings fall back to English.");
                     ui.horizontal_wrapped(|ui| {
