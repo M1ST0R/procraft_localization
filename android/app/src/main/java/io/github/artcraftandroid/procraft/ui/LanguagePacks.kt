@@ -136,7 +136,11 @@ internal object LanguagePacks {
         revisionState.intValue++
     }
 
-    fun catalog(): List<String> = languageCatalog()
+    fun catalog(context: Context): List<String> = runCatching {
+        val raw = context.assets.open("localization/ui-catalog.json").bufferedReader().use { it.readText() }
+        val array = org.json.JSONArray(raw)
+        (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }
+    }.getOrElse { languageCatalog() }
 
     fun encode(pack: TranslationPack): String {
         val root = JSONObject()
@@ -326,9 +330,10 @@ private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (TranslationPack) -> Unit) {
+    val context = LocalContext.current
     var changed by remember(pack.id) { mutableStateOf(LinkedHashMap(pack.strings)) }
     var search by remember { mutableStateOf("") }
-    val catalog = remember { LanguagePacks.catalog() }
+    val catalog = remember { LanguagePacks.catalog(context) }
     val visible = remember(search, catalog, changed) {
         if (search.isBlank()) catalog else catalog.filter { it.contains(search, ignoreCase = true) || changed[it]?.contains(search, ignoreCase = true) == true }
     }
