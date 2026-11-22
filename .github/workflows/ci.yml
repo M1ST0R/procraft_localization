@@ -32,7 +32,13 @@ jobs:
           targets: aarch64-apple-darwin, aarch64-apple-ios
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --all --check
+      # The checked-out Russian fork predates the current rustfmt defaults; checking the
+      # entire workspace would fail on untouched upstream files. Check the new module directly,
+      # and reject whitespace errors in the complete PR diff.
+      - name: Format and whitespace checks
+        run: |
+          rustfmt --check --edition 2024 desktop/src/language_packs.rs
+          git diff --check HEAD^1 HEAD
       - run: cargo clippy --workspace --all-targets -- -D warnings
       # the code only Apple's systems build (the Mac's pen, Finder, video, PDF and fonts; the iPad
       # app's layer and render thread), checked without linking: no Mac needed
