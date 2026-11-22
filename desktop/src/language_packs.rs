@@ -17,8 +17,9 @@ const FORMAT_VERSION: u32 = 1;
 const MAX_PACK_BYTES: u64 = 5 * 1024 * 1024;
 const MAX_STRINGS: usize = 20_000;
 const MAX_TEMPLATE_STRINGS: usize = 128;
+const MAX_SOURCE_TEXT_BYTES: usize = 4096;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LanguagePack {
     format_version: u32,
@@ -133,7 +134,13 @@ pub fn translate_override<'a>(source: &'a str) -> Option<Cow<'a, str>> {
         Active::Custom(pack, templates) => {
             let exact = pack.strings.get(source).filter(|value| !value.trim().is_empty()).cloned();
             let translated = exact
-                .or_else(|| templates.iter().find_map(|(pattern, value)| translate_template(source, pattern, value)))
+                .or_else(|| {
+                    if source.len() > MAX_SOURCE_TEXT_BYTES {
+                        None
+                    } else {
+                        templates.iter().find_map(|(pattern, value)| translate_template(source, pattern, value))
+                    }
+                })
                 .unwrap_or_else(|| source.to_owned());
             Some(Cow::Owned(translated))
         }
@@ -219,6 +226,29 @@ fn activate_builtin(id: &str) -> Result<(), String> {
         *state = if id == "builtin:en" { Active::English } else { Active::Russian };
     }
     Ok(())
+}
+
+fn ensure_import_does_not_replace(existing: Option<&LanguagePack>, incoming: &LanguagePack) -> Result<(), String> {
+    if existing.is_some_and(|installed| installed != incoming) {
+        return Err("A different language pack with this ID is already installed.".to_owned());
+    }
+    Ok(())
+}
+
+fn import_pack(path: &Path) -> Result<LanguagePack, String> {
+    let pack = read_pack(path)?;
+    let destination = pack_path(&pack.id);
+    if destination.exists() {
+        let existing = read_pack(&destination)?;
+        ensure_import_does_not_replace(Some(&existing), &pack)?;
+        std::fs::write(active_id_path(), &pack.id).map_err(|e| e.to_string())?;
+        if let Ok(mut state) = active_lock().write() {
+            *state = active_custom(pack.clone());
+        }
+    } else {
+        activate_pack(&pack)?;
+    }
+    Ok(pack)
 }
 
 fn activate_pack(pack: &LanguagePack) -> Result<(), String> {
@@ -477,10 +507,7 @@ pub fn show(ctx: &egui::Context) {
                                 .add_filter("ProCraft language pack", &["procraft-lang"])
                                 .pick_file()
                             {
-                                match read_pack(&path).and_then(|pack| {
-                                    activate_pack(&pack)?;
-                                    Ok(pack)
-                                }) {
+                                match import_pack(&path) {
                                     Ok(pack) => state.editor = None,
                                     Err(error) => state.error = Some(error),
                                 }
@@ -623,6 +650,26 @@ mod tests {
             translate_template("4 of 8", "{used} of {maximum}", "{used} de {maximum}"),
             Some("4 de 8".to_owned()),
         );
+    }
+
+    #[test]
+    fn importing_an_existing_id_never_replaces_different_translation_data() {
+        let mut existing = LanguagePack {
+            format_version: FORMAT_VERSION,
+            id: "es.demo".to_owned(),
+            locale: "es-ES".to_owned(),
+            name: "Español".to_owned(),
+            author: "A".to_owned(),
+            app_version: "0.0.7-beta".to_owned(),
+            catalog_version: catalog_version(),
+            base_locale: english(),
+            strings: BTreeMap::from([("Gallery".to_owned(), "Galería".to_owned())]),
+        };
+        let same = existing.clone();
+        assert!(ensure_import_does_not_replace(Some(&existing), &same).is_ok());
+        existing.strings.insert("Gallery".to_owned(), "Galerie".to_owned());
+        assert!(ensure_import_does_not_replace(Some(&existing), &same).is_err());
+        assert!(ensure_import_does_not_replace(None, &same).is_ok());
     }
 
     #[test]
