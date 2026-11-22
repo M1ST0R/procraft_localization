@@ -1,8 +1,11 @@
 package io.github.artcraftandroid.procraft.ui
 
 import android.content.Context
+import android.content.ClipData
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.core.content.FileProvider
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -128,6 +131,20 @@ internal object LanguagePacks {
     fun export(context: Context, uri: Uri, pack: TranslationPack) {
         context.contentResolver.openOutputStream(uri, "wt")?.bufferedWriter(Charsets.UTF_8)?.use { it.write(encode(pack)) }
             ?: error("Could not write the selected file.")
+    }
+
+    fun share(context: Context, pack: TranslationPack) {
+        val directory = File(context.cacheDir, "exports").apply { mkdirs() }
+        val file = File(directory, "${pack.id}.procraft-lang")
+        file.writeText(encode(pack), Charsets.UTF_8)
+        val uri = FileProvider.getUriForFile(context, context.packageName + ".files", file)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/octet-stream"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            clipData = ClipData.newUri(context.contentResolver, file.name, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Share language pack"))
     }
 
     fun delete(context: Context, pack: TranslationPack) {
@@ -285,6 +302,9 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
             }
             Button(onClick = { selectedPack?.let { exportPicker.launch("${it.id}.procraft-lang") } }, enabled = selectedPack != null) {
                 MaterialText("Export")
+            }
+            Button(onClick = { selectedPack?.let { runCatching { LanguagePacks.share(context, it) }.onFailure { error = it.message ?: "Could not share pack." } } }, enabled = selectedPack != null) {
+                MaterialText("Share")
             }
             Button(onClick = {
                 selectedPack?.let { LanguagePacks.delete(context, it); packs = LanguagePacks.installed(context); selected = LanguagePacks.currentId() }
