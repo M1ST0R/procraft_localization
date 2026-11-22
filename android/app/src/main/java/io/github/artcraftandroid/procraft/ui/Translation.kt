@@ -1237,6 +1237,8 @@ private val russianUi = mapOf(
     "Earth" to "Земля",
 )
 
+internal fun languageCatalog(): List<String> = russianUi.keys.sorted()
+
 private val artworkCount = Regex("""^([0-9]+) artworks$""")
 private val quickMenuName = Regex("""^QuickMenu ([0-9]+)$""")
 private val deleteArtworkCount = Regex("""^Delete ([0-9]+) artworks?\?$""")
@@ -1247,6 +1249,7 @@ private val trackedTime = Regex("""^([0-9]+)h ([0-9]+)m$""")
 private val layerSetCount = Regex("""^([0-9]+) of ([0-9]+)$""")
 
 internal fun localizeUiText(source: String): String {
+    LanguagePacks.override(source)?.let { return it }
     russianUi[source]?.let { return it }
     if (source == source.uppercase()) {
         russianUi.entries.firstOrNull { it.key.uppercase() == source }?.let { return it.value }
