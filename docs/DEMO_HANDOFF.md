@@ -57,7 +57,7 @@ Both platforms ship the same source catalog at `assets/localization/ui-catalog.j
 - Import is limited to 5 MB and no more than 20,000 translation entries.
 - IDs and metadata have format/length checks.
 - Keys and values are length-limited.
-- Named placeholders like `{count}` must be preserved exactly.
+- Named placeholders like `{count}` must be preserved exactly and are substituted at runtime when the source UI text matches a catalog template.
 - Missing or empty values fall back to the English source string.
 - A custom pack does not silently fall back to Russian.
 - Packs contain JSON text only. No code, scripts, plugin permissions or network actions are loaded.
@@ -91,7 +91,7 @@ This demo is built to work now on the existing text-rendering boundary, so v1 us
 
 - When upstream changes an English phrase, a corresponding pack entry may need updating.
 - Some generated/parameterized text, plugin content and UI text outside the two rendering wrappers may not be editable yet.
-- The pack manager uses a shared catalog of 1,364 source strings derived from the current Android and Desktop translation dictionaries.
+- The pack manager uses a shared catalog of 1,371 source strings derived from the current Android and Desktop translation dictionaries.
 - Sharing is file-based, not a hosted translation marketplace. A user exports the pack and sends the file.
 - The bundled Russian dictionary remains a built-in option; users can create/import their own packs and choose which one is active.
 - There is no auto-update marketplace, moderation or remote sync.
