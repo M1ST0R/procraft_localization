@@ -356,7 +356,7 @@ internal object LanguagePacks {
     }
 
     private fun placeholders(value: String): List<String> =
-        Regex("\\\\{[^{}]+}").findAll(value).map { it.value }.sorted().toList()
+        Regex("\\{[^{}]+}").findAll(value).map { it.value }.sorted().toList()
 
     private fun refreshTemplates() {
         activeTemplates = activeStrings?.entries
@@ -412,7 +412,7 @@ internal object LanguagePacks {
             if (inString) {
                 when {
                     escaped -> escaped = false
-                    character == '\\\\' -> escaped = true
+                    character == '\\' -> escaped = true
                     character == '"' -> inString = false
                 }
                 continue
