@@ -109,12 +109,14 @@ jobs:
         run: |
           ./gradlew --no-daemon :app:assembleRelease :app:lintRelease \
             -Pprocraft.abis=arm64-v8a \
+            -Pprocraft.demoBuild=true \
             "-Pprocraft.version=$APP_VERSION" \
             "-Pprocraft.versionCode=$APP_VERSION_CODE"
           mkdir -p "$GITHUB_WORKSPACE/dist"
-          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-arm64.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-Demo-arm64.apk"
 
       - name: Build demo APK (debug-signed; no signing secrets)
+        working-directory: android
         if: ${{ !(github.ref == 'refs/heads/translation/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
         working-directory: android
         env:
