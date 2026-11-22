@@ -1,7 +1,8 @@
 # Demo handoff: Community Language Packs
 
-**Branch:** `demo/community-language-packs`  
-**Base:** the Russian community build on ProCraft `v0.0.7-beta`  
+**Branch:** `demo/community-language-packs`
+
+**Base:** the Russian community build on ProCraft `v0.0.7-beta`
 **Purpose:** an end-to-end, in-app MVP that users can try, rather than a proposal or a static sample file.
 
 ## User-facing workflow
