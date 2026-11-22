@@ -316,7 +316,7 @@ internal object LanguagePacks {
                 pack.catalogVersion.length <= 80 &&
                 pack.baseLocale.length <= 35 &&
                 pack.strings.size <= MAX_PACK_STRINGS &&
-                pack.strings.keys.count(PackPlaceholderPattern::containsMatchIn) <= MAX_TEMPLATE_STRINGS
+                pack.strings.keys.count { PackPlaceholderPattern.containsMatchIn(it) } <= MAX_TEMPLATE_STRINGS
         ) { "Pack metadata or string count is too large." }
         pack.strings.forEach { (key, value) ->
             require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) {
@@ -734,7 +734,7 @@ private fun PackEditorPage(
             if (inString) {
                 when {
                     escaped -> escaped = false
-                    character == '\\\\' -> escaped = true
+                    character == '\\' -> escaped = true
                     character == '"' -> inString = false
                 }
                 continue
