@@ -7,8 +7,9 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::{OnceLock, RwLock};
+use std::sync::{Arc, OnceLock, RwLock};
 
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +18,7 @@ const MAX_PACK_BYTES: u64 = 5 * 1024 * 1024;
 const MAX_STRINGS: usize = 20_000;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct LanguagePack {
     format_version: u32,
     id: String,
@@ -34,18 +36,16 @@ struct LanguagePack {
     strings: BTreeMap<String, String>,
 }
 
-fn tr(source: &str) -> String { crate::translation::translate(source).into_owned() }
+fn tr(source: &str) -> String {\n    crate::translation::translate(source).into_owned()\n}
 
-fn unknown_version() -> String { "unknown".to_owned() }
-fn catalog_version() -> String { "procraft-ui-source-1".to_owned() }
-fn english() -> String { "en".to_owned() }
+fn unknown_version() -> String {\n    "unknown".to_owned()\n}\nfn catalog_version() -> String {\n    "procraft-ui-source-1".to_owned()\n}\nfn english() -> String {\n    "en".to_owned()\n}
 
 #[derive(Clone)]
 enum Active {
     Unloaded,
     Russian,
     English,
-    Custom(LanguagePack),
+    Custom(Arc<LanguagePack>),
 }
 
 static ACTIVE: OnceLock<RwLock<Active>> = OnceLock::new();
@@ -67,12 +67,15 @@ fn pack_path(id: &str) -> PathBuf {
 }
 
 fn read_pack(path: &Path) -> Result<LanguagePack, String> {
-    let metadata = std::fs::metadata(path).map_err(|e| e.to_string())?;
-    if metadata.len() > MAX_PACK_BYTES {
+    let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
+    let mut bounded = file.take(MAX_PACK_BYTES + 1);
+    let mut raw = String::new();
+    bounded.read_to_string(&mut raw).map_err(|e| e.to_string())?;
+    if raw.len() as u64 > MAX_PACK_BYTES {
         return Err("Language pack is larger than 5 MB.".to_owned());
     }
-    let raw = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
-    let pack: LanguagePack = serde_json::from_str(&raw).map_err(|e| format!("Invalid language pack: {e}"))?;
+    let pack: LanguagePack =
+        serde_json::from_str(&raw).map_err(|e| format!("Invalid language pack: {e}"))?;
     validate(&pack)?;
     Ok(pack)
 }
@@ -83,15 +86,18 @@ fn current() -> Active {
     if !matches!(loaded, Active::Unloaded) {
         return loaded;
     }
-    let next = std::fs::read_to_string(active_id_path()).ok().and_then(|id| {
-        let id = id.trim();
-        match id {
-            "builtin:en" => Some(Active::English),
-            "" | "builtin:ru" => Some(Active::Russian),
-            _ if valid_id(id) => read_pack(&pack_path(id)).ok().map(Active::Custom),
-            _ => None,
-        }
-    }).unwrap_or(Active::Russian);
+    let next = std::fs::read_to_string(active_id_path())
+        .ok()
+        .and_then(|id| {
+            let id = id.trim();
+            match id {
+                "builtin:en" => Some(Active::English),
+                "" | "builtin:ru" => Some(Active::Russian),
+                _ if valid_id(id) => read_pack(&pack_path(id)).ok().map(|pack| Active::Custom(Arc::new(pack))),
+                _ => None,
+            }
+        })
+        .unwrap_or(Active::Russian);
     if let Ok(mut state) = lock.write() {
         *state = next.clone();
     }
@@ -105,12 +111,19 @@ pub fn translate_override<'a>(source: &'a str) -> Option<Cow<'a, str>> {
         Active::Unloaded | Active::Russian => None,
         Active::English => Some(Cow::Borrowed(source)),
         Active::Custom(pack) => {
-            let exact = pack.strings.get(source).filter(|value| !value.trim().is_empty()).cloned();
-            let translated = exact.or_else(|| {
-                pack.strings.iter()
-                    .filter(|(pattern, value)| pattern.contains('{') && !value.trim().is_empty())
-                    .find_map(|(pattern, value)| translate_template(source, pattern, value))
-            }).unwrap_or_else(|| source.to_owned());
+            let exact = pack
+                .strings
+                .get(source)
+                .filter(|value| !value.trim().is_empty())
+                .cloned();
+            let translated = exact
+                .or_else(|| {
+                    pack.strings
+                        .iter()
+                        .filter(|(pattern, value)| pattern.contains('{') && !value.trim().is_empty())
+                        .find_map(|(pattern, value)| translate_template(source, pattern, value))
+                })
+                .unwrap_or_else(|| source.to_owned());
             Some(Cow::Owned(translated))
         }
     }
@@ -249,11 +262,18 @@ fn reveal_pack(path: &Path) {
 }
 
 fn installed() -> Vec<LanguagePack> {
-    let Ok(entries) = std::fs::read_dir(packs_dir()) else { return Vec::new() };
-    let mut packs: Vec<LanguagePack> = entries.filter_map(Result::ok).filter_map(|entry| {
-        let path = entry.path();
-        (path.extension().is_some_and(|ext| ext == "procraft-lang")).then(|| read_pack(&path).ok()).flatten()
-    }).collect();
+    let Ok(entries) = std::fs::read_dir(packs_dir()) else {
+        return Vec::new();
+    };
+    let mut packs: Vec<LanguagePack> = entries
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let path = entry.path();
+            (path.extension().is_some_and(|ext| ext == "procraft-lang"))
+                .then(|| read_pack(&path).ok())
+                .flatten()
+        })
+        .collect();
     packs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     packs
 }
@@ -327,8 +347,13 @@ fn empty_pack(name: &str, locale: &str, author: &str) -> Result<LanguagePack, St
     if !valid_locale(locale) || locale.len() > 35 {
         return Err("Enter a locale such as es-ES or de-DE.".to_owned());
     }
-    let id = format!("{}.{}", locale.to_ascii_lowercase().replace('_', "-"), std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH).map_or(1, |duration| duration.as_secs()));
+    let id = format!(
+        "{}.{}",
+        locale.to_ascii_lowercase().replace('_', "-"),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(1, |duration| duration.as_nanos())
+    );
     let pack = LanguagePack {
         format_version: FORMAT_VERSION,
         id,
@@ -410,11 +435,11 @@ pub fn show(ctx: &egui::Context) {
                     let search = state.query.to_lowercase();
                     let entries = catalog();
                     egui::ScrollArea::vertical().max_height(510.0).show(ui, |ui| {
-                        for source in entries.iter().filter(|source| search.is_empty() || source.to_lowercase().contains(&search)) {
+                        for source in\n                            entries.iter().filter(|source| search.is_empty() || source.to_lowercase().contains(&search))\n                        {
                             ui.horizontal(|ui| {
                                 ui.add_sized([310.0, 28.0], egui::Label::new(source));
                                 let mut value = pack.strings.get(source).cloned().unwrap_or_default();
-                                if ui.add_sized([ui.available_width(), 28.0], egui::TextEdit::singleline(&mut value)).changed() {
+                                if ui\n                                    .add_sized([ui.available_width(), 28.0], egui::TextEdit::singleline(&mut value))\n                                    .changed()\n                                {
                                     if value.trim().is_empty() {
                                         pack.strings.remove(source);
                                     } else {
@@ -425,7 +450,7 @@ pub fn show(ctx: &egui::Context) {
                         }
                     });
                     ui.label(format!("{} translated strings", pack.strings.len()));
-                    if !close_editor { state.editor = Some(pack); }
+                    if !close_editor {\n                        state.editor = Some(pack);\n                    }
                 } else {
                     ui.label(tr("Create, edit, import and export translations. Missing strings fall back to English."));
                     ui.horizontal_wrapped(|ui| {
@@ -433,32 +458,33 @@ pub fn show(ctx: &egui::Context) {
                             state.making_new = !state.making_new;
                         }
                         if ui.button(tr("Import .procraft-lang")).clicked() {
-                            if let Some(path) = rfd::FileDialog::new().add_filter("ProCraft language pack", &["procraft-lang"]).pick_file() {
-                                match read_pack(&path).and_then(|pack| { activate_pack(&pack)?; Ok(pack) }) {
+                            if let Some(path) = rfd::FileDialog::new()\n                                .add_filter("ProCraft language pack", &["procraft-lang"])\n                                .pick_file()\n                            {
+                                match read_pack(&path).and_then(|pack| {\n                                    activate_pack(&pack)?;\n                                    Ok(pack)\n                                }) {
                                     Ok(pack) => state.editor = None,
                                     Err(error) => state.error = Some(error),
                                 }
                             }
                         }
                         if ui.button(tr("English (source strings)")).clicked() {
-                            if let Err(error) = activate_builtin("builtin:en") { state.error = Some(error); }
+                            if let Err(error) = activate_builtin("builtin:en") {\n                                state.error = Some(error);\n                            }
                         }
                         if ui.button(tr("Русский — встроенный")).clicked() {
-                            if let Err(error) = activate_builtin("builtin:ru") { state.error = Some(error); }
+                            if let Err(error) = activate_builtin("builtin:ru") {\n                                state.error = Some(error);\n                            }
                         }
                     });
                     if state.making_new {
                         ui.horizontal(|ui| {
-                            ui.label(tr("Name")); ui.text_edit_singleline(&mut state.new_name);
-                            ui.label(tr("Language code (e.g. es-ES)")); ui.text_edit_singleline(&mut state.new_locale);
+                            ui.label(tr("Name"));\n                            ui.text_edit_singleline(&mut state.new_name);
+                            ui.label(tr("Language code (e.g. es-ES)"));\n                            ui.text_edit_singleline(&mut state.new_locale);
                         });
                         ui.horizontal(|ui| {
-                            ui.label(tr("Author (optional)")); ui.text_edit_singleline(&mut state.new_author);
+                            ui.label(tr("Author (optional)"));\n                            ui.text_edit_singleline(&mut state.new_author);
                             if ui.button(tr("Create and edit")).clicked() {
                                 match empty_pack(&state.new_name, &state.new_locale, &state.new_author) {
                                     Ok(pack) => {
-                                        if let Err(error) = activate_pack(&pack) { state.error = Some(error); }
-                                        else {
+                                        if let Err(error) = activate_pack(&pack) {
+                                            state.error = Some(error);
+                                        } else {
                                             state.editor = Some(pack);
                                             state.making_new = false;
                                             state.new_name.clear();
@@ -477,8 +503,16 @@ pub fn show(ctx: &egui::Context) {
                     egui::ScrollArea::vertical().max_height(330.0).show(ui, |ui| {
                         for pack in &packs {
                             ui.horizontal(|ui| {
-                                if ui.selectable_label(active_id() == pack.id, format!("{} · {} · {} strings", pack.name, pack.locale, pack.strings.len())).clicked() {
-                                    if let Err(error) = activate_pack(pack) { state.error = Some(error); }
+                                if ui
+                                    .selectable_label(
+                                        active_id() == pack.id,
+                                        format!("{} · {} · {} strings", pack.name, pack.locale, pack.strings.len()),
+                                    )
+                                    .clicked()
+                                {
+                                    if let Err(error) = activate_pack(pack) {
+                                        state.error = Some(error);
+                                    }
                                 }
                             });
                         }
@@ -507,7 +541,7 @@ pub fn show(ctx: &egui::Context) {
                         if ui.add_enabled(selected.is_some(), egui::Button::new(tr("Delete"))).clicked() {
                             if let Some(pack) = selected.as_ref() {
                                 let _ = std::fs::remove_file(pack_path(&pack.id));
-                                if let Err(error) = activate_builtin("builtin:ru") { state.error = Some(error); }
+                                if let Err(error) = activate_builtin("builtin:ru") {\n                                    state.error = Some(error);\n                                }
                             }
                         }
                     });
@@ -551,10 +585,7 @@ mod tests {
 
     #[test]
     fn named_placeholders_are_substituted_in_runtime_templates() {
-        assert_eq!(
-            translate_template("3 artworks", "{count} artworks", "{count} obras"),
-            Some("3 obras".to_owned()),
-        );
+        assert_eq!(translate_template("3 artworks", "{count} artworks", "{count} obras"), Some("3 obras".to_owned()),);
         assert_eq!(
             translate_template("Delete 12 artworks?", "Delete {count} artworks?", "¿Eliminar {count} obras?"),
             Some("¿Eliminar 12 obras?".to_owned()),
