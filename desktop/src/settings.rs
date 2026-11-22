@@ -230,7 +230,8 @@ pub fn show(ctx: &egui::Context, prefs: &mut Prefs) -> Option<Said> {
                 let pack_row = pack_row.shrink2(vec2(MARGIN, 0.0));
                 ui.painter().rect_filled(pack_row, 12, argb(GROUP));
                 let pack_cy = pack_row.center().y;
-                text(ui.painter(), pos2(pack_row.left() + 16.0, pack_cy), Align2::LEFT_CENTER, "Language Packs", 17.0, Weight::Regular, argb(INK));
+                let pack_label = crate::translation::translate("Language packs");
+                text(ui.painter(), pos2(pack_row.left() + 16.0, pack_cy), Align2::LEFT_CENTER, pack_label.as_ref(), 17.0, Weight::Regular, argb(INK));
                 text(ui.painter(), pos2(pack_row.right() - 16.0, pack_cy), Align2::RIGHT_CENTER, "›", 20.0, Weight::Regular, argb(DIM));
                 if pack_response.clicked() {
                     said = Some(Said::LanguagePacks);
