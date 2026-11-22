@@ -2,6 +2,18 @@
 
 This branch is a **community-maintained Russian-language build** of ProCraft for Android, Windows and Linux. It is intended for Russian-speaking users who want a localized desktop and Android app before an official upstream localization is available. It is separate from the proposal for a reusable Community Language Packs system on [the main branch](https://github.com/M1ST0R/procraft_localization/tree/main).
 
+### Working community language-pack demo
+
+This branch includes an in-app, file-based translation manager on Android and Desktop. Users can create a language, search the shared UI source catalog, edit strings, save packs locally, import/export `.procraft-lang` files, switch active translations and delete packs. Missing strings fall back to English, and placeholders are validated on import/save.
+
+- Android: **Settings → Language packs**
+- Desktop: **Preferences → Language Packs**
+- Shared source catalog: `assets/localization/ui-catalog.json`
+- Importable sample: [`examples/ru-community.procraft-lang`](examples/ru-community.procraft-lang)
+- Detailed behavior and limitations: [`docs/COMMUNITY_LANGUAGE_PACKS.md`](docs/COMMUNITY_LANGUAGE_PACKS.md)
+
+Format v1 uses exact English UI strings as keys so it works with the current UI rendering boundary. The separate [`LOCALIZATION_PROPOSAL.md`](LOCALIZATION_PROPOSAL.md) describes a future stable-message-ID architecture.
+
 ### What this project changes
 
 - Adds a Russian UI translation layer to the Android Jetpack Compose text-rendering boundary.
