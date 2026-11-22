@@ -42,6 +42,8 @@ import java.util.UUID
 
 private const val MAX_PACK_BYTES = 5 * 1024 * 1024
 private const val MAX_PACK_STRINGS = 20_000
+private const val MAX_PACK_JSON_DEPTH = 32
+private const val MAX_TEMPLATE_STRINGS = 128
 private const val PACK_CATALOG_VERSION = "procraft-ui-source-1"
 private const val PACK_APP_VERSION = "0.0.7-beta"
 
@@ -77,7 +79,7 @@ internal object LanguagePacks {
     private val revisionState = mutableIntStateOf(0)
     private var activeId: String = "builtin:ru"
     private var activeStrings: Map<String, String>? = null
-    private var activeTemplates: List<Pair<String, String>> = emptyList()
+    private var activeTemplates: List<CompiledPackTemplate> = emptyList()
 
     /** Read by the Compose Text wrapper to recompose labels when the active pack changes. */
     val revision: Int get() = revisionState.intValue
@@ -112,8 +114,8 @@ internal object LanguagePacks {
             else -> {
                 val strings = activeStrings
                 strings?.get(source)?.takeIf(String::isNotBlank)
-                    ?: activeTemplates.firstNotNullOfOrNull { (pattern, translated) ->
-                        renderTemplate(source, pattern, translated)
+                    ?: activeTemplates.firstNotNullOfOrNull { template ->
+                        renderTemplate(source, template)
                     }
                     ?: source
             }
@@ -257,6 +259,7 @@ internal object LanguagePacks {
         require(raw.toByteArray(Charsets.UTF_8).size <= MAX_PACK_BYTES) {
             "Language pack is larger than 5 MB."
         }
+        validateJsonDepth(raw)
         val root = JSONObject(raw)
         val allowedFields = setOf(
             "format_version", "id", "locale", "name", "author",
@@ -267,7 +270,9 @@ internal object LanguagePacks {
             while (keys.hasNext()) add(keys.next())
         }
         require(actualFields.all { it in allowedFields }) { "The pack contains unsupported fields." }
-        require(root.optInt("format_version", -1) == FORMAT_VERSION) {
+        val formatVersion = root.get("format_version") as? Number
+            ?: error("The pack format version must be an integer.")
+        require(formatVersion.toDouble() == FORMAT_VERSION.toDouble()) {
             "Unsupported language-pack format version."
         }
 
@@ -288,13 +293,13 @@ internal object LanguagePacks {
         }
 
         return TranslationPack(
-            id = root.optString("id"),
-            locale = root.optString("locale"),
-            name = root.optString("name"),
-            author = root.optString("author", ""),
-            appVersion = root.optString("app_version", "unknown"),
-            catalogVersion = root.optString("catalog_version", PACK_CATALOG_VERSION),
-            baseLocale = root.optString("base_locale", "en"),
+            id = requiredString(root, "id"),
+            locale = requiredString(root, "locale"),
+            name = requiredString(root, "name"),
+            author = optionalString(root, "author", ""),
+            appVersion = optionalString(root, "app_version", "unknown"),
+            catalogVersion = optionalString(root, "catalog_version", PACK_CATALOG_VERSION),
+            baseLocale = optionalString(root, "base_locale", "en"),
             strings = strings,
         ).also(::validate)
     }
@@ -310,7 +315,8 @@ internal object LanguagePacks {
                 pack.appVersion.length <= 40 &&
                 pack.catalogVersion.length <= 80 &&
                 pack.baseLocale.length <= 35 &&
-                pack.strings.size <= MAX_PACK_STRINGS
+                pack.strings.size <= MAX_PACK_STRINGS &&
+                pack.strings.keys.count(PackPlaceholderPattern::containsMatchIn) <= MAX_TEMPLATE_STRINGS
         ) { "Pack metadata or string count is too large." }
         pack.strings.forEach { (key, value) ->
             require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) {
@@ -326,31 +332,425 @@ internal object LanguagePacks {
     private fun refreshTemplates() {
         activeTemplates = activeStrings?.entries
             ?.filter { PackPlaceholderPattern.containsMatchIn(it.key) && it.value.isNotBlank() }
-            ?.map { it.key to it.value }
-            ?.sortedByDescending { it.first.length }
+            ?.mapNotNull { (pattern, translated) -> compileTemplate(pattern, translated) }
+            ?.sortedByDescending { it.regex.pattern.length }
             .orEmpty()
     }
 
-    private fun renderTemplate(source: String, pattern: String, translated: String): String? {
-        val placeholders = PackPlaceholderPattern.findAll(pattern).toList()
+    private fun compileTemplate(pattern: String, translated: String): CompiledPackTemplate? {
+        val placeholders = PackPlaceholderPattern.findAll(pattern).map { it.value }.toList()
         if (placeholders.isEmpty()) return null
+        val ranges = PackPlaceholderPattern.findAll(pattern).toList()
         val expression = buildString {
             append('^')
             var cursor = 0
-            placeholders.forEach { placeholder ->
+            ranges.forEach { placeholder ->
                 append(Regex.escape(pattern.substring(cursor, placeholder.range.first)))
                 append("(.+?)")
                 cursor = placeholder.range.last + 1
             }
             append(Regex.escape(pattern.substring(cursor)))
-            append('$')
+            append('
+    private fun readPack(file: File): TranslationPack {
+        val bytes = AtomicFile(file).openRead().use { readBounded(it, MAX_PACK_BYTES) }
+        return decode(bytes.toString(Charsets.UTF_8))
+    }
+
+    private fun readBounded(input: InputStream, limit: Int): ByteArray {
+        val output = ByteArrayOutputStream(minOf(limit, 64 * 1024))
+        val buffer = ByteArray(8 * 1024)
+        var total = 0
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            total += count
+            require(total <= limit) { "Language pack is larger than 5 MB." }
+            output.write(buffer, 0, count)
         }
-        val match = Regex(expression).matchEntire(source) ?: return null
-        var result = translated
-        placeholders.forEachIndexed { index, placeholder ->
-            result = result.replace(placeholder.value, match.groupValues[index + 1])
+        return output.toByteArray()
+    }
+
+    private fun packsDirectory(context: Context) = File(context.filesDir, "language-packs")
+
+    private fun packFile(context: Context, id: String): File {
+        require(PackIdPattern.matches(id)) { "Invalid language-pack ID." }
+        return File(packsDirectory(context), "$id.procraft-lang")
+    }
+}
+
+@Composable
+internal fun LanguagePacksPage(onBack: () -> Unit) {
+    val context = LocalContext.current
+    var packs by remember { mutableStateOf(LanguagePacks.installed(context)) }
+    var selected by remember { mutableStateOf(LanguagePacks.currentId()) }
+    var editing by remember { mutableStateOf<TranslationPack?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var createDialog by remember { mutableStateOf(false) }
+    var newName by remember { mutableStateOf("") }
+    var newLocale by remember { mutableStateOf("") }
+    var newAuthor by remember { mutableStateOf("") }
+
+    val importPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                val pack = LanguagePacks.import(context, uri)
+                LanguagePacks.activate(context, pack.id)
+                packs = LanguagePacks.installed(context)
+                selected = pack.id
+            }.onFailure { error = it.message ?: "Import failed." }
+        }
+    }
+    val exportPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            packs.firstOrNull { it.id == selected }?.let { pack ->
+                runCatching { LanguagePacks.export(context, uri, pack) }
+                    .onFailure { error = it.message ?: "Export failed." }
+            }
+        }
+    }
+
+    if (editing != null) {
+        PackEditorPage(
+            pack = requireNotNull(editing),
+            onBack = { editing = null },
+            onSave = { changed ->
+                runCatching {
+                    LanguagePacks.save(context, changed)
+                    LanguagePacks.activate(context, changed.id)
+                    packs = LanguagePacks.installed(context)
+                    selected = changed.id
+                    editing = null
+                }.onFailure { error = it.message ?: "Could not save the pack." }
+            },
+        )
+        error?.let {
+            AlertDialog(
+                onDismissRequest = { error = null },
+                title = { Text("Language pack") },
+                text = { Text(it) },
+                confirmButton = { Button(onClick = { error = null }) { Text("OK") } },
+            )
+        }
+        return
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF000000)).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "‹ Settings",
+                color = PackBlue,
+                fontSize = 17.sp,
+                modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
+            )
+            Text(
+                "Language packs",
+                color = PackInk,
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Text(
+            "Create, edit, import and export translations. Missing strings fall back to English.",
+            color = PackDim,
+            fontSize = 13.sp,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { createDialog = true }) { Text("New") }
+            Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
+        }
+        Text("BUILT-IN", color = PackDim, fontSize = 12.sp)
+        PackChoice("English (source strings)", selected == "builtin:en") {
+            runCatching { LanguagePacks.activate(context, "builtin:en") }
+                .onSuccess { selected = "builtin:en" }
+                .onFailure { error = it.message ?: "Could not activate language." }
+        }
+        PackChoice("Русский — встроенный", selected == "builtin:ru") {
+            runCatching { LanguagePacks.activate(context, "builtin:ru") }
+                .onSuccess { selected = "builtin:ru" }
+                .onFailure { error = it.message ?: "Could not activate language." }
+        }
+        Text("INSTALLED PACKS", color = PackDim, fontSize = 12.sp)
+        if (packs.isEmpty()) {
+            Text(
+                "No custom packs yet. Create one or import a .procraft-lang file.",
+                color = PackDim,
+                fontSize = 14.sp,
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.weight(1f, fill = true),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            items(packs, key = { it.id }) { pack ->
+                PackChoice(
+                    "${pack.name} · ${pack.locale} · ${pack.strings.size} strings",
+                    selected == pack.id,
+                ) {
+                    runCatching { LanguagePacks.activate(context, pack.id) }
+                        .onSuccess { selected = pack.id }
+                        .onFailure { error = it.message ?: "Could not activate pack." }
+                }
+            }
+        }
+
+        val selectedPack = packs.firstOrNull { it.id == selected }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { selectedPack?.let { editing = it.copy(strings = LinkedHashMap(it.strings)) } },
+                enabled = selectedPack != null,
+            ) { Text("Edit") }
+            Button(
+                onClick = { selectedPack?.let { exportPicker.launch("${it.id}.procraft-lang") } },
+                enabled = selectedPack != null,
+            ) { Text("Export") }
+            Button(
+                onClick = {
+                    selectedPack?.let { pack ->
+                        runCatching { LanguagePacks.share(context, pack) }
+                            .onFailure { error = it.message ?: "Could not share pack." }
+                    }
+                },
+                enabled = selectedPack != null,
+            ) { Text("Share") }
+            Button(
+                onClick = {
+                    selectedPack?.let { pack ->
+                        runCatching { LanguagePacks.delete(context, pack) }
+                            .onSuccess {
+                                packs = LanguagePacks.installed(context)
+                                selected = LanguagePacks.currentId()
+                            }
+                            .onFailure { error = it.message ?: "Could not delete pack." }
+                    }
+                },
+                enabled = selectedPack != null,
+            ) { Text("Delete") }
+        }
+
+        error?.let {
+            AlertDialog(
+                onDismissRequest = { error = null },
+                title = { Text("Language pack") },
+                text = { Text(it) },
+                confirmButton = { Button(onClick = { error = null }) { Text("OK") } },
+            )
+        }
+    }
+
+    if (createDialog) {
+        AlertDialog(
+            onDismissRequest = { createDialog = false },
+            title = { Text("Create translation") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        label = { Text("Name") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = newLocale,
+                        onValueChange = { newLocale = it },
+                        label = { Text("Language code (e.g. es-ES)") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = newAuthor,
+                        onValueChange = { newAuthor = it },
+                        label = { Text("Author (optional)") },
+                        singleLine = true,
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    runCatching { LanguagePacks.create(newName, newLocale, newAuthor) }
+                        .onSuccess { pack ->
+                            runCatching {
+                                LanguagePacks.save(context, pack)
+                                packs = LanguagePacks.installed(context)
+                                selected = pack.id
+                                LanguagePacks.activate(context, pack.id)
+                                editing = pack
+                                createDialog = false
+                                newName = ""
+                                newLocale = ""
+                                newAuthor = ""
+                            }.onFailure { error = it.message ?: "Could not create the pack." }
+                        }
+                        .onFailure { error = it.message ?: "Could not create the pack." }
+                }) { Text("Create") }
+            },
+            dismissButton = {
+                Button(onClick = { createDialog = false }) { Text("Cancel") }
+            },
+        )
+    }
+}
+
+@Composable
+private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                if (active) Color(0xFF222C3D) else Color(0xFF1C1C1E),
+                RoundedCornerShape(10.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            if (active) "●" else "○",
+            color = if (active) PackBlue else PackDim,
+            fontSize = 16.sp,
+            modifier = Modifier.padding(end = 12.dp),
+        )
+        Text(label, color = PackInk, fontSize = 15.sp)
+    }
+}
+
+@Composable
+private fun PackEditorPage(
+    pack: TranslationPack,
+    onBack: () -> Unit,
+    onSave: (TranslationPack) -> Unit,
+) {
+    val context = LocalContext.current
+    var changed by remember(pack.id) { mutableStateOf(LinkedHashMap(pack.strings)) }
+    var search by remember { mutableStateOf("") }
+    val catalog = remember { LanguagePacks.catalog(context) }
+    val visible = remember(search, catalog, changed) {
+        if (search.isBlank()) {
+            catalog
+        } else {
+            catalog.filter {
+                it.contains(search, ignoreCase = true) ||
+                    changed[it]?.contains(search, ignoreCase = true) == true
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF000000))
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "‹ Packs",
+                color = PackBlue,
+                fontSize = 16.sp,
+                modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(pack.name, color = PackInk, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "${pack.locale} · ${changed.size} translated strings",
+                    color = PackDim,
+                    fontSize = 12.sp,
+                )
+            }
+            Button(onClick = { onSave(pack.copy(strings = LinkedHashMap(changed))) }) {
+                Text("Save")
+            }
+        }
+        OutlinedTextField(
+            value = search,
+            onValueChange = { search = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Search source strings") },
+            singleLine = true,
+        )
+        Text(
+            "Translate the English source below. Leave a field empty to use English fallback.",
+            color = PackDim,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(vertical = 6.dp),
+        )
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(visible, key = { it }) { source ->
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(Color(0xFF1C1C1E), RoundedCornerShape(10.dp))
+                        .padding(10.dp),
+                ) {
+                    Text(source, color = Color(0xFFD0D0D0), fontSize = 13.sp)
+                    OutlinedTextField(
+                        value = changed[source] ?: "",
+                        onValueChange = { value ->
+                            changed = LinkedHashMap(changed).apply {
+                                if (value.isBlank()) remove(source) else put(source, value)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Translation") },
+                        minLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+)
+        }
+        return CompiledPackTemplate(Regex(expression), placeholders, translated)
+    }
+
+    private fun renderTemplate(source: String, template: CompiledPackTemplate): String? {
+        val match = template.regex.matchEntire(source) ?: return null
+        var result = template.translated
+        template.placeholders.forEachIndexed { index, placeholder ->
+            result = result.replace(placeholder, match.groupValues[index + 1])
         }
         return result
+    }
+
+    private fun requiredString(root: JSONObject, key: String): String =
+        root.get(key) as? String ?: error("The pack field '$key' must be a string.")
+
+    private fun optionalString(root: JSONObject, key: String, default: String): String {
+        if (!root.has(key)) return default
+        return root.get(key) as? String ?: error("The pack field '$key' must be a string.")
+    }
+
+    private fun validateJsonDepth(raw: String) {
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for (character in raw) {
+            if (inString) {
+                when {
+                    escaped -> escaped = false
+                    character == '\\\\' -> escaped = true
+                    character == '"' -> inString = false
+                }
+                continue
+            }
+            when (character) {
+                '"' -> inString = true
+                '{', '[' -> {
+                    depth++
+                    require(depth <= MAX_PACK_JSON_DEPTH) { "The language pack JSON is nested too deeply." }
+                }
+                '}', ']' -> {
+                    depth--
+                    require(depth >= 0) { "The language pack JSON is malformed." }
+                }
+            }
+        }
     }
 
     private fun readPack(file: File): TranslationPack {
