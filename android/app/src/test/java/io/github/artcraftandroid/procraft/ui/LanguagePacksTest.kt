@@ -8,15 +8,13 @@ class LanguagePacksTest {
     @Test
     fun translatesASingleNamedPlaceholder() {
         val template = LanguagePacks.compileTemplate("{count} artworks", "{count} obras")
-        assertNotNull(template)
-        assertEquals("12 obras", LanguagePacks.renderTemplate("12 artworks", template!!))
+        assertEquals("12 obras", LanguagePacks.renderTemplate("12 artworks", requireNotNull(template)))
     }
 
     @Test
     fun translatesMultipleNamedPlaceholders() {
         val template = LanguagePacks.compileTemplate("{used} of {maximum}", "{used} из {maximum}")
-        assertNotNull(template)
-        assertEquals("2 из 5", LanguagePacks.renderTemplate("2 of 5", template!!))
+        assertEquals("2 из 5", LanguagePacks.renderTemplate("2 of 5", requireNotNull(template)))
     }
 
     @Test
@@ -25,8 +23,7 @@ class LanguagePacksTest {
             "{used} of {maximum}",
             "{maximum} всего ({used} использовано)",
         )
-        assertNotNull(template)
-        assertEquals("5 всего (2 использовано)", LanguagePacks.renderTemplate("2 of 5", template!!))
+        assertEquals("5 всего (2 использовано)", LanguagePacks.renderTemplate("2 of 5", requireNotNull(template)))
     }
 
     @Test
