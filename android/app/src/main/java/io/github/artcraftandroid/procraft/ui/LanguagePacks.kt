@@ -30,11 +30,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.json.JSONObject
 import java.io.File
 import java.util.Locale
+
+private val PackInk = Color(0xFFFFFFFF)
+private val PackDim = Color(0xFF8E8E93)
+private val PackBlue = Color(0xFF0A84FF)
 
 internal data class TranslationPack(
     val id: String,
@@ -305,24 +310,24 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("‹ Settings", color = Blue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
-            Text("Language packs", color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("‹ Settings", color = PackBlue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
+            Text("Language packs", color = PackInk, fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         }
-        Text("Create, edit, import and export translations. Missing strings fall back to English.", color = Dim, fontSize = 13.sp)
+        Text("Create, edit, import and export translations. Missing strings fall back to English.", color = PackDim, fontSize = 13.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { create = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
         }
-        Text("BUILT-IN", color = Dim, fontSize = 12.sp)
+        Text("BUILT-IN", color = PackDim, fontSize = 12.sp)
         PackChoice("English (source strings)", selected == "builtin:en") {
             runCatching { LanguagePacks.activate(context, "builtin:en") }.onSuccess { selected = "builtin:en" }
         }
         PackChoice("Русский — встроенный", selected == "builtin:ru") {
             runCatching { LanguagePacks.activate(context, "builtin:ru") }.onSuccess { selected = "builtin:ru" }
         }
-        Text("INSTALLED PACKS", color = Dim, fontSize = 12.sp)
+        Text("INSTALLED PACKS", color = PackDim, fontSize = 12.sp)
         if (packs.isEmpty()) {
-            Text("No custom packs yet. Create one or import a .procraft-lang file.", color = Dim, fontSize = 14.sp)
+            Text("No custom packs yet. Create one or import a .procraft-lang file.", color = PackDim, fontSize = 14.sp)
         }
         LazyColumn(Modifier.weight(1f, fill = true), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(packs, key = { it.id }) { pack ->
@@ -381,8 +386,8 @@ private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (active) "●" else "○", color = if (active) Blue else Dim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
-        Text(label, color = Ink, fontSize = 15.sp)
+        Text(if (active) "●" else "○", color = if (active) Blue else PackDim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
+        Text(label, color = PackInk, fontSize = 15.sp)
     }
 }
 
@@ -397,10 +402,10 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
     }
     Column(Modifier.fillMaxSize().background(Color(0xFF000000)).padding(horizontal = 16.dp, vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("‹ Packs", color = Blue, fontSize = 16.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
+            Text("‹ Packs", color = PackBlue, fontSize = 16.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
             Column(Modifier.weight(1f)) {
-                Text(pack.name, color = Ink, fontSize = 21.sp, fontWeight = FontWeight.Bold)
-                Text("${pack.locale} · ${changed.size} translated strings", color = Dim, fontSize = 12.sp)
+                Text(pack.name, color = PackInk, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                Text("${pack.locale} · ${changed.size} translated strings", color = PackDim, fontSize = 12.sp)
             }
             Button(onClick = { onSave(pack.copy(strings = changed)) }) { Text("Save") }
         }
@@ -408,7 +413,7 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
             value = search, onValueChange = { search = it }, modifier = Modifier.fillMaxWidth(),
             label = { Text("Search source strings") }, singleLine = true,
         )
-        Text("Translate the English source below. Leave a field empty to use English fallback.", color = Dim, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
+        Text("Translate the English source below. Leave a field empty to use English fallback.", color = PackDim, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(visible, key = { it }) { source ->
                 Column(Modifier.fillMaxWidth().background(Color(0xFF1C1C1E), RoundedCornerShape(10.dp)).padding(10.dp)) {
@@ -621,24 +626,24 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("‹ Settings", color = Blue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
-            Text("Language packs", color = Ink, fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("‹ Settings", color = PackBlue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
+            Text("Language packs", color = PackInk, fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         }
-        Text("Create, edit, import and export translations. Missing strings fall back to English.", color = Dim, fontSize = 13.sp)
+        Text("Create, edit, import and export translations. Missing strings fall back to English.", color = PackDim, fontSize = 13.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { create = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
         }
-        Text("BUILT-IN", color = Dim, fontSize = 12.sp)
+        Text("BUILT-IN", color = PackDim, fontSize = 12.sp)
         PackChoice("English (source strings)", selected == "builtin:en") {
             runCatching { LanguagePacks.activate(context, "builtin:en") }.onSuccess { selected = "builtin:en" }
         }
         PackChoice("Русский — встроенный", selected == "builtin:ru") {
             runCatching { LanguagePacks.activate(context, "builtin:ru") }.onSuccess { selected = "builtin:ru" }
         }
-        Text("INSTALLED PACKS", color = Dim, fontSize = 12.sp)
+        Text("INSTALLED PACKS", color = PackDim, fontSize = 12.sp)
         if (packs.isEmpty()) {
-            Text("No custom packs yet. Create one or import a .procraft-lang file.", color = Dim, fontSize = 14.sp)
+            Text("No custom packs yet. Create one or import a .procraft-lang file.", color = PackDim, fontSize = 14.sp)
         }
         LazyColumn(Modifier.weight(1f, fill = true), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(packs, key = { it.id }) { pack ->
@@ -697,8 +702,8 @@ private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(if (active) "●" else "○", color = if (active) Blue else Dim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
-        Text(label, color = Ink, fontSize = 15.sp)
+        Text(if (active) "●" else "○", color = if (active) Blue else PackDim, fontSize = 16.sp, modifier = Modifier.padding(end = 12.dp))
+        Text(label, color = PackInk, fontSize = 15.sp)
     }
 }
 
@@ -713,10 +718,10 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
     }
     Column(Modifier.fillMaxSize().background(Color(0xFF000000)).padding(horizontal = 16.dp, vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("‹ Packs", color = Blue, fontSize = 16.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
+            Text("‹ Packs", color = PackBlue, fontSize = 16.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
             Column(Modifier.weight(1f)) {
-                Text(pack.name, color = Ink, fontSize = 21.sp, fontWeight = FontWeight.Bold)
-                Text("${pack.locale} · ${changed.size} translated strings", color = Dim, fontSize = 12.sp)
+                Text(pack.name, color = PackInk, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                Text("${pack.locale} · ${changed.size} translated strings", color = PackDim, fontSize = 12.sp)
             }
             Button(onClick = { onSave(pack.copy(strings = changed)) }) { Text("Save") }
         }
@@ -724,7 +729,7 @@ private fun PackEditorPage(pack: TranslationPack, onBack: () -> Unit, onSave: (T
             value = search, onValueChange = { search = it }, modifier = Modifier.fillMaxWidth(),
             label = { Text("Search source strings") }, singleLine = true,
         )
-        Text("Translate the English source below. Leave a field empty to use English fallback.", color = Dim, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
+        Text("Translate the English source below. Leave a field empty to use English fallback.", color = PackDim, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
         LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(visible, key = { it }) { source ->
                 Column(Modifier.fillMaxWidth().background(Color(0xFF1C1C1E), RoundedCornerShape(10.dp)).padding(10.dp)) {
