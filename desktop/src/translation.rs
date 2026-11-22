@@ -6,6 +6,7 @@
 use std::borrow::Cow;
 
 pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
+    if let Some(translated) = crate::language_packs::translate_override(source) { return translated; }
     let translated = match source {
         "ProCraft" => "ProCraft",
         "Gallery" => "Галерея",
@@ -723,6 +724,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
 /// Short labels for the six narrow tabs in the Actions panel.
 /// These are deliberately shorter than the full translations so they fit without touching.
 pub fn tab_label<'a>(source: &'a str) -> Cow<'a, str> {
+    if let Some(translated) = crate::language_packs::translate_override(source) { return translated; }
     match source {
         "Add" => Cow::Borrowed("Добавить"),
         "Canvas" => Cow::Borrowed("Холст"),
