@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text as MaterialText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -258,7 +257,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
                 }
                 .onFailure { error = it.message ?: "Could not save the pack." }
         })
-        error?.let { AlertDialog(onDismissRequest = { error = null }, title = { MaterialText("Language pack") }, text = { MaterialText(it) }, confirmButton = { Button(onClick = { error = null }) { MaterialText("OK") } }) }
+        error?.let { AlertDialog(onDismissRequest = { error = null }, title = { Text("Language pack") }, text = { MaterialText(it) }, confirmButton = { Button(onClick = { error = null }) { MaterialText("OK") } }) }
         return
     }
 
