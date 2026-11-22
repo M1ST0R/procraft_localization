@@ -47,6 +47,8 @@ internal data class TranslationPack(
     val name: String,
     val author: String,
     val appVersion: String,
+    val catalogVersion: String,
+    val baseLocale: String,
     val strings: LinkedHashMap<String, String>,
 )
 
@@ -151,7 +153,10 @@ internal object LanguagePacks {
         require(Regex("[A-Za-z]{2,8}([_-][A-Za-z0-9]{2,8})*").matches(cleanLocale)) { "Enter a locale such as es-ES or de-DE." }
         val stem = cleanLocale.lowercase(Locale.ROOT).replace('_', '-')
         val id = "$stem.${System.currentTimeMillis().toString().takeLast(8)}"
-        return TranslationPack(id, cleanLocale, cleanName, author.trim().take(120), "0.0.7-beta", linkedMapOf())
+        return TranslationPack(
+            id, cleanLocale, cleanName, author.trim().take(120),
+            "0.0.7-beta", "procraft-ui-source-1", "en", linkedMapOf(),
+        )
     }
 
     fun save(context: Context, pack: TranslationPack): TranslationPack {
@@ -210,8 +215,8 @@ internal object LanguagePacks {
             .put("name", pack.name)
             .put("author", pack.author)
             .put("app_version", pack.appVersion)
-            .put("catalog_version", "procraft-ui-source-1")
-            .put("base_locale", "en")
+            .put("catalog_version", pack.catalogVersion)
+            .put("base_locale", pack.baseLocale)
         val strings = JSONObject()
         pack.strings.toSortedMap().forEach { (key, value) -> strings.put(key, value) }
         root.put("strings", strings)
@@ -238,6 +243,8 @@ internal object LanguagePacks {
             name = root.optString("name"),
             author = root.optString("author"),
             appVersion = root.optString("app_version", "unknown"),
+            catalogVersion = root.optString("catalog_version", "procraft-ui-source-1"),
+            baseLocale = root.optString("base_locale", "en"),
             strings = strings,
         ).also(::validate)
     }
@@ -245,7 +252,11 @@ internal object LanguagePacks {
     private fun validate(pack: TranslationPack) {
         require(pack.id.matches(Regex("[a-z0-9][a-z0-9._-]{2,95}"))) { "Invalid pack ID." }
         require(pack.locale.length in 2..35 && pack.name.isNotBlank() && pack.name.length <= 80) { "Invalid pack metadata." }
-        require(pack.author.length <= 120 && pack.strings.size <= 20000) { "Pack metadata or string count is too large." }
+        require(
+            pack.author.length <= 120 && pack.appVersion.length <= 40 &&
+                pack.catalogVersion.length <= 80 && pack.baseLocale.length <= 35 &&
+                pack.strings.size <= 20000
+        ) { "Pack metadata or string count is too large." }
         pack.strings.forEach { (key, value) ->
             require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) { "A string exceeds the format limits." }
             require(placeholders(key) == placeholders(value)) { "Placeholder mismatch in: $key" }
