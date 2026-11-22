@@ -1913,14 +1913,17 @@ pub(crate) fn onto_white(rgba: &[u8]) -> Vec<u8> {
 pub(crate) fn straight_alpha_in_place(rgba: &mut [u8]) {
     debug_assert_eq!(rgba.len() % 4, 0, "RGBA data must contain whole pixels");
     procraft_engine::par::each_part(rgba, 1 << 20, |piece| {
-        for pixel in piece.chunks_exact_mut(4) {
-            let alpha = u32::from(pixel[3]);
+        let (pixels, _) = piece.as_chunks_mut::<4>();
+        for [red, green, blue, alpha] in pixels.iter_mut() {
+            let alpha = u32::from(*alpha);
             let un = |channel: u8| {
-                (u32::from(channel) * 255 + alpha / 2).checked_div(alpha).map_or(0, |value| value.min(255) as u8)
+                (u32::from(channel) * 255 + alpha / 2)
+                    .checked_div(alpha)
+                    .map_or(0, |value| value.min(255) as u8)
             };
-            pixel[0] = un(pixel[0]);
-            pixel[1] = un(pixel[1]);
-            pixel[2] = un(pixel[2]);
+            *red = un(*red);
+            *green = un(*green);
+            *blue = un(*blue);
         }
     });
 }
