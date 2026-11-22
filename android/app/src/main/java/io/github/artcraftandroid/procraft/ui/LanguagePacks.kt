@@ -392,7 +392,7 @@ internal object LanguagePacks {
         var remaining = source
         val values = linkedMapOf<String, String>()
         template.placeholders.forEachIndexed { index, placeholder ->
-            val prefix = template.literals[index]
+            val prefix = if (index == 0) template.literals[index] else ""
             if (!remaining.startsWith(prefix)) return null
             remaining = remaining.substring(prefix.length)
 
