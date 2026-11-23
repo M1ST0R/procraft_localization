@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - russian
-      - fix/language-pack-translation-coverage
     paths:
       - "android/**"
       - "crates/**"
@@ -139,7 +138,7 @@ jobs:
       - name: Verify APK
         shell: bash
         run: |
-          APK="$(find dist -maxdepth 1 -type f -name 'ProCraft-RU*.apk' -print -quit)"
+          APK="$(find dist -maxdepth 1 -type f -name 'ProCraft-*.apk' -print -quit)"
           test -n "$APK"
           APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
           "$APKSIGNER" verify --verbose "$APK"
