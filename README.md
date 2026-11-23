@@ -1,6 +1,6 @@
-## Russian community builds (this branch)
+# ProCraft — Russian edition
 
-This branch is a **community-maintained Russian-language build** of ProCraft for Android, Windows and Linux. It is intended for Russian-speaking users who want a localized desktop and Android app before an official upstream localization is available. It is separate from the proposal for a reusable Community Language Packs system on [the main branch](https://github.com/M1ST0R/procraft_localization/tree/main).
+This `russian` branch contains the standalone Russian-language edition for Android, Windows and Linux. It does not include the Community Language Packs manager. The [`main` branch](https://github.com/M1ST0R/procraft_localization/tree/main) is the separate Lang Pack demo edition.
 
 ### What this project changes
 
