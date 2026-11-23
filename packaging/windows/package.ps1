@@ -50,6 +50,25 @@ if ($Arch -eq 'x64') {
 } else {
   throw "ARCH must be x64 or arm64, not $Arch"
 }
+$Edition = if ($env:EDITION) { $env:EDITION } else { 'official' }
+switch ($Edition) {
+  'official' {
+    $PackageName = 'procraft'; $ProductName = 'ProCraft'
+    $UpgradeCode = 'EC507040-DA02-41B4-AB27-7FE1AA22F2E5'
+    $RegistryKey = 'Software\ProCraft'; $ComponentGuid = 'ACC6EA13-1460-4C60-8E6A-0479BAD6FEB4'
+  }
+  'langpack' {
+    $PackageName = 'procraft-langpack'; $ProductName = 'ProCraft LangPack Demo'
+    $UpgradeCode = 'E2C92B8A-7D8A-46D2-9C2B-3F0F9B5A8C71'
+    $RegistryKey = 'Software\ProCraftLangPack'; $ComponentGuid = '1F97F9E8-3D1E-4F75-AF4C-3E0D7E1D4C91'
+  }
+  'ru' {
+    $PackageName = 'procraft-ru'; $ProductName = 'ProCraft RU'
+    $UpgradeCode = '3C4D8F5E-6C12-4E2D-90B2-9A4A1B0E6D31'
+    $RegistryKey = 'Software\ProCraftRU'; $ComponentGuid = 'B48C2A01-AD6C-44E1-95B0-4D3D6D04F2A8'
+  }
+  default { throw "EDITION must be official, langpack, or ru; got '$Edition'" }
+}
 $Dist = if ($env:DIST) { $env:DIST } else { Join-Path $Root 'dist' }
 $TargetDir = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR } else { Join-Path $Root 'target' }
 # WIX_EXE, not WIX: Windows runners set WIX to an old WiX 3's folder
@@ -134,11 +153,12 @@ try {
 Write-Output "ok DXC $DxcRelease ($Arch): dxcompiler.dll and dxil.dll beside ProCraft.exe"
 
 # ---- MSI ----------------------------------------------------------------------------------------
-$Msi = Join-Path $Dist "procraft-$Version-windows-$Arch.msi"
+$Msi = Join-Path $Dist "$PackageName-$Version-windows-$Arch.msi"
 Invoke-Native 'wix build' {
   & $Wix build (Join-Path $PSScriptRoot 'procraft.wxs') -arch $Arch `
     -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext -culture en-US `
-    -d "Version=$MsiVersion" -d "DisplayVersion=$Version" -d "BinDir=$Stage" `
+    -d "Version=$MsiVersion" -d "DisplayVersion=$Version" -d "ProductName=$ProductName" `
+    -d "UpgradeCode=$UpgradeCode" -d "RegistryKey=$RegistryKey" -d "ComponentGuid=$ComponentGuid" -d "BinDir=$Stage" `
     -d "IconPath=$(Join-Path $Root 'assets\app-icon\procraft.ico')" -o $Msi
 }
 Invoke-Native 'wix msi validate' {
@@ -148,7 +168,7 @@ Invoke-Native 'wix msi validate' {
 Remove-Item -Force -ErrorAction SilentlyContinue ([IO.Path]::ChangeExtension($Msi, '.wixpdb'))
 
 # ---- portable zip -------------------------------------------------------------------------------
-$Name = "procraft-$Version-windows-$Arch-portable"
+$Name = "$PackageName-$Version-windows-$Arch-portable"
 $Portable = Join-Path $TargetDir "windows-package\$Name"
 Remove-Item -Recurse -Force $Portable -ErrorAction SilentlyContinue
 Copy-Item -Recurse $Stage $Portable
