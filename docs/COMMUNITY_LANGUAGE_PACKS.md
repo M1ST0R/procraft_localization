@@ -1,13 +1,20 @@
-# Community Language Packs — edition note
+# Community Language Packs — not included in the Russian edition
 
-The `russian` branch is the standalone Russian-language edition. It does **not** contain the Community Language Packs manager, pack import/export UI or custom translation editor.
+The in-app Community Language Packs manager is implemented on the repository's `main` branch only. This `russian` branch is the separate Russian-only build and does **not** include the custom-pack editor.
 
-The working Community Language Packs MVP is maintained on the repository's `main` branch:
+On `main`, the manager is available at:
 
-- [Current implementation and format](https://github.com/M1ST0R/procraft_localization/blob/main/docs/COMMUNITY_LANGUAGE_PACKS.md)
-- [User and translator guide](https://github.com/M1ST0R/procraft_localization/blob/main/docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
+- Android: **Settings → Language packs**
+- Windows/Linux: **Preferences → Language Packs**
+
+Users of the Lang Pack demo can create, edit, save, activate, import, export, share and delete data-only `.procraft-lang` files. The current format is JSON v1, uses exact English UI text as keys and falls back to English for missing entries.
+
+For the actual feature documentation, use:
+
 - [Public feature walkthrough](https://github.com/M1ST0R/procraft_localization/blob/main/docs/COMMUNITY_LANGUAGE_PACKS_DISCUSSION.md)
-- [Pack schema](https://github.com/M1ST0R/procraft_localization/blob/main/schemas/procraft-language-pack.schema.json)
+- [User and translator guide](https://github.com/M1ST0R/procraft_localization/blob/main/docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
+- [Format, limits and implementation](https://github.com/M1ST0R/procraft_localization/blob/main/docs/COMMUNITY_LANGUAGE_PACKS.md)
+- [JSON Schema](https://github.com/M1ST0R/procraft_localization/blob/main/schemas/procraft-language-pack.schema.json)
 - [Security report](https://github.com/M1ST0R/procraft_localization/blob/main/security/language-packs-2026-11-23/REPORT.md)
 
-This file exists in the Russian branch only as a navigation note so readers do not mistake an older format proposal for a feature shipped in this edition. For current behavior, limits, validation and sample files, use the `main`-branch documentation linked above.
+Do not assume that any of these editor screens or import/export controls exist in the Russian-only build.
