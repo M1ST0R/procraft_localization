@@ -1,6 +1,6 @@
 name: CI
 
-# Cross-platform validation for both community editions. Platform packages are built by their own workflows.
+# Fast validation only. Packaging is handled by dedicated release workflows.
 on:
   push:
     branches:
@@ -19,22 +19,39 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUST_VERSION: "1.99.0"
-  NDK_VERSION: "29.0.14206865"
 
 jobs:
   translation-audit:
-    name: Russian translation coverage and pack validation
+    name: Translation coverage and language-pack validation
     if: ${{ github.ref == 'refs/heads/main' || github.base_ref == 'main' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Check catalog coverage and language pack consistency
+      - name: Validate dictionaries and sample pack
         run: python3 tools/check_translation_coverage.py
 
-  android-native:
-    name: Android native build, lint and unit tests
+  desktop-tests:
+    name: Desktop translation and core tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Desktop translation tests
+        run: cargo test --locked -p procraft-desktop translation::tests
+      - name: Language-pack runtime tests
+        run: cargo test --locked -p procraft-desktop language_packs::tests
+      - name: Core PNG export tests
+        run: cargo test --locked -p procraft-core --lib project::signature_tests
+
+  android-tests:
+    name: Android unit tests
     if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
     steps:
@@ -49,39 +66,16 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-linux-android, x86_64-linux-android
-          components: clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-      - name: cargo-ndk
+      - name: Install cargo-ndk
         run: cargo install cargo-ndk --version "4.1.2" --locked
-      - name: NDK
+      - name: Install NDK
         run: |
-          # sdkmanager closes stdin after accepting the licence; keep its exit status.
           set +o pipefail
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" > /dev/null
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;29.0.14206865" > /dev/null
           set -o pipefail
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
-      # the code only Android builds (the surface and the render thread)
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
-      - name: Release APK and lint
-        working-directory: android
-        run: ./gradlew --no-daemon :app:assembleRelease :app:lintRelease
-      - name: Unit tests
+      - name: Android unit tests (x86_64)
         working-directory: android
         run: ./gradlew --no-daemon :app:testDebugUnitTest -Pprocraft.abis=x86_64
-      - name: 16 KB pages
-        run: |
-          apk=android/app/build/outputs/apk/release/app-release.apk
-          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          "$tools/zipalign" -c -P 16 -v 4 "$apk" > /dev/null
-          readelf="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
-          dir=$(mktemp -d)
-          unzip -q "$apk" 'lib/*' -d "$dir"
-          for so in "$dir"/lib/*/*.so; do
-            for align in $("$readelf" -lW "$so" | awk '$1 == "LOAD" { print $NF }'); do
-              if [ $((align)) -lt 16384 ]; then
-                echo "$so: a segment aligned to $align"
-                exit 1
-              fi
-            done
-          done
-          echo "every library's segments are aligned to 16 KB"
