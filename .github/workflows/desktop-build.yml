@@ -54,11 +54,11 @@ jobs:
 
       - name: Test desktop translations
         run: |
-          cargo test -p procraft-desktop translation::tests
-          cargo test -p procraft-desktop language_packs::tests
+          cargo test --locked -p procraft-desktop translation::tests
+          cargo test --locked -p procraft-desktop language_packs::tests
 
       - name: Test PNG export helpers
-        run: cargo test -p procraft-core --lib project::signature_tests
+        run: cargo test --locked -p procraft-core --lib project::signature_tests
 
       - name: Install WiX v5
         shell: bash
@@ -120,11 +120,11 @@ jobs:
 
       - name: Test desktop translations
         run: |
-          cargo test -p procraft-desktop translation::tests
-          cargo test -p procraft-desktop language_packs::tests
+          cargo test --locked -p procraft-desktop translation::tests
+          cargo test --locked -p procraft-desktop language_packs::tests
 
       - name: Test PNG export helpers
-        run: cargo test -p procraft-core --lib project::signature_tests
+        run: cargo test --locked -p procraft-core --lib project::signature_tests
 
       - name: Install verified packaging tools
         shell: bash
