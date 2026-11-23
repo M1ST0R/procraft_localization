@@ -60,8 +60,17 @@ class LanguagePacksTest {
     @Test
     fun acceptsLongSourceKeysUsedByTheFullCatalog() {
         val key = "A".repeat(175)
-        val raw = """{"format_version":1,"id":"ru.demo","locale":"ru-RU","name":"Русский","strings":{"$key":"Перевод"}}"""
-        assertEquals("Перевод", LanguagePacks.decode(raw).strings[key])
+        val strings = org.json.JSONObject().put(key, "Перевод")
+        val raw = org.json.JSONObject()
+            .put("format_version", 1)
+            .put("id", "ru.community.demo")
+            .put("locale", "ru-RU")
+            .put("name", "Русский")
+            .put("strings", strings)
+            .toString()
+
+        val decoded = LanguagePacks.decode(raw)
+        assertEquals("Перевод", decoded.strings[key])
     }
 
 }
