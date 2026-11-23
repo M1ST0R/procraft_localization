@@ -37,6 +37,8 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import java.util.Locale
 import java.util.UUID
 
@@ -44,7 +46,7 @@ private const val MAX_PACK_BYTES = 5 * 1024 * 1024
 private const val MAX_PACK_STRINGS = 20_000
 private const val MAX_PACK_JSON_DEPTH = 32
 private const val MAX_TEMPLATE_STRINGS = 128
-private const val PACK_CATALOG_VERSION = "procraft-ui-source-1"
+private const val PACK_CATALOG_VERSION = "procraft-ui-source-2"
 private const val PACK_APP_VERSION = "0.0.7-beta"
 
 private val PackInk = Color(0xFFFFFFFF)
@@ -203,7 +205,7 @@ internal object LanguagePacks {
         val input = context.contentResolver.openInputStream(uri)
             ?: error("Could not read the selected file.")
         val bytes = input.use { readBounded(it, MAX_PACK_BYTES) }
-        val pack = decode(bytes.toString(Charsets.UTF_8))
+        val pack = decode(decodeUtf8Strict(bytes))
         val destination = packFile(context, pack.id)
         if (destination.exists()) {
             val existing = readPack(destination)
@@ -290,9 +292,11 @@ internal object LanguagePacks {
             "The pack contains unsupported fields."
         }
 
-        val formatVersion = root.get("format_version") as? Number
-            ?: error("The pack format version must be an integer.")
-        require(formatVersion.toDouble() == FORMAT_VERSION.toDouble()) {
+        val formatVersion = root.get("format_version")
+        require(formatVersion is Int || formatVersion is Long) {
+            "The pack format version must be an integer."
+        }
+        require((formatVersion as Number).toLong() == FORMAT_VERSION.toLong()) {
             "Unsupported language-pack format version."
         }
 
@@ -419,6 +423,13 @@ internal object LanguagePacks {
         return result
     }
 
+    internal fun decodeUtf8Strict(bytes: ByteArray): String {
+        val decoder = Charsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+        return decoder.decode(ByteBuffer.wrap(bytes)).toString()
+    }
+
     private fun requiredString(root: JSONObject, key: String): String =
         root.get(key) as? String ?: error("The pack field '$key' must be a string.")
 
@@ -458,7 +469,7 @@ internal object LanguagePacks {
 
     private fun readPack(file: File): TranslationPack {
         val bytes = AtomicFile(file).openRead().use { readBounded(it, MAX_PACK_BYTES) }
-        return decode(bytes.toString(Charsets.UTF_8))
+        return decode(decodeUtf8Strict(bytes))
     }
 
     private fun readBounded(input: InputStream, limit: Int): ByteArray {
