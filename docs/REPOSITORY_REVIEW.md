@@ -1,48 +1,59 @@
 # Repository review — ProCraft Community Builds
 
-Review scope: public repository structure, branch/documentation clarity, GitHub Actions configuration, community package identity and the Language Pack feature. This is not a full application code audit.
+**Review date:** 2026-11-23  
+**Scope:** public repository structure, branches, documentation, GitHub Actions, community package identity and Language Pack integration. This is not a full application audit.
 
 ## Overall assessment
 
-The two-edition direction is clearer: `main` is the Lang Pack demo and `russian` is the Russian-only build. The default branch is `main`. The remaining clarity issue is old refs: GitHub still lists temporary branches from the earlier workflow; they need deletion by the repository owner.
-
-## Findings and corrections
-
-| Finding | Priority | Status |
-|---|---|---|
-| README top sections still referred to old demo branch names, obsolete run IDs and a removed Release workflow | High (documentation correctness) | README introductions rewritten for the two current editions; docs updated |
-| Windows MSI and Linux package identities originally matched upstream, so installing the community package could replace or conflict with upstream | High (install isolation) | Edition-specific product/package IDs, UpgradeCodes, install folders, app IDs and portable filenames added; fresh builds required to verify |
-| Desktop workflows did not pass an explicit edition to packaging | High | `main` passes `langpack`; `russian` passes `ru`; packaging shell syntax check added |
-| Russian Clippy failed on existing indexing/chunks warnings in straight-alpha conversion | Medium (CI reliability) | Russian code changed to array-chunk iteration matching current main; verify fresh CI |
-| Release workflow was removed but documentation still linked to it | Medium | Docs now state that community builds are distributed as temporary Actions artifacts |
-| Maintainer message described only a proposal although the feature was implemented | Medium | Maintainer message updated to request feedback on the working MVP and future stable IDs |
-| Old feature/docs pages had stale branch/workflow names and catalog counts | Medium | README, guide, behavior docs, handoff, proposal and build instructions revised |
-| Temporary branches remain on GitHub | Cleanup | Owner action: delete obsolete refs after verifying they are no longer needed |
-
-## Branch layout
+The repository now has exactly two intended branches:
 
 - `main`: Community Language Packs demo.
 - `russian`: Russian-only community edition.
-- Default branch: `main`.
 
-Old audit/fix/demo branches are not part of the intended public workflow and should be removed by the owner. Do not delete `main` or `russian`.
+The default branch is `main`. The repository branch list was re-checked after cleanup; no temporary audit/fix/demo refs remain.
 
-## Workflow review
+## Resolved findings
 
-The three retained workflows are CI, Android APK and Desktop builds. They run on the intended edition branches. Actions permissions are read-only for contents in the reviewed workflows. Android signing secrets are restricted by the workflow condition to the trusted owner on the Russian branch; other builds use debug signing. Artifacts are temporary (30-day retention), not permanent releases.
+| Finding | Priority | Status |
+|---|---|---|
+| README/docs referred to obsolete branch names, run IDs and removed Release workflow | High (documentation correctness) | Corrected in main and russian |
+| Windows MSI/Linux package identities matched upstream | High (installation isolation) | Edition-specific identities added; fresh builds and manual coexistence verification pending |
+| Linux DEB failed on unquoted nfpm YAML variable scalars and missing package-name substitutions | High (build correctness) | Quoted YAML scalars and substitutions added |
+| Linux AppImage build consumed mutable `continuous` tool/runtime binaries | High (supply chain) | AppImage tool/runtime now version-pinned and SHA-256 verified |
+| Third-party GitHub Actions used mutable major tags | High (supply chain) | Actions pinned to full immutable commit SHAs on both branches |
+| Build tool installs were version ranges or mutable downloads | Medium/High | cargo-ndk and nfpm pinned; nfpm archive checksum verified; appimagetool/runtime checksums verified |
+| Checkout left token credentials in local Git config | Medium | Checkout uses `persist-credentials: false` |
+| Main security report had trailing whitespace | Low (CI hygiene) | Fixed |
+| Russian Clippy baseline failed on duplicate match arms, collapsible ifs and unnecessary dereference | Medium (CI reliability) | Translation and gallery code fixed in russian; new CI pending |
+| Russian docs described old branch/workflow/release state and confused the feature availability | High (documentation correctness) | README, maintenance guide, maintainer message and language-pack note corrected |
+| CI job label implied Clippy/tests while it actually ran Android/Gradle validation | Medium (clarity) | Renamed to Android native build/lint/unit-test job |
 
-## Packaging isolation fix
+## Workflow structure
 
-Windows now selects an edition-specific MSI ProductName, UpgradeCode, component GUID, registry key, installation folder and portable ZIP prefix. Linux selects edition-specific package names, binary names, desktop entry IDs, icon names and AppImage/tar/deb basenames. The official package mode remains the default when no `EDITION` is supplied. Fresh Desktop builds and installation/coexistence tests are required before declaring this fix verified.
+Both branches contain exactly three workflow files:
 
-## Remaining cleanup/hardening
+- `.github/workflows/ci.yml`
+- `.github/workflows/android-apk.yml`
+- `.github/workflows/desktop-build.yml`
 
-1. Delete temporary refs so only `main` and `russian` remain.
-2. Verify Windows MSI installs both editions alongside upstream and each other; uninstall/upgrade each independently.
-3. Verify Linux DEB package names, desktop entries and icons coexist; test AppImage/tar extraction.
-4. Consider pinning GitHub Actions to immutable commit SHAs instead of major tags, and replace toolchain `master` references with reviewed version pins where practical.
-5. Keep the separate security report scoped and updated; this review does not claim a full app audit.
+The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing.
 
-## Current build verification
+## Packaging isolation
 
-Use the live [main Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Amain) and [russian Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Arussian) pages. Do not treat older artifacts as proof that the newly changed packaging identity code has been built. Fresh workflow success plus manual install/coexistence tests are required.
+Windows MSI now has edition-specific product name, UpgradeCode, component GUID, registry key, install folder and portable ZIP prefix. Linux packages use edition-specific package names, binary names, desktop entry IDs, icon names and AppImage/tar/DEB names.
+
+The implementation is present in the two branches. Do not mark the fix fully verified until fresh Desktop workflows finish successfully and manual side-by-side installation, upgrade and uninstall tests have been performed.
+
+## Remaining work
+
+1. Verify fresh Windows MSI and Portable builds from both branches.
+2. Verify fresh Linux DEB, AppImage and tar.gz builds from both branches.
+3. Manually install upstream, Lang Pack and Russian desktop versions together; verify upgrades and uninstalls independently.
+4. Add atomic replacement for Desktop pack writes.
+5. Add parser/placeholder fuzz tests and Android/Desktop acceptance parity tests.
+6. Review repository rulesets, branch protection and secret access with owner-level admin permissions.
+7. Run a broader dependency audit and independent application security review.
+
+## Current verification
+
+Use the live [main Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Amain) and [russian Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Arussian) pages. Older successful artifacts predate parts of the packaging/supply-chain changes and are not proof of the current source. The latest runs must pass before publishing install links.
