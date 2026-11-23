@@ -3,7 +3,7 @@
 **Review date:** 2026-11-23  
 **Review branch:** `audit/language-packs-2026-11-23`  
 **Target branch:** `fix/language-pack-translation-coverage`  
-**Reviewed source commit:** `da3ffefa90500e42053ced894934824866e29b97`  
+**Reviewed source commit:** `68b28a38473b79bfac39cd022cfce20772815a08`  
 **Assessment:** Scoped static source/configuration review. No confirmed exploitable vulnerability found in the reviewed language-pack path.
 
 ## 1. Executive summary
@@ -46,11 +46,12 @@ Threat scenarios considered:
 **Severity:** Low — input-validation consistency / hardening  
 **Status:** Fixed in target branch
 
-Before the fix, the Desktop runtime validator checked the pack ID, locale, display name, author, entry count, key/value lengths and placeholder consistency, but did not enforce the schema limits for `app_version`, `catalog_version` and `base_locale`.
+Before the fix, the Desktop runtime validator checked locale syntax, the pack ID, display name, author, entry count, key/value lengths and placeholder consistency, but did not consistently enforce the schema's total `locale` length limit or the limits for `app_version`, `catalog_version` and `base_locale`.
 
-The overall import limit was still 5 MB, and the missing per-field limits did not provide a demonstrated path to code execution or path traversal. However, the runtime contract was weaker than Android and the published schema.
+The overall import limit was still 5 MB, and the missing field-length checks did not provide a demonstrated path to code execution or path traversal. However, the runtime contract was weaker than Android and the published schema.
 
 **Change:** Desktop validation now enforces:
+- `locale` ≤ 35 characters (in addition to locale syntax);
 - `app_version` ≤ 40 characters;
 - `catalog_version` ≤ 80 characters;
 - `base_locale` ≤ 35 characters.
