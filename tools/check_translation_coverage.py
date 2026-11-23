@@ -20,6 +20,19 @@ PREVIEW = ROOT / "examples/ru-community-preview.json"
 RUST_PAIR = re.compile(r'^\s*("(?:\\.|[^"\\])*")\s*=>\s*("(?:\\.|[^"\\])*"),\s*$', re.MULTILINE)
 KOTLIN_PAIR = re.compile(r'^\s*("(?:\\.|[^"\\])*")\s+to\s+("(?:\\.|[^"\\])*"),?\s*$', re.MULTILINE)
 PLACEHOLDER = re.compile(r"\{[A-Za-z][A-Za-z0-9_]*\}")
+DESKTOP_COMPACT_OVERRIDES = {
+    "Disc": "Диск",
+    "Tap + to start a new canvas": "Нажмите «+», чтобы создать холст",
+    "Rectangle": "Прямоуг.",
+    "Invert": "Инверт.",
+    "Feather": "Растуш.",
+    "Save & Load": "Сохр.",
+    "Color Fill": "Залив.",
+    "Flip Horizontal": "Гориз.",
+    "Flip Vertical": "Вертик.",
+    "Fill Layer": "Заливочный слой",
+    "Alpha Lock": "Альфа-блокировка",
+}
 EXPECTED_TERMS = {
     "Licenses": "Лицензии",
     "Language packs": "Языковые пакеты",
@@ -103,13 +116,23 @@ for label, dictionary in (("Desktop", desktop), ("Android", android)):
     if empty:
         fail(f"{label} dictionary has {len(empty)} empty translations; first: {empty[:8]!r}")
 
-different = [
-    (key, desktop[key], android[key])
+different = {
+    key: (desktop[key], android[key])
     for key in catalog
     if desktop[key] != android[key]
-]
-if different:
-    fail(f"Desktop/Android terminology diverges for {len(different)} entries; first: {different[:8]!r}")
+}
+unexpected = {
+    key: values
+    for key, values in different.items()
+    if key not in DESKTOP_COMPACT_OVERRIDES or values[0] != DESKTOP_COMPACT_OVERRIDES[key]
+}
+missing_overrides = set(DESKTOP_COMPACT_OVERRIDES) - set(different)
+if unexpected or missing_overrides:
+    fail(
+        "Desktop-specific compact labels changed unexpectedly; "
+        f"unexpected={list(unexpected.items())[:8]!r}, "
+        f"no-longer-needed={sorted(missing_overrides)!r}"
+    )
 
 for key, expected in EXPECTED_TERMS.items():
     if desktop.get(key) != expected or android.get(key) != expected:
@@ -144,6 +167,7 @@ print(
     f"{len(catalog)} catalog entries, "
     f"{len(desktop)} Desktop keys, "
     f"{len(android)} Android keys, "
-    f"{len(pack_strings)} sample-pack entries; "
-    "catalogs, terminology and preview are synchronized."
+    f"{len(pack_strings)} sample-pack entries, "
+    f"{len(DESKTOP_COMPACT_OVERRIDES)} intentional compact Desktop labels; "
+    "catalogs, translations and preview are synchronized."
 )
