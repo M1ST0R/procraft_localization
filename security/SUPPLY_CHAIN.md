@@ -32,7 +32,7 @@ When updating an Action, resolve the intended release tag to its commit SHA, rev
 - AppImage runtime: `20251108`, separately downloaded and SHA-256 verified before being embedded into the generated AppImage.
 - Windows DirectX Shader Compiler: version `v1.9.2609`; its archive SHA-256 is pinned in `packaging/windows/package.ps1`.
 
-All Cargo build/package commands use the repository lockfile; Cargo package installation uses a locked resolution. Do not remove `Cargo.lock` or update it without reviewing the dependency changes.
+Cargo test and packaging commands use `--locked`; `cargo-ndk` is installed with a locked resolution. Do not remove `Cargo.lock` or update it without reviewing the dependency changes.
 
 ## Pinned artifact digests
 
@@ -56,6 +56,10 @@ The Linux packaging script validates the AppImage packer and runtime every time 
 - Checkout steps set `persist-credentials: false`; jobs do not need a write-capable Git credential after checkout.
 - Android release signing material is restricted to trusted owner-triggered events on `russian`. Other builds use a temporary debug key.
 - Artifacts are uploaded with a 30-day retention period. These Actions artifacts are test outputs, not signed official releases.
+
+## Workflow validation scope
+
+The CI workflow's Android job validates the Android native/Gradle build, lint and unit tests; the Desktop workflow runs the Rust translation and PNG helper tests. The job is named according to what it actually executes. The workflows do not claim a full workspace Clippy gate on every platform.
 
 ## Remaining limits
 
