@@ -7,11 +7,11 @@ This repository provides **two community editions** of upstream ProCraft.
 | [`main`](https://github.com/M1ST0R/procraft_localization/tree/main) | **Lang Pack Demo** | Russian UI, full translation catalog and the in-app editor for creating, importing, editing, exporting and sharing language packs. |
 | [`russian`](https://github.com/M1ST0R/procraft_localization/tree/russian) | **Russian Edition** | Separate Russian UI build without the Community Language Packs manager. |
 
-## Main Action
+## CI
 
-[**Main workflow — translation coverage, Android lint and tests**](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
+[**CI workflow — translation coverage, Android lint and tests**](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
 
-The Main workflow checks that all 1,374 source-catalog entries have the same Russian translation on Android and Desktop, validates the complete sample pack and verifies that its readable preview stays in sync. It also runs the Android build, lint and unit tests.
+The CI workflow checks that all 1,374 source-catalog entries have the same Russian translation on Android and Desktop, validates the complete sample pack and verifies that its readable preview stays in sync. It also runs the Android build, lint and unit tests.
 
 ## Downloads
 
@@ -49,7 +49,7 @@ The Community Language Packs manager is included in the maintained `main` editio
 
 ## Community Edition Notes
 
-Both branches track upstream ProCraft and preserve upstream attribution/licensing. The `main` branch carries the Language Packs manager and a Russian dictionary checked against all 1,374 source-catalog entries; the Main workflow prevents missing entries or Android/Desktop terminology drift from silently returning. Layout and translation quality still require human review.
+Both branches track upstream ProCraft and preserve upstream attribution/licensing. The `main` branch carries the Language Packs manager and a Russian dictionary checked against all 1,374 source-catalog entries; the CI workflow prevents missing entries or Android/Desktop terminology drift from silently returning. Layout and translation quality still require human review.
 
 **Upstream project:** [artcraft-android/procraft](https://github.com/artcraft-android/procraft). The original upstream overview and screenshots continue below.
 
