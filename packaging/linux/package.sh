@@ -97,25 +97,56 @@ if has appimage; then
   cp "$STAGE/usr/share/applications/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
   cp "$ROOT/assets/app-icon/hicolor/256x256/apps/procraft.png" "$APPDIR/$APP_ID.png"
   ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
-  # Pin both the AppImage packer and the embedded runtime. The runtime is executable code
-  # prepended to every generated AppImage, so it is checksum-verified independently.
+  # Pin both the AppImage packer and runtime to versioned upstream assets.
+  # AppImage tool and runtime are executable build inputs; verify SHA-256 on every run.
   APPIMAGETOOL_VERSION="1.9.1"
-  APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
   RUNTIME_VERSION="20251108"
-  RUNTIME_SHA256="2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
-  TOOL="$TARGET_DIR/appimagetool-$ARCH-$APPIMAGETOOL_VERSION.AppImage"
-  RUNTIME="$TARGET_DIR/appimage-runtime-$ARCH-$RUNTIME_VERSION"
+  case "$ARCH" in
+    x86_64)
+      APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+      RUNTIME_SHA256="2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
+      ;;
+    aarch64)
+      APPIMAGETOOL_SHA256="f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158"
+      RUNTIME_SHA256="00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444"
+      ;;
+    *)
+      echo "no pinned AppImage tool/runtime hashes for $ARCH" >&2
+      exit 2
+      ;;
+  esac
+  TOOL="$TARGET_DIR/appimagetool-$APPIMAGETOOL_VERSION-$ARCH.AppImage"
+  RUNTIME="$TARGET_DIR/appimage-runtime-$RUNTIME_VERSION-$ARCH"
+
+  if [ -f "$TOOL" ] && ! printf '%s  %s\\n' "$APPIMAGETOOL_SHA256" "$TOOL" | sha256sum --check --status; then
+    rm -f "$TOOL"
+  fi
   if [ ! -f "$TOOL" ]; then
-    curl -fsSL -o "$TOOL" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
-    chmod +x "$TOOL"
+    TMP_TOOL="$TOOL.part"
+    curl --fail --location --silent --show-error --retry 3 \\
+      -o "$TMP_TOOL" \\
+      "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
+    printf '%s  %s\\n' "$APPIMAGETOOL_SHA256" "$TMP_TOOL" | sha256sum --check --strict
+    mv "$TMP_TOOL" "$TOOL"
+  fi
+  printf '%s  %s\\n' "$APPIMAGETOOL_SHA256" "$TOOL" | sha256sum --check --strict
+  chmod +x "$TOOL"
+
+  if [ -f "$RUNTIME" ] && ! printf '%s  %s\\n' "$RUNTIME_SHA256" "$RUNTIME" | sha256sum --check --status; then
+    rm -f "$RUNTIME"
   fi
   if [ ! -f "$RUNTIME" ]; then
-    curl -fsSL -o "$RUNTIME" "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
-    chmod +x "$RUNTIME"
+    TMP_RUNTIME="$RUNTIME.part"
+    curl --fail --location --silent --show-error --retry 3 \\
+      -o "$TMP_RUNTIME" \\
+      "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
+    printf '%s  %s\\n' "$RUNTIME_SHA256" "$TMP_RUNTIME" | sha256sum --check --strict
+    mv "$TMP_RUNTIME" "$RUNTIME"
   fi
-  printf '%s  %s\n' "$APPIMAGETOOL_SHA256" "$TOOL" | sha256sum --check --status
-  printf '%s  %s\n' "$RUNTIME_SHA256" "$RUNTIME" | sha256sum --check --status
-  # Extracted and run, so it needs no FUSE in containers or CI. Runtime is injected offline.
+  printf '%s  %s\\n' "$RUNTIME_SHA256" "$RUNTIME" | sha256sum --check --strict
+  chmod +x "$RUNTIME"
+
+  # Provide the verified runtime explicitly; appimagetool must not fetch the moving "continuous" asset.
   ARCH="$ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOL" --runtime-file "$RUNTIME" --no-appstream "$APPDIR" "$DIST/$BASENAME.AppImage"
   echo "wrote $DIST/$BASENAME.AppImage"
 fi
