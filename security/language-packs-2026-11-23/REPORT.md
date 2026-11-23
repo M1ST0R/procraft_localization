@@ -101,6 +101,10 @@ Use the current workflow pages; older runs may be cancelled or may predate the p
 
 Do not mark the package-identity fix verified until fresh Desktop builds succeed and manual install/upgrade/coexistence tests are completed.
 
+## Supply-chain hardening
+
+The related build workflows now pin third-party Actions to full commit SHAs. Tool installations are version-specific; nfpm 2.48.0, appimagetool 1.9.1 and AppImage runtime 20251108 are downloaded from versioned releases and SHA-256 verified. Checkout credential persistence is disabled and cargo-ndk uses version 4.1.2 with locked resolution. Details and exact digests are recorded in [SUPPLY_CHAIN.md](../SUPPLY_CHAIN.md).
+
 ## Follow-up
 
 1. Add atomic replacement for Desktop language-pack writes.
