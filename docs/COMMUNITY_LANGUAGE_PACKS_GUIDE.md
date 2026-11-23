@@ -49,6 +49,26 @@ Example:
 | `Merge down` | `Объединить с нижним слоем` |
 | `Highlights` | `Света` |
 
+### Russian labels covered by the updated sample
+
+| English source key | Russian translation |
+|---|---|
+| `Licenses` | Лицензии |
+| `Language packs` | Языковые пакеты |
+| `Maximum Speed Distance` | Порог скорости кисти |
+| `Cancel` | Отмена |
+| `Import` | Импортировать |
+| `Basics` | Основные |
+| `Ok` / `OK` | ОК |
+| `Combine down` / `Merge down` | Объединить с нижним слоем |
+| `Clipping mask` | Обтравочная маска |
+| `Gamma` | Гамма |
+| `Red` / `Green` / `Blue` | Красный / Зелёный / Синий |
+| `Cyan` / `Magenta` / `Yellow` | Голубой / Пурпурный / Жёлтый |
+| `Shadows` | Тени |
+| `Midtones` | Средние тона |
+| `Highlights` | Света |
+
 ### Rules that matter
 
 **Exact source keys:** Format v1 uses English UI text as keys. Capitalization, punctuation and spaces are significant. `Licenses` and `Licences` are separate entries.
@@ -75,7 +95,7 @@ On Desktop select the pack row; on Android tap it. The active selection is retai
 2. Select **Import .procraft-lang** on Desktop or **Import** on Android.
 3. Choose the file.
 4. The app validates it before installation.
-5. Select it in the installed list if it is not already active.
+5. The imported pack appears in the installed list and becomes active automatically.
 
 A pack ID identifies the pack. If the same ID is already installed with different contents, the import is rejected rather than silently replacing the existing pack.
 
