@@ -145,16 +145,16 @@ if pack != preview:
 if pack.get("format_version") != 1 or not isinstance(pack.get("strings"), dict):
     fail("sample pack does not use the expected v1 strings format")
 pack_strings = pack["strings"]
-missing_pack = [key for key in desktop if key not in pack_strings]
+missing_pack = [key for key in android if key not in pack_strings]
 if missing_pack:
     fail(f"sample pack is missing {len(missing_pack)} built-in entries; first: {missing_pack[:8]!r}")
 
-for key, expected_value in desktop.items():
+for key, expected_value in android.items():
     value = pack_strings.get(key)
     if not isinstance(value, str) or not value.strip():
         fail(f"sample pack has an empty or non-string value for {key!r}")
     if value != expected_value:
-        fail(f"sample pack does not match the built-in dictionary for {key!r}")
+        fail(f"sample pack does not match the Android built-in dictionary for {key!r}")
 
 for key, value in pack_strings.items():
     if Counter(PLACEHOLDER.findall(key)) != Counter(PLACEHOLDER.findall(value)):
