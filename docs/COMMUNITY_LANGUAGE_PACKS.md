@@ -1,6 +1,6 @@
 # Community Language Packs — working demo
 
-The `demo/community-language-packs` branch contains a working, data-only language-pack manager in the Android and Desktop apps.
+The `main` branch contains a working, data-only language-pack manager in the Android and Desktop apps.
 
 ## What works
 
@@ -67,7 +67,7 @@ Fields:
 - Some generated or parameterized text and plugin-provided content may not appear as editable catalog entries yet.
 - There is no online translation marketplace or automatic synchronization. Sharing is file-based: export the pack and send it to another user.
 - The built-in Russian dictionary remains bundled as a special built-in choice; it is not automatically exported as a user pack.
-- The demo proves the full create/edit/save/import/export/switch flow. It is an MVP implementation intended for maintainer review, not the final long-term localization architecture.
+- The main-branch demo proves the full create/edit/save/import/export/switch flow. It is an MVP implementation intended for maintainer review, not the final long-term localization architecture.
 
 ## Sample pack
 
