@@ -147,7 +147,9 @@ jobs:
         run: bash packaging/linux/package.sh
 
       - name: Validate packaging shell scripts
-        run: bash -n packaging/linux/package.sh packaging/linux/AppRun
+        run: |
+          bash -n packaging/linux/package.sh
+          bash -n packaging/linux/AppRun
 
       - name: List packages
         run: ls -lh dist
