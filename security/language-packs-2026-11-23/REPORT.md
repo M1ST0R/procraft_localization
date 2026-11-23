@@ -122,13 +122,13 @@ Source-level regression coverage was added or retained for:
 - Desktop metadata length limits;
 - Desktop translation coverage for the newly translated UI labels.
 
-Build workflows started for the target feature branch:
+Build verification for the target feature branch:
 
-- Android APK: [run 45204091233](https://github.com/M1ST0R/procraft_localization/actions/runs/45204091233) (Android code/test commit `6ff62253f3c03c9d4f31efea9392f7a8fcde1e07`)
-- Desktop Windows/Linux: [run 45205688437](https://github.com/M1ST0R/procraft_localization/actions/runs/45205688437) (latest source commit `7fe4f33844751b5bf7aa12a27267389cac3c2eef`)
-- Full pull-request CI: [run 45205704582](https://github.com/M1ST0R/procraft_localization/actions/runs/45205704582)
+- Android APK workflow: [run 45204091233](https://github.com/M1ST0R/procraft_localization/actions/runs/45204091233) — **passed**, artifact `ProCraft-RU-Android-arm64` was uploaded (Android source/test changes were already present in this run's commit).
+- Desktop Windows/Linux packaging: [run 45205688437](https://github.com/M1ST0R/procraft_localization/actions/runs/45205688437) — pending at the time of this report update; it targets source commit `7fe4f33844751b5bf7aa12a27267389cac3c2eef`.
+- Full pull-request CI: [run 45206244009](https://github.com/M1ST0R/procraft_localization/actions/runs/45206244009) — pending at the time of this report update.
 
-The CI runs were still in progress when this report was drafted. Their final result must be checked on GitHub Actions before treating the build/package verification as passed. The report must not be interpreted as claiming that pending jobs succeeded.
+Do not treat pending jobs as passed. Re-check the linked GitHub Actions runs before merging.
 
 ## 6. Residual risks and recommended follow-up
 
