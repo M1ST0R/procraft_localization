@@ -1,7 +1,9 @@
 package io.github.artcraftandroid.procraft.ui
 
+import java.nio.charset.CharacterCodingException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LanguagePacksTest {
@@ -40,5 +42,19 @@ class LanguagePacksTest {
         assertNull(LanguagePacks.compileTemplate("{first}{second}", "{first}-{second}"))
     }
 
+    @Test
+    fun rejectsMalformedUtf8InsteadOfReplacingBytes() {
+        val invalidUtf8 = byteArrayOf(0x7b, 0x22, 0x69, 0x64, 0x22, 0x3a, 0x22, 0xff.toByte(), 0x22, 0x7d)
+        val error = runCatching { LanguagePacks.decodeUtf8Strict(invalidUtf8) }.exceptionOrNull()
+        assertTrue(error is CharacterCodingException)
+    }
+
+    @Test
+    fun rejectsFloatingPointFormatVersions() {
+        val raw = """{"format_version":1.0,"strings":{}}"""
+        val error = runCatching { LanguagePacks.decode(raw) }.exceptionOrNull()
+        assertTrue(error is IllegalArgumentException)
+        assertTrue(error?.message?.contains("integer") == true)
+    }
 
 }
