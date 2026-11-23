@@ -18,6 +18,7 @@ const MAX_PACK_BYTES: u64 = 5 * 1024 * 1024;
 const MAX_STRINGS: usize = 20_000;
 const MAX_TEMPLATE_STRINGS: usize = 128;
 const MAX_SOURCE_TEXT_BYTES: usize = 4096;
+const MAX_SOURCE_KEY_CHARS: usize = 512;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -383,7 +384,7 @@ fn validate(pack: &LanguagePack) -> Result<(), String> {
         return Err("Language pack has too many dynamic templates (maximum 128).".to_owned());
     }
     for (source, translated) in &pack.strings {
-        if source.is_empty() || source.len() > 160 || translated.len() > 4000 {
+        if source.is_empty() || source.chars().count() > MAX_SOURCE_KEY_CHARS || translated.len() > 4000 {
             return Err("A string exceeds the format limits.".to_owned());
         }
         if placeholders(source) != placeholders(translated) {
