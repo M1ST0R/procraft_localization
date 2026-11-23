@@ -23,8 +23,8 @@ env:
   NDK_VERSION: "29.0.14206865"
 
 jobs:
-  rust:
-    name: Rust (format, clippy, tests)
+  android-native:
+    name: Android native build, lint and unit tests
     if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
     steps:
