@@ -2,7 +2,7 @@
 
 | Item | Priority | Status | Notes |
 |---|---|---|---|
-| Align Desktop metadata length validation with the schema and Android | Low | Fixed | Added limits for app_version, catalog_version and base_locale plus regression checks |
+| Align Desktop metadata length validation with the schema and Android | Low | Fixed | Added limits for locale, app_version, catalog_version and base_locale plus regression checks |
 | Strict UTF-8 decoding on Android import and stored-pack read | Hardening | Present | Malformed byte sequences are rejected |
 | Restrict format_version to integer 1 on Android | Hardening | Present | Floating-point 1.0 is rejected |
 | Enforce pack ID constraints before constructing storage paths | Hardening | Present | IDs outside the allowed pattern are rejected |
