@@ -10,6 +10,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
     let translated = match source {
         "ProCraft" => "ProCraft",
         "Community language packs" => "Языковые пакеты сообщества",
+        "Language packs" => "Языковые пакеты",
         "← Packs" => "← Пакеты",
         "Translate English source strings. Empty values use English fallback." => "Переводите английские исходные строки. Пустые значения используют английский оригинал.",
         "Search source text" => "Поиск исходного текста",
@@ -79,6 +80,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Tap + to start a new canvas" => "Нажмите «+», чтобы создать холст",
         "QuickMenu" => "Быстрое меню",
         "Licences" => "Лицензии",
+        "Licenses" => "Лицензии",
         "Lock" => "Заблокировать",
         "Unlock" => "Разблокировать",
         "Max" => "Макс.",
@@ -101,6 +103,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Layers available" => "Доступно слоёв",
         "Assisted layers" => "Слои с рисованием по направляющим",
         "Clipping layers" => "Обтравочные слои",
+        "Clipping mask" => "Обтравочная маска",
         "Layer masks" => "Маски слоёв",
         "Mask" => "Маска",
         "mask" => "маска",
@@ -134,6 +137,8 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Settings" => "Настройки",
         "Advanced settings" => "Дополнительные настройки",
         "Done" => "Готово",
+        "Ok" => "ОК",
+        "OK" => "ОК",
         "Cancel" => "Отмена",
         "cancel" => "отмена",
         "Next" => "Далее",
@@ -206,6 +211,8 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "This library has no brushes yet" => "В этой библиотеке пока нет кистей",
         "Combine" => "Объединить",
         "Combine Mode" => "Режим объединения",
+        "Combine down" => "Объединить с нижним слоем",
+        "Merge down" => "Объединить с нижним слоем",
         "Uncombine" => "Разъединить",
         "Uncombine these brushes?" => "Разъединить эти кисти?",
         "The pair becomes two brushes again, side by side in the set. It can't be undone." => "Кисти снова станут двумя отдельными кистями в наборе. Это действие нельзя отменить.",
@@ -237,6 +244,16 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Hardness" => "Жёсткость",
         "Flow" => "Поток",
         "Color" => "Цвет",
+        "Gamma" => "Гамма",
+        "Red" => "Красный",
+        "Green" => "Зелёный",
+        "Blue" => "Синий",
+        "Cyan" => "Голубой",
+        "Magenta" => "Пурпурный",
+        "Yellow" => "Жёлтый",
+        "Shadows" => "Тени",
+        "Midtones" => "Средние тона",
+        "Highlights" => "Света",
         "Colors" => "Цвета",
         "Color history" => "История цветов",
         "Active palette" => "Активная палитра",
@@ -647,6 +664,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Source" => "Источник",
         "Tip" => "Наконечник",
         "Basic" => "Основной",
+        "Basics" => "Основные",
         "Both" => "Оба",
         "Bristles" => "Щетина",
         "Circles" => "Круги",
@@ -935,6 +953,35 @@ mod tests {
             assert_eq!(translate(source), expected, "{source}");
         }
         assert_eq!(translate("More Options"), "Доп. действия");
+    }
+
+    #[test]
+    fn requested_ui_labels_are_translated() {
+        for (source, expected) in [
+            ("Licenses", "Лицензии"),
+            ("Language packs", "Языковые пакеты"),
+            ("Maximum Speed Distance", "Порог скорости кисти"),
+            ("Cancel", "Отмена"),
+            ("Import", "Импортировать"),
+            ("Basics", "Основные"),
+            ("Ok", "ОК"),
+            ("OK", "ОК"),
+            ("Combine down", "Объединить с нижним слоем"),
+            ("Merge down", "Объединить с нижним слоем"),
+            ("Clipping mask", "Обтравочная маска"),
+            ("Gamma", "Гамма"),
+            ("Red", "Красный"),
+            ("Green", "Зелёный"),
+            ("Blue", "Синий"),
+            ("Cyan", "Голубой"),
+            ("Magenta", "Пурпурный"),
+            ("Yellow", "Жёлтый"),
+            ("Shadows", "Тени"),
+            ("Midtones", "Средние тона"),
+            ("Highlights", "Света"),
+        ] {
+            assert_eq!(translate(source), expected, "{source}");
+        }
     }
 
     #[test]
