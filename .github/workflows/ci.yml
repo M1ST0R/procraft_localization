@@ -1,13 +1,13 @@
-name: CI
+name: Main
 
-# Run for pull requests and manual dispatch on either edition branch. Builds are handled by the
-# separate Android APK and Desktop builds workflows.
+# Main validation gate for the maintained edition. Platform packages are built by their own workflows.
 on:
   push:
     branches:
       - main
-      - russian
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,16 @@ env:
   NDK_VERSION: "29.0.14206865"
 
 jobs:
+  translation-audit:
+    name: Russian translation coverage and pack validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check catalog coverage and language pack consistency
+        run: python3 tools/check_translation_coverage.py
+
   android-native:
     name: Android native build, lint and unit tests
     if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
