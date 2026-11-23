@@ -6,6 +6,7 @@ on:
       - translation/russian
       - demo/community-language-packs
       - fix/windows-language-packs-window
+      - fix/language-pack-translation-coverage
     paths:
       - "desktop/**"
       - "crates/**"
