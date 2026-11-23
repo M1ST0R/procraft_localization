@@ -1,6 +1,7 @@
 # Maintainer handoff — Community Language Packs
 
 **Target branch:** `main` (default)  
+**Separate Russian edition:** `russian`  
 **Upstream baseline:** ProCraft `v0.0.7-beta`  
 **Purpose:** a working in-app demo, not a static mockup.
 
