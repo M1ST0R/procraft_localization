@@ -368,7 +368,11 @@ fn validate(pack: &LanguagePack) -> Result<(), String> {
     if !valid_id(&pack.id) {
         return Err("Invalid language-pack ID.".to_owned());
     }
-    if !valid_locale(&pack.locale) || pack.name.trim().is_empty() || pack.name.len() > 80 {
+    if !valid_locale(&pack.locale)
+        || pack.locale.len() > 35
+        || pack.name.trim().is_empty()
+        || pack.name.len() > 80
+    {
         return Err("Invalid language-pack name or locale.".to_owned());
     }
     if pack.author.len() > 120
@@ -730,6 +734,10 @@ mod tests {
         assert!(validate(&pack).is_err());
         pack.catalog_version = catalog_version();
         pack.base_locale = "b".repeat(36);
+        assert!(validate(&pack).is_err());
+        pack.base_locale = english();
+        pack.locale = format!("{}aa", "aa-".repeat(12));
+        assert!(valid_locale(&pack.locale));
         assert!(validate(&pack).is_err());
     }
 }
