@@ -317,7 +317,7 @@ internal object LanguagePacks {
             val key = keys.next()
             val value = stringsObject.get(key) as? String
                 ?: error("Translation values must be strings.")
-            require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) {
+            require(key.isNotBlank() && key.length <= 512 && value.length <= 4000) {
                 "A string exceeds the format limits."
             }
             require(placeholders(key) == placeholders(value)) {
@@ -358,7 +358,7 @@ internal object LanguagePacks {
             "Pack metadata, string count or dynamic-template count exceeds the format limits."
         }
         pack.strings.forEach { (key, value) ->
-            require(key.isNotBlank() && key.length <= 160 && value.length <= 4000) {
+            require(key.isNotBlank() && key.length <= 512 && value.length <= 4000) {
                 "A string exceeds the format limits."
             }
             require(placeholders(key) == placeholders(value)) {
