@@ -32,7 +32,7 @@ Example:
   "name": "Español — Community",
   "author": "Community contributor",
   "app_version": "0.0.7-beta",
-  "catalog_version": "procraft-ui-source-1",
+  "catalog_version": "procraft-ui-source-2",
   "base_locale": "en",
   "strings": {
     "Gallery": "Galería",
@@ -47,7 +47,7 @@ Fields:
 - `format_version`: currently `1`.
 - `id`: unique portable pack ID, lowercase letters/digits plus `.`, `_` or `-`.
 - `locale`, `name`, `author`: language metadata.
-- `app_version` and `catalog_version`: the source build/catalog this pack was created against.
+- `app_version` and `catalog_version`: the source build/catalog this pack was created against; the current catalog revision is `procraft-ui-source-2`.
 - `base_locale`: the language of source strings, currently `en`.
 - `strings`: exact English source string → translated string.
 
