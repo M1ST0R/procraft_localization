@@ -78,8 +78,12 @@ fi
 if has deb; then
   command -v nfpm >/dev/null || { echo "error: nfpm not found (https://nfpm.goreleaser.com/install/)" >&2; exit 1; }
   export VERSION NFPM_ARCH="$DEB_ARCH"
-  # nfpm expands variables in fields like `version`, but not in `contents[].src`
-  sed "s|\${STAGE}|$STAGE|g" "$HERE/nfpm.yaml" >"$WORK/nfpm.yaml"
+  # nfpm expands arch/version from the environment; substitute identity and staged file paths first.
+  sed \
+    -e "s|\${STAGE}|$STAGE|g" \
+    -e "s|@@PKG_NAME@@|$PKG_NAME|g" \
+    -e "s|@@BIN_NAME@@|$BIN_NAME|g" \
+    "$HERE/nfpm.yaml" > "$WORK/nfpm.yaml"
   (cd "$ROOT" && nfpm package -f "$WORK/nfpm.yaml" -p deb -t "$DIST/$BASENAME.deb")
 fi
 
@@ -93,16 +97,26 @@ if has appimage; then
   cp "$STAGE/usr/share/applications/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
   cp "$ROOT/assets/app-icon/hicolor/256x256/apps/procraft.png" "$APPDIR/$APP_ID.png"
   ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
-  TOOL="${APPIMAGETOOL:-$(command -v appimagetool || true)}"
-  if [ -z "$TOOL" ]; then
-    TOOL="$TARGET_DIR/appimagetool-$ARCH.AppImage"
-    if [ ! -x "$TOOL" ]; then
-      curl -fsSL -o "$TOOL" "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage"
-      chmod +x "$TOOL"
-    fi
+  # Pin both the AppImage packer and the embedded runtime. The runtime is executable code
+  # prepended to every generated AppImage, so it is checksum-verified independently.
+  APPIMAGETOOL_VERSION="1.9.1"
+  APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+  RUNTIME_VERSION="20251108"
+  RUNTIME_SHA256="2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
+  TOOL="$TARGET_DIR/appimagetool-$ARCH-$APPIMAGETOOL_VERSION.AppImage"
+  RUNTIME="$TARGET_DIR/appimage-runtime-$ARCH-$RUNTIME_VERSION"
+  if [ ! -f "$TOOL" ]; then
+    curl -fsSL -o "$TOOL" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
+    chmod +x "$TOOL"
   fi
-  # extracted and run, so it needs no FUSE (containers, CI)
-  ARCH="$ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOL" --no-appstream "$APPDIR" "$DIST/$BASENAME.AppImage"
+  if [ ! -f "$RUNTIME" ]; then
+    curl -fsSL -o "$RUNTIME" "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
+    chmod +x "$RUNTIME"
+  fi
+  printf '%s  %s\n' "$APPIMAGETOOL_SHA256" "$TOOL" | sha256sum --check --status
+  printf '%s  %s\n' "$RUNTIME_SHA256" "$RUNTIME" | sha256sum --check --status
+  # Extracted and run, so it needs no FUSE in containers or CI. Runtime is injected offline.
+  ARCH="$ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOL" --runtime-file "$RUNTIME" --no-appstream "$APPDIR" "$DIST/$BASENAME.AppImage"
   echo "wrote $DIST/$BASENAME.AppImage"
 fi
 
