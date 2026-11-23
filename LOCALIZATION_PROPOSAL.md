@@ -4,7 +4,7 @@
 **Target:** Android (Kotlin + Jetpack Compose) and Desktop (Rust + egui)  
 **Motivation:** let users translate ProCraft, maintain their own terminology, and share language packs without maintaining separate application forks.
 
-> **Implementation note (demo branch):** the running MVP currently uses format v1 with exact English UI strings as keys, because it can be wired into the existing text-rendering boundary without a full catalog refactor. This document describes the longer-term stable-message-ID design; it is not the format currently consumed by the demo editor. See [the working demo format and UI](COMMUNITY_LANGUAGE_PACKS.md).
+> **Implementation note (main branch):** the running MVP currently uses format v1 with exact English UI strings as keys, because it can be wired into the existing text-rendering boundary without a full catalog refactor. This document describes the longer-term stable-message-ID design; it is not the format currently consumed by the main-branch demo editor. See [the working demo format and UI](COMMUNITY_LANGUAGE_PACKS.md).
 
 
 ## The problem
@@ -97,4 +97,4 @@ Language packs are untrusted input. They should be parsed with size limits, sche
 
 ## Scope of this repository
 
-This branch is a proposal for maintainer discussion. It is intentionally separate from the Android Russian application build in `translation/russian`. The sample schema and pack describe the proposed interface; they are not yet wired into the ProCraft application. The implementation should be adjusted with maintainer feedback before a production PR.
+This branch is a proposal for maintainer discussion. It is intentionally separate from the Android Russian application build in `translation/russian`. The sample schema and pack describe the proposed interface; they are already implemented on the `main` branch as a working demo; this proposal describes a future architecture. The implementation should be adjusted with maintainer feedback before a production PR.
