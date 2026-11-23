@@ -106,7 +106,7 @@ Use the existing branch; do not create a permanent branch for the Russian editio
 
 ### Windows
 
-Requirements: Rust toolchain `1.99.0`, MSVC build tools, .NET/WiX v5.2-compatible tooling as used by the workflow.
+Requirements: Rust toolchain `1.99.0`, MSVC build tools, and .NET/WiX v5.0.2 with the UI and Util extensions.
 
 From the repository root in PowerShell:
 
