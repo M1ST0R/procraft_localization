@@ -628,9 +628,6 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "The signature couldn't be kept." => "Не удалось сохранить подпись.",
         "clear signature" => "очистить подпись",
         "author photo" => "фото автора",
-        "Low quality" => "Низкое качество",
-        "Good quality" => "Хорошее качество",
-        "Studio quality" => "Студийное качество",
         "Brush maker" => "Автор кисти",
         "Edit source" => "Изменить источник",
         "Source" => "Источник",
@@ -755,74 +752,60 @@ fn translate_dynamic<'a>(source: &'a str) -> Cow<'a, str> {
     if let Some(rest) = source.strip_prefix("Last reset point: ") {
         return Cow::Owned(format!("Последняя точка сброса: {rest}"));
     }
-    if let Some(rest) = source.strip_prefix("Frame ") {
-        if rest.chars().all(|c| c.is_ascii_digit()) {
-            return Cow::Owned(format!("Кадр {rest}"));
-        }
+    if let Some(rest) = source.strip_prefix("Frame ")
+        && rest.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("Кадр {rest}"));
     }
-    if let Some(rest) = source.strip_prefix("Layer ") {
-        if rest.chars().all(|c| c.is_ascii_digit()) {
-            return Cow::Owned(format!("Слой {rest}"));
-        }
+    if let Some(rest) = source.strip_prefix("Layer ")
+        && rest.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("Слой {rest}"));
     }
-    if let Some(rest) = source.strip_prefix("Delete ") {
-        if let Some(number) = rest.strip_suffix(" artworks?") {
-            if number.chars().all(|c| c.is_ascii_digit()) {
-                return Cow::Owned(format!("Удалить {} {}?", number, artwork_word(number, true)));
-            }
-        }
-        if let Some(number) = rest.strip_suffix(" artwork?") {
-            if number.chars().all(|c| c.is_ascii_digit()) {
-                return Cow::Owned(format!("Удалить {} {}?", number, artwork_word(number, true)));
-            }
-        }
+    if let Some(rest) = source.strip_prefix("Delete ")
+        && let Some(number) = rest.strip_suffix(" artworks?").or_else(|| rest.strip_suffix(" artwork?"))
+        && number.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("Удалить {} {}?", number, artwork_word(number, true)));
     }
-    if let Some((used, maximum)) = source.split_once(" of ") {
-        if !used.is_empty()
-            && !maximum.is_empty()
-            && used.chars().all(|c| c.is_ascii_digit())
-            && maximum.chars().all(|c| c.is_ascii_digit())
-        {
-            return Cow::Owned(format!("{used} из {maximum}"));
-        }
+    if let Some((used, maximum)) = source.split_once(" of ")
+        && !used.is_empty()
+        && !maximum.is_empty()
+        && used.chars().all(|c| c.is_ascii_digit())
+        && maximum.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("{used} из {maximum}"));
     }
-    if let Some(number) = source.strip_suffix(" artworks") {
-        if number.chars().all(|c| c.is_ascii_digit()) {
-            return Cow::Owned(format!("{number} {}", artwork_word(number, false)));
-        }
-    }
-    if let Some(number) = source.strip_suffix(" artwork") {
-        if number.chars().all(|c| c.is_ascii_digit()) {
-            return Cow::Owned(format!("{number} {}", artwork_word(number, false)));
-        }
+    if let Some(number) = source.strip_suffix(" artworks").or_else(|| source.strip_suffix(" artwork"))
+        && number.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("{number} {}", artwork_word(number, false)));
     }
     if source.starts_with("Selection Threshold ") {
         return Cow::Owned(format!("Порог выделения {}", source.trim_start_matches("Selection Threshold ")));
     }
-    if let Some(rest) = source.strip_prefix("This canvas holds at most ") {
-        if let Some(count) = rest.strip_suffix(" layers.") {
-            if count.chars().all(|c| c.is_ascii_digit()) {
-                return Cow::Owned(format!("На этом холсте можно создать не более {count} слоёв."));
-            }
-        }
+    if let Some(count) = source.strip_prefix("This canvas holds at most ")
+        .and_then(|rest| rest.strip_suffix(" layers."))
+        && count.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("На этом холсте можно создать не более {count} слоёв."));
     }
-    if let Some(rest) = source.strip_prefix("Delete “") {
-        if let Some(name) = rest.strip_suffix("”?") {
-            return Cow::Owned(format!("Удалить «{name}»?"));
-        }
+    if let Some(name) = source.strip_prefix("Delete “").and_then(|rest| rest.strip_suffix("”?")) {
+        return Cow::Owned(format!("Удалить «{name}»?"));
     }
-    if let Some(number) = source.strip_prefix("Selection ") {
-        if !number.is_empty() && number.chars().all(|c| c.is_ascii_digit()) {
-            return Cow::Owned(format!("Выделение {number}"));
-        }
+    if let Some(number) = source.strip_prefix("Selection ")
+        && !number.is_empty()
+        && number.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("Выделение {number}"));
     }
     if source.starts_with("Threshold ") {
         return Cow::Owned(format!("Порог {}", source.trim_start_matches("Threshold ")));
     }
-    if let Some(rest) = source.strip_prefix("QuickMenu ") {
-        if rest.chars().all(|c| c.is_ascii_digit()) {
-            return Cow::Owned(format!("Быстрое меню {rest}"));
-        }
+    if let Some(rest) = source.strip_prefix("QuickMenu ")
+        && rest.chars().all(|c| c.is_ascii_digit())
+    {
+        return Cow::Owned(format!("Быстрое меню {rest}"));
     }
     Cow::Borrowed(source)
 }
