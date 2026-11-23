@@ -30,6 +30,8 @@ The Lang Pack manager is available only on `main`:
 - [Format, behavior and limitations](docs/COMMUNITY_LANGUAGE_PACKS.md)
 - [Maintainer handoff and acceptance tests](docs/DEMO_HANDOFF.md)
 - [Security review (separate report)](security/language-packs-2026-11-23/REPORT.md)
+- [Security remediation checklist](security/language-packs-2026-11-23/ACTIONS.md)
+- [Supply-chain hardening and verified build inputs](security/SUPPLY_CHAIN.md)
 - [Repository review and cleanup notes](docs/REPOSITORY_REVIEW.md)
 - Importable sample: [`examples/ru-community.procraft-lang`](examples/ru-community.procraft-lang)
 
