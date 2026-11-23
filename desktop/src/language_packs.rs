@@ -454,7 +454,7 @@ pub fn show(ctx: &egui::Context) {
         }
         let mut open = state.open;
         egui::Window::new(tr("Community language packs"))
-            .id(egui::Id::new("community_language_packs_manager"))
+            .id(egui::Id::unique("community_language_packs_manager"))
             .open(&mut open)
             .order(egui::Order::Foreground)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
