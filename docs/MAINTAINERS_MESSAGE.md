@@ -2,14 +2,16 @@
 
 Hello ProCraft maintainers,
 
-I would like to propose a community localization system for ProCraft.
+This repository now contains a working community localization demo on `main`, rather than only a proposal. Android and Desktop users can create, edit, save, activate, import, export, share and delete file-based `.procraft-lang` packs. The `russian` branch remains a separate Russian-only community build.
 
-Because the Android interface uses Kotlin/Jetpack Compose while Desktop uses Rust/egui and both share functionality through the Rust core, adding translations only to Android string resources would not cover the complete application. Maintaining separate forks for each language also makes translations hard to keep in sync with upstream releases.
+The current MVP is wired into the existing text-rendering boundaries and uses exact English UI strings as keys (format v1). It is intentionally simple, data-only, offline and cross-platform. The public walkthrough, user guide, schema, sample pack, acceptance checklist and scoped security report are linked from the README.
 
-My proposal is a shared localization layer based on stable message keys and versioned, data-only language packs (`.procraft-lang`). Users could import, create, edit, and export translation variants. Missing entries would fall back to English, and the app would report new or changed source strings after updates. Packs would contain plain text only and would not have plugin permissions or executable code.
+I would appreciate feedback on:
+- whether the current text-rendering integration is an acceptable community demo;
+- the exact English-source-key approach for v1 and its limitations;
+- whether a future stable-message-ID catalog and shared localization resolver would fit upstream's architecture;
+- how upstream would prefer translation contributions and review to be organized.
 
-This repository contains the proposed pack format, a JSON Schema, a Russian example, and an implementation outline. It is a discussion PoC, not a production-ready patch; I would prefer to align the API and integration points with your direction before preparing a full implementation PR.
-
-Would this approach fit the project's goals? In particular, I would appreciate feedback on whether a shared Rust resolver exposed through UniFFI is a suitable boundary for Android and egui.
+The current demo is not presented as a final production localization architecture. Feedback can guide whether it should remain a community-maintained implementation or evolve into an upstream PR.
 
 Thank you for your work on ProCraft.
