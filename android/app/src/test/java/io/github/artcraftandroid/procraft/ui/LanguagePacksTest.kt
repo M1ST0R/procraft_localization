@@ -57,4 +57,11 @@ class LanguagePacksTest {
         assertTrue(error?.message?.contains("integer") == true)
     }
 
+    @Test
+    fun acceptsLongSourceKeysUsedByTheFullCatalog() {
+        val key = "A".repeat(175)
+        val raw = """{"format_version":1,"id":"ru.demo","locale":"ru-RU","name":"Русский","strings":{"$key":"Перевод"}}"""
+        assertEquals("Перевод", LanguagePacks.decode(raw).strings[key])
+    }
+
 }
