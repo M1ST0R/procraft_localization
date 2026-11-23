@@ -29,13 +29,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-apple-darwin, aarch64-apple-ios
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --all --check
+      - name: Whitespace check
+        run: git diff --check HEAD^1 HEAD
       - run: cargo clippy --workspace --all-targets -- -D warnings
       # the code only Apple's systems build (the Mac's pen, Finder, video, PDF and fonts; the iPad
       # app's layer and render thread), checked without linking: no Mac needed
