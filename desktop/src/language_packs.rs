@@ -368,11 +368,7 @@ fn validate(pack: &LanguagePack) -> Result<(), String> {
     if !valid_id(&pack.id) {
         return Err("Invalid language-pack ID.".to_owned());
     }
-    if !valid_locale(&pack.locale)
-        || pack.locale.len() > 35
-        || pack.name.trim().is_empty()
-        || pack.name.len() > 80
-    {
+    if !valid_locale(&pack.locale) || pack.locale.len() > 35 || pack.name.trim().is_empty() || pack.name.len() > 80 {
         return Err("Invalid language-pack name or locale.".to_owned());
     }
     if pack.author.len() > 120
