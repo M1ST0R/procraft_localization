@@ -3,10 +3,12 @@ name: Android APK
 on:
   push:
     branches:
-      - translation/russian
+      - main
+      - russian
   pull_request:
     branches:
-      - translation/russian
+      - main
+      - russian
   workflow_dispatch:
 
 permissions:
@@ -112,7 +114,7 @@ jobs:
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: ProCraft-RU-Android-arm64
+          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Android-arm64' || 'ProCraft-RU-Android-arm64' }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
