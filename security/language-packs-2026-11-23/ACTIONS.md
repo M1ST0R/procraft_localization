@@ -16,3 +16,6 @@
 | Pin Actions/toolchain to immutable reviewed versions | Supply-chain hardening | Fixed | Third-party Actions use full commit SHAs; toolchain reference is commit-pinned |
 | Verify rulesets, branch protection, secret permissions | Owner action | Pending | Requires repo administration |
 | Full dependency audit and independent security review | Follow-up | Not performed | Outside scope of this review |
+
+
+Supply-chain pinning and binary checksums are documented in [SUPPLY_CHAIN.md](../SUPPLY_CHAIN.md).
