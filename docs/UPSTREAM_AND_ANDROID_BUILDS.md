@@ -9,7 +9,7 @@ Keep the branches separate. Do not copy one branch over the other.
 
 ## Main branch — Lang Pack Demo
 
-- [Main action — translation coverage and Android checks](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
+- [CI — translation coverage and Android checks](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
 - [Android ARM64 APK](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Amain)
 - [Windows and Linux Desktop packages](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Amain)
 
@@ -19,7 +19,7 @@ Artifacts are retained for 30 days. Download them from a successful workflow run
 - Windows artifact: `ProCraft-LangPack-Windows-x64` (MSI and portable ZIP).
 - Linux artifact: `ProCraft-LangPack-Linux-x86_64` (AppImage, DEB and tar.gz).
 
-The Main workflow audits all 1,374 catalog entries, checks identical Android/Desktop Russian values, validates the full sample pack and its JSON preview, then runs Android lint and unit tests.
+The CI workflow audits all 1,374 catalog entries, checks identical Android/Desktop Russian values, validates the full sample pack and its JSON preview, then runs Android lint and unit tests.
 
 ## Russian branch — Russian Edition
 
@@ -65,6 +65,6 @@ git merge upstream/main
 
 For the ProCraft v0.0.7-beta baseline, upstream consolidated several standalone plugins into larger plugins (including Krita Brushes, ColorDrop tools, Interface, Effects, Layer fills and Layer tools). Keep upstream plugin manifests and bundled files. Do not restore obsolete standalone plugin folders when carrying community changes forward.
 
-Resolve conflicts by keeping upstream functional changes and reapplying the relevant Russian translation changes only where needed. On `main`, also update both translation dictionaries, the sample pack and its readable preview when the source catalog changes. Run the Main workflow and the package workflows for the branch you updated; test APKs on an Android tablet and Desktop packages on their target OS.
+Resolve conflicts by keeping upstream functional changes and reapplying the relevant Russian translation changes only where needed. On `main`, also update both translation dictionaries, the sample pack and its readable preview when the source catalog changes. Run the CI workflow and the package workflows for the branch you updated; test APKs on an Android tablet and Desktop packages on their target OS.
 
 For a larger update, create a short-lived branch and PR into `main` or `russian` so conflicts and regressions are visible.
