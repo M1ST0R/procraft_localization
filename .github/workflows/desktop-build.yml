@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - russian
     paths:
       - "desktop/**"
       - "crates/**"
@@ -94,7 +93,7 @@ jobs:
       - name: Upload Windows packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Windows-x64' || 'ProCraft-RU-Windows-x64' }}
+          name: ProCraft-LangPack-Windows-x64
           path: dist/*
           if-no-files-found: error
           retention-days: 30
@@ -171,7 +170,7 @@ jobs:
       - name: Upload Linux packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Linux-x86_64' || 'ProCraft-RU-Linux-x86_64' }}
+          name: ProCraft-LangPack-Linux-x86_64
           path: dist/*
           if-no-files-found: error
           retention-days: 30
