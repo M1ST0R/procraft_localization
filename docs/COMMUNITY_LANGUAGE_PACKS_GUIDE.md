@@ -16,7 +16,7 @@ This guide explains the working Language Packs manager in the `main` branch for 
 2. Open **Preferences**.
 3. Select **Language Packs**.
 
-The `russian` branch is a Russian-only build and does not contain this editor.
+The repository now maintains one edition on `main`, including this editor.
 
 ## 2. Create a translation from scratch
 
@@ -127,7 +127,7 @@ A `.procraft-lang` file is UTF-8 JSON. Example:
 
 The `strings` object maps exact English UI keys to translation values. Catalog revision `procraft-ui-source-2` is metadata and does not change format v1.
 
-The importer limits the file to 5 MiB, 20,000 strings, source keys up to 160 characters, values up to 4,000 characters and 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. The [JSON Schema](../schemas/procraft-language-pack.schema.json) documents the contract.
+The importer limits the file to 5 MiB, 20,000 strings, source keys up to 512 characters, values up to 4,000 characters and 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. The [JSON Schema](../schemas/procraft-language-pack.schema.json) documents the contract.
 
 ## 9. Troubleshooting
 
