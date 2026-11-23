@@ -21,8 +21,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-${{ github.ref }}-${{ github.sha }}
-  cancel-in-progress: false
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
