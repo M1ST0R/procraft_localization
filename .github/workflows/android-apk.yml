@@ -3,8 +3,8 @@ name: Android APK
 on:
   push:
     branches:
-      - translation/russian
-      - demo/community-language-packs
+      - main
+      - russian
       - fix/language-pack-translation-coverage
     paths:
       - "android/**"
@@ -16,7 +16,8 @@ on:
       - ".github/workflows/android-apk.yml"
   pull_request:
     branches:
-      - translation/russian
+      - main
+      - russian
   workflow_dispatch:
 
 permissions:
@@ -83,7 +84,7 @@ jobs:
       # Release signing material is only exposed on the trusted Russian branch by its owner.
       # PRs and the feature-demo branch use the temporary Gradle debug key.
       - name: Configure release signing key
-        if: ${{ github.ref == 'refs/heads/translation/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+        if: ${{ github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         env:
           KEYSTORE_BASE64: ${{ secrets.PROCRAFT_KEYSTORE_BASE64 }}
         shell: bash
@@ -99,7 +100,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build signed APK (trusted branch only)
-        if: ${{ github.ref == 'refs/heads/translation/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+        if: ${{ github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         working-directory: android
         env:
           PROCRAFT_KEYSTORE_PASSWORD: ${{ secrets.PROCRAFT_KEYSTORE_PASSWORD }}
@@ -116,7 +117,7 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-arm64.apk"
 
       - name: Build demo APK (debug-signed; no signing secrets)
-        if: ${{ !(github.ref == 'refs/heads/translation/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
+        if: ${{ !(github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
         working-directory: android
         env:
           APP_VERSION: ${{ steps.version.outputs.name }}
@@ -128,7 +129,12 @@ jobs:
             "-Pprocraft.version=$APP_VERSION" \
             "-Pprocraft.versionCode=$APP_VERSION_CODE"
           mkdir -p "$GITHUB_WORKSPACE/dist"
-          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-Demo-arm64.apk"
+          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            apk_name="ProCraft-LangPack-arm64.apk"
+          else
+            apk_name="ProCraft-RU-Demo-arm64.apk"
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/$apk_name"
 
       - name: Verify APK
         shell: bash
@@ -142,7 +148,7 @@ jobs:
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: ProCraft-RU-Android-arm64
+          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Android-arm64' || 'ProCraft-RU-Android-arm64' }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
