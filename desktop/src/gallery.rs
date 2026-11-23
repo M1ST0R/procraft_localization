@@ -688,15 +688,6 @@ impl Gallery {
         let painter = ui.painter();
         let top = screen.top();
         let title = self.stack.as_ref().map_or("ProCraft", |s| s.1.as_str()).to_owned();
-        text(
-            painter,
-            pos2(screen.left() + 32.0, top + 11.0),
-            Align2::LEFT_TOP,
-            &title,
-            36.0,
-            Weight::Bold,
-            argb(TITLE),
-        );
         let wide = screen.width() > screen.height();
         let actions: &[(SelectAction, &str, f32)] = if wide {
             &[
@@ -713,14 +704,42 @@ impl Gallery {
                 (SelectAction::More, "More", 61.0),
             ]
         };
+        // The minimums preserve the original spacing, while the measured label width includes
+        // the Russian translation. Without this, long labels such as "Предпросмотр" overlap.
+        let action_width = |label: &str, minimum: f32| {
+            minimum.max(crate::look::text_width(painter, label, 16.0, Weight::Regular) + 24.0)
+        };
         let done = Rect::from_min_size(pos2(screen.right() - 20.0 - 44.0, top + 10.0), vec2(44.0, 45.0));
-        let width: f32 = actions.iter().map(|a| a.2).sum();
+        let width: f32 = actions.iter().map(|(_, label, minimum)| action_width(label, *minimum)).sum();
         let capsule = Rect::from_min_size(pos2(done.left() - 13.0 - width, top + 10.0), vec2(width, 45.0));
+
+        // Keep the gallery title clear of the action capsule on narrow windows.
+        let title_left = screen.left() + 32.0;
+        let title_room = (capsule.left() - 16.0 - title_left).max(0.0);
+        let full_title_width = crate::look::text_width(painter, &title, 36.0, Weight::Bold);
+        let title_size = if full_title_width > title_room && full_title_width > 0.0 {
+            36.0 * title_room / full_title_width
+        } else {
+            36.0
+        };
+        if title_size >= 16.0 {
+            text(
+                painter,
+                pos2(title_left, top + 11.0),
+                Align2::LEFT_TOP,
+                &title,
+                title_size,
+                Weight::Bold,
+                argb(TITLE),
+            );
+        }
+
         painter.rect_filled(capsule, 22.5, argb(CAPSULE));
         painter.rect_stroke(capsule, 22.5, Stroke::new(1.0, argb(CAPSULE_EDGE)), egui::StrokeKind::Inside);
         let mut x = capsule.left();
         let mut chosen = None;
-        for &(action, label, w) in actions {
+        for &(action, label, minimum) in actions {
+            let w = action_width(label, minimum);
             let button = Rect::from_min_size(pos2(x, capsule.top()), vec2(w, 45.0));
             let ink = if self.can(action) { argb(TITLE) } else { argb(SIZE) };
             text(painter, button.center(), Align2::CENTER_CENTER, label, 16.0, Weight::Regular, ink);
@@ -1189,14 +1208,18 @@ impl Gallery {
             }
         }
         let plus = Rect::from_min_size(pos2(screen.right() - 20.0 - 44.0, top + 10.0), vec2(44.0, 45.0));
-        let capsule_width = 69.0 + 71.0 + 66.0;
+        let labels: [(&str, f32); 3] = [("Select", 69.0), ("Import", 71.0), ("Photo", 66.0)];
+        let widths = labels.map(|(label, minimum)| {
+            minimum.max(crate::look::text_width(painter, label, 16.0, Weight::Regular) + 24.0)
+        });
+        let capsule_width: f32 = widths.iter().sum();
         let capsule =
             Rect::from_min_size(pos2(plus.left() - 12.0 - capsule_width, top + 10.0), vec2(capsule_width, 45.0));
         painter.rect_filled(capsule, 22.5, argb(CAPSULE));
         painter.rect_stroke(capsule, 22.5, Stroke::new(1.0, argb(CAPSULE_EDGE)), egui::StrokeKind::Inside);
         let mut x = capsule.left();
         let mut asked = None;
-        for (label, width) in [("Select", 69.0), ("Import", 71.0), ("Photo", 66.0)] {
+        for ((label, _), width) in labels.into_iter().zip(widths) {
             let button = Rect::from_min_size(pos2(x, capsule.top()), vec2(width, 45.0));
             text(painter, button.center(), Align2::CENTER_CENTER, label, 16.0, Weight::Regular, argb(TEXT));
             if ui.interact(button, ui.scope_id().with(label), Sense::click()).clicked() {

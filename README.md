@@ -1,4 +1,88 @@
-> **Community localization proposal:** This repository proposes a built-in system for user-created language packs. Start with [LOCALIZATION_PROPOSAL.md](LOCALIZATION_PROPOSAL.md), review the [language-pack format](docs/COMMUNITY_LANGUAGE_PACKS.md), or use the [maintainer discussion message](docs/MAINTAINERS_MESSAGE.md). The Android Russian build for personal use is maintained separately in the [translation/russian branch](https://github.com/M1ST0R/procraft_localization/tree/translation/russian).
+# ProCraft Community Language Packs — Demo
+
+**This is the main branch and the language-pack demo edition.** The Russian-only build is maintained separately on the [`russian` branch](https://github.com/M1ST0R/procraft_localization/tree/russian).
+
+This demo includes an in-app translation manager for Android and Desktop. Users can create language packs, search and edit strings, save locally, import/export `.procraft-lang` files, switch languages and delete packs. Missing strings fall back to English; placeholders are validated.
+
+### Language-pack demo features
+
+This branch includes an in-app, file-based translation manager on Android and Desktop. Users can create a language, search the shared UI source catalog, edit strings, save packs locally, import/export `.procraft-lang` files, switch active translations and delete packs. Missing strings fall back to English, and placeholders are validated on import/save.
+
+- Android: **Settings → Language packs**
+- Desktop: **Preferences → Language Packs**
+- Shared source catalog: `assets/localization/ui-catalog.json`
+- Importable sample: [`examples/ru-community.procraft-lang`](examples/ru-community.procraft-lang)
+- User and contributor guide: [`docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md`](docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
+- Detailed behavior and limitations: [`docs/COMMUNITY_LANGUAGE_PACKS.md`](docs/COMMUNITY_LANGUAGE_PACKS.md)
+- Maintainer handoff and end-to-end acceptance checklist: [`docs/DEMO_HANDOFF.md`](docs/DEMO_HANDOFF.md)
+
+Format v1 uses exact English UI strings as keys so it works with the current UI rendering boundary. The separate [`LOCALIZATION_PROPOSAL.md`](LOCALIZATION_PROPOSAL.md) describes a future stable-message-ID architecture.
+
+### What this project changes
+
+- Adds a Russian UI translation layer to the Android Jetpack Compose text-rendering boundary.
+- Adds a separate Russian dictionary to the desktop `egui` text-rendering boundary, covering the main menus, canvas information, layers, colours, settings, brush library and Brush Studio.
+- Translates built-in brush names and common interface labels while preserving formatting; unknown or not-yet-translated text falls back to English.
+- Keeps user-created artwork names and arbitrary plugin-provided text unchanged unless they match a built-in UI string.
+- Uses a separate Android application ID, `io.github.artcraftandroid.procraft.ru`, so the Android community build can coexist with the official ProCraft app.
+- Builds Android APKs and Windows/Linux desktop packages with separate GitHub Actions workflows.
+- Tracks upstream **ProCraft v0.0.7-beta**: 394 new built-in brushes, the dedicated Krita brush engine and studio, consolidated plugins, updated icons, and upstream performance and stability fixes.
+
+### Install the Russian build
+
+1. Open the [Community Language Packs Android workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Ademo%2Fcommunity-language-packs).
+2. Open the newest successful run on the `demo/community-language-packs` branch.
+3. Download the **ProCraft-RU-Android-arm64** artifact from the bottom of the run page.
+4. Extract the ZIP and install `ProCraft-RU-Android-arm64.apk` on an ARM64 Android tablet.
+5. Allow installation from the browser or file manager if Android asks.
+
+The Actions artifact is temporary (currently retained for 30 days). The feature demo APK is distributed from this branch's workflow artifacts; the older `0.0.3` release predates the in-app Language Packs manager and does **not** contain this feature. The Android community build has its own package ID and is installed alongside, rather than over, the official app.
+
+### Current feature-demo builds
+
+The current demo build runs are available here:
+
+- [Android ARM64 APK — run 141](https://github.com/M1ST0R/procraft_localization/actions/runs/45055585910)
+- [Windows x64 and Linux x86_64 — run 40](https://github.com/M1ST0R/procraft_localization/actions/runs/45055766062)
+
+Download the artifacts only after the corresponding run has completed successfully. Each artifact is available from the run page under **Artifacts**.
+
+### Build desktop versions
+
+The [Desktop RU builds workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Ademo%2Fcommunity-language-packs) runs automatically when desktop source, the shared engine, plugins, assets or packaging files change on this branch. It can also be started manually from **Actions → Desktop RU builds → Run workflow**.
+
+- **Windows x64** — download the `ProCraft-RU-Windows-x64` artifact. It contains an `.msi` installer and a portable `.zip` with `ProCraft.exe` and the required DirectX Shader Compiler DLLs.
+- **Linux x86_64** — download the `ProCraft-RU-Linux-x86_64` artifact. It contains an `.AppImage`, a `.deb` package and a `.tar.gz` archive.
+- Desktop artifacts are retained for 30 days. Versioned releases can also include the desktop packages through the existing [Release workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/release.yml).
+
+
+### Translation status and known limitations
+
+The translation is an ongoing community effort, not yet a complete official localization. Some text can remain in English when it comes from an untranslated label, a separate rendering path, a plugin, user content, or a string that has not yet been added to the dictionary. Please report the exact English wording and where it appears; a screenshot is especially useful.
+
+Russian phrases are often longer than their English originals. Some buttons, tabs or compact panels may clip or truncate translated text. Report the screen, device resolution/orientation, and a screenshot where possible. The translation layer can change wording, but fixing a layout that is too narrow may require a targeted UI layout change rather than shortening every translation.
+
+### Updating the Russian build
+
+- **New community demo build:** when app or shared source files change on `demo/community-language-packs`, GitHub Actions builds a new Android APK and Windows/Linux packages.
+- **Manual Android build:** open **Actions → Android APK → Run workflow** and select `demo/community-language-packs`.
+- **Manual desktop build:** open **Actions → Desktop RU builds → Run workflow** for `demo/community-language-packs`.
+- **Upstream ProCraft update:** follow [the upstream merge and signing instructions](docs/UPSTREAM_AND_ANDROID_BUILDS.md). Merge upstream changes into this branch; do not replace this branch with a fresh upstream checkout.
+- Keep the same package ID and signing key for every update. Android uses the matching signing certificate and a higher version code to install updates without uninstalling the existing app.
+
+### Contributing translation fixes
+
+Open an issue in this repository or report it in the community Discord. Include:
+- the exact English text as it appears in the app;
+- the screen or menu where it appears;
+- a screenshot, if possible;
+- the suggested Russian translation, if you have one.
+
+For clipped text, include the device model, screen resolution, orientation and whether the problem occurs at the default display/font size. Avoid reporting user-created names or plugin text as missing built-in translations unless they are meant to be translated by the app.
+
+---
+
+> **Russian community build:** this branch carries the Russian interface variants for Android and desktop. It is kept separate from the community-localization proposal on [main](https://github.com/M1ST0R/procraft_localization/tree/main). Android APKs and desktop packages are built by [GitHub Actions](https://github.com/M1ST0R/procraft_localization/actions); see [build and update notes](docs/UPSTREAM_AND_ANDROID_BUILDS.md).
 
 <p align="center">
   <img src="assets/app-icon/procraft-1024.png" alt="ProCraft's app icon: a paintbrush in a warm-to-cool blend on a black tile" width="128">
@@ -120,9 +204,8 @@ ProCraft is in beta, on Android tablets and on the desktop (Windows and Linux).
 | Gallery: stacks, new-canvas presets, import and share (PNG, JPEG, PSD, PDF, TIFF, GIF, MP4), time-lapse | 🚧 nearly done |
 | 3D painting: OBJ and USDZ models, texture sets, painting on the mesh, lights and environments | 🚧 |
 | Desktop: Windows and Linux, the same interface with a mouse, a pen tablet and keyboard shortcuts; an installer, an AppImage and a .deb | 🚧 beta |
-| Plugins: `.procraft-plugin` files you import in Prefs › Plugins, each off until you turn it on and gone without a trace when you turn it off. Filters (a few lines of WGSL, under Adjustments) and sandboxed WebAssembly that changes how the app behaves, such as Interface, Touch offset and ColorDrop tools. How to write one: [docs/plugins.md](docs/plugins.md) | ✅ |
+| Plugins: `.procraft-plugin` files you import in Prefs › Plugins, each off until you turn it on and gone without a trace when you turn it off. Filters (a few lines of WGSL, under Adjustments) and sandboxed WebAssembly that changes how the app behaves, such as Interface size, Touch offset and ColorDrop gap closing. How to write one: [docs/plugins.md](docs/plugins.md) | ✅ |
 | More for plugins: buttons that change the artwork (asking permission first), panels of their own, the colour picker drawn their way, kinds of artwork and of layer of their own, such as Vector layers | ✅ |
-| Brush engines in plugins: brush files another app's engine draws, drawn by a plugin as that app draws them, with a brush studio of its own, such as Krita brushes (Krita's pixel brush) | 🚧 |
 | Phones: their own app, ProCraft Pocket (this one is for tablets) | ⬜ |
 
 <sub>✅ works today · 🚧 in progress · ⬜ not started · 🚫 not planned</sub>

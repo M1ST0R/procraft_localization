@@ -24,7 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.Text as MaterialText
+import io.github.artcraftandroid.procraft.ui.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -50,6 +51,7 @@ import io.github.artcraftandroid.procraft.canvas.wideColorByDefault
 import io.github.artcraftandroid.procraft.ui.Pc
 import io.github.artcraftandroid.procraft.ui.Switch
 import io.github.artcraftandroid.procraft.ui.fittedInterfaceSize
+import io.github.artcraftandroid.procraft.ui.LanguagePacksPage
 
 /**
  * The app's own settings, apart from the canvas: what Android's page for the app links to as its
@@ -58,6 +60,7 @@ import io.github.artcraftandroid.procraft.ui.fittedInterfaceSize
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        io.github.artcraftandroid.procraft.ui.LanguagePacks.load(this)
         val prefs = getSharedPreferences("interface", Context.MODE_PRIVATE)
         val plugins = keptPlugins(this, prefs)
         Pc.accentGiven = Pc.accentOf(plugins)
@@ -132,12 +135,25 @@ private val Groups: List<Pair<String, List<Setting>>> = listOf(
 @Composable
 private fun SettingsScreen(prefs: android.content.SharedPreferences, onDone: () -> Unit) {
     var licences by remember { mutableStateOf(false) }
+    var languagePacks by remember { mutableStateOf(false) }
     if (licences) return Licences { licences = false }
+    if (languagePacks) return LanguagePacksPage { languagePacks = false }
     Box(Modifier.fillMaxSize().background(Back).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("ProCraft", color = Ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text("Done", color = Blue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onDone).padding(8.dp))
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(top = 18.dp).clip(RoundedCornerShape(12.dp)).background(Group)
+                    .clickable { languagePacks = true }.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Language packs", color = Ink, fontSize = 17.sp)
+                    Text("Create, edit, import and export translations", color = Dim, fontSize = 13.sp)
+                }
+                Text("›", color = Dim, fontSize = 20.sp)
             }
             for ((heading, rows) in Groups) {
                 Text(heading.uppercase(), color = Dim, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 6.dp))

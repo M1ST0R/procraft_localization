@@ -398,7 +398,8 @@ impl AnimatedExport {
             // Cancel and Done at the top right
             let done_rect =
                 Rect::from_min_size(pos2(screen.right() - 16.0 - 44.0, screen.top() + 16.0), vec2(44.0, 45.0));
-            let galley = ui.painter().layout_no_wrap("Cancel".to_owned(), Weight::Regular.font(17.0), argb(CANCEL_INK));
+            let cancel_label = crate::translation::translate("Cancel").into_owned();
+            let galley = ui.painter().layout_no_wrap(cancel_label, Weight::Regular.font(17.0), argb(CANCEL_INK));
             let capsule = Rect::from_min_size(
                 pos2(done_rect.left() - 13.0 - galley.size().x - 26.0, done_rect.center().y - 21.5),
                 vec2(galley.size().x + 26.0, 43.0),
@@ -444,7 +445,13 @@ impl AnimatedExport {
                         ui.painter().rect_filled(cell, 15, argb(pc::ACCENT));
                     }
                     let ink = if chosen { Color32::WHITE } else { argb(ROW_INK) };
-                    text(ui.painter(), cell.center(), Align2::CENTER_CENTER, label, 15.0, Weight::Regular, ink);
+                    let label_width = crate::look::text_width(ui.painter(), label, 15.0, Weight::Regular);
+                    let font_size = if label_width > cell.width() - 8.0 {
+                        (15.0 * (cell.width() - 8.0) / label_width).max(10.0)
+                    } else {
+                        15.0
+                    };
+                    text(ui.painter(), cell.center(), Align2::CENTER_CENTER, label, font_size, Weight::Regular, ink);
                     if ui.interact(cell, ui.scope_id().with(("size", i)), Sense::click()).clicked() {
                         self.web_ready = i == 1;
                     }

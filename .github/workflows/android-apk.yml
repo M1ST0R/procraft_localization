@@ -1,0 +1,157 @@
+name: Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - russian
+    paths:
+      - "android/**"
+      - "crates/**"
+      - "plugins/**"
+      - "assets/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/android-apk.yml"
+  pull_request:
+    branches:
+      - main
+      - russian
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: "1.99.0"
+  NDK_VERSION: "29.0.14206865"
+
+jobs:
+  build:
+    name: Build Android APK (arm64)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: aarch64-linux-android
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: android-arm64
+
+      - name: Install cargo-ndk and Android NDK
+        shell: bash
+        run: |
+          cargo install cargo-ndk --version "^4" --locked
+          # sdkmanager closes stdin once it has accepted the licence; avoid treating yes' SIGPIPE
+          # as a failed installation while preserving sdkmanager's own exit status.
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" >/dev/null
+          set -o pipefail
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      # Give every CI APK a strictly increasing versionCode, starting above the copied 0.0.7-beta.
+      # Gradle derives versionCode from this version and checks the matching property.
+      - name: Resolve CI version
+        id: version
+        shell: bash
+        run: |
+          n=$((GITHUB_RUN_NUMBER + 1))
+          patch=$((7 + (n - 1) / 98))
+          pre=$(((n - 1) % 98 + 1))
+          base=$((patch * 100 + pre))
+          echo "name=0.0.${patch}-beta.${pre}" >> "$GITHUB_OUTPUT"
+          echo "code=$base" >> "$GITHUB_OUTPUT"
+
+      # Release signing material is only exposed on the trusted Russian branch by its owner.
+      # PRs and the feature-demo branch use the temporary Gradle debug key.
+      - name: Configure release signing key
+        if: ${{ github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PROCRAFT_KEYSTORE_BASE64 }}
+        shell: bash
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/procraft-release.p12"
+            echo "PROCRAFT_KEYSTORE=$RUNNER_TEMP/procraft-release.p12" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No PROCRAFT_KEYSTORE_BASE64 secret. APK will use the runner's temporary Android debug key; it will not update an install signed with a different key."
+          fi
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build signed APK (trusted branch only)
+        if: ${{ github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+        working-directory: android
+        env:
+          PROCRAFT_KEYSTORE_PASSWORD: ${{ secrets.PROCRAFT_KEYSTORE_PASSWORD }}
+          PROCRAFT_KEY_ALIAS: ${{ secrets.PROCRAFT_KEY_ALIAS }}
+          PROCRAFT_KEY_PASSWORD: ${{ secrets.PROCRAFT_KEY_PASSWORD }}
+          APP_VERSION: ${{ steps.version.outputs.name }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease \
+            -Pprocraft.abis=arm64-v8a \
+            "-Pprocraft.version=$APP_VERSION" \
+            "-Pprocraft.versionCode=$APP_VERSION_CODE"
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-arm64.apk"
+
+      - name: Build demo APK (debug-signed; no signing secrets)
+        if: ${{ !(github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
+        working-directory: android
+        env:
+          APP_VERSION: ${{ steps.version.outputs.name }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease \
+            -Pprocraft.abis=arm64-v8a \
+            -Pprocraft.demoBuild=true \
+            "-Pprocraft.version=$APP_VERSION" \
+            "-Pprocraft.versionCode=$APP_VERSION_CODE"
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            apk_name="ProCraft-LangPack-arm64.apk"
+          else
+            apk_name="ProCraft-RU-Demo-arm64.apk"
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/$apk_name"
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          APK="$(find dist -maxdepth 1 -type f -name 'ProCraft-*.apk' -print -quit)"
+          test -n "$APK"
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
+          "$APKSIGNER" verify --verbose "$APK"
+          sha256sum "$APK" | tee dist/SHA256SUMS.txt
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Android-arm64' || 'ProCraft-RU-Android-arm64' }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/procraft-release.p12"

@@ -1295,12 +1295,18 @@ impl Colours {
                     vec2(rect.width(), 38.0),
                 );
                 let ink = Color32::WHITE;
+                let label_width = crate::look::text_width(ui.painter(), kind.label(), 17.0, Weight::Regular);
+                let font_size = if label_width > rect.width() - 40.0 {
+                    (17.0 * (rect.width() - 40.0) / label_width).max(11.0)
+                } else {
+                    17.0
+                };
                 text(
                     ui.painter(),
                     pos2(row.left() + 20.0, row.center().y),
                     Align2::LEFT_CENTER,
                     kind.label(),
-                    17.0,
+                    font_size,
                     Weight::Regular,
                     ink,
                 );
@@ -1579,7 +1585,7 @@ impl Colours {
             }
             let ink = if on { Color32::WHITE } else { argb(PANEL_TITLE) };
             let weight = if on { Weight::SemiBold } else { Weight::Regular };
-            let words = ui.painter().layout_no_wrap(label.into(), weight.font(15.0), ink).size().x;
+            let words = crate::look::text_width(ui.painter(), label, 15.0, weight);
             let left = cell.center().x - (21.0 + 6.0 + words) / 2.0;
             look.icon(ui, icon, pos2(left + 10.5, cell.center().y), 21.0, ink);
             text(ui.painter(), pos2(left + 27.0, cell.center().y), Align2::LEFT_CENTER, label, 15.0, weight, ink);
@@ -2050,7 +2056,13 @@ fn mode_tabs(ui: &Ui, look: &mut Look, rect: Rect, mode: Mode) -> Option<Mode> {
             if selected { argb(pc::ACCENT) } else { argb(PANEL_TITLE) },
         );
         let ink = if selected { argb(pc::MENU_INK) } else { argb(PANEL_TITLE) };
-        text(ui.painter(), pos2(x, rect.top() + 41.0), Align2::CENTER_TOP, label, 13.0, Weight::Medium, ink);
+        let label_width = crate::look::text_width(ui.painter(), label, 13.0, Weight::Medium);
+        let font_size = if label_width > w - 8.0 {
+            (13.0 * (w - 8.0) / label_width).max(10.0)
+        } else {
+            13.0
+        };
+        text(ui.painter(), pos2(x, rect.top() + 41.0), Align2::CENTER_TOP, label, font_size, Weight::Medium, ink);
     }
     chosen
 }

@@ -374,7 +374,16 @@ pub fn text_runs(
     size: f32,
     colour: Color32,
 ) -> Rect {
-    tracked_runs(painter, at, align, runs, size, colour, TRACKING)
+    let translated: Vec<String> = runs
+        .iter()
+        .map(|(text, _)| crate::translation::translate(text).into_owned())
+        .collect();
+    let translated_runs: Vec<(&str, Weight)> = runs
+        .iter()
+        .zip(&translated)
+        .map(|((_, weight), text)| (text.as_str(), *weight))
+        .collect();
+    tracked_runs(painter, at, align, &translated_runs, size, colour, TRACKING)
 }
 
 /// The tracking (em) that brings the face to the measured widths of rows' labels near 15 points,
@@ -393,7 +402,8 @@ pub fn text_tracked(
     colour: Color32,
     tracking: f32,
 ) -> Rect {
-    tracked_runs(painter, at, align, &[(text, weight)], size, colour, tracking)
+    let translated = crate::translation::translate(text);
+    tracked_runs(painter, at, align, &[(translated.as_ref(), weight)], size, colour, tracking)
 }
 
 fn tracked_runs(
@@ -430,6 +440,7 @@ pub fn wrapped(
     colour: Color32,
     width: f32,
 ) -> Arc<egui::Galley> {
+    let translated = crate::translation::translate(text);
     let mut job = LayoutJob::default();
     let format = TextFormat {
         font_id: weight.font(size),
@@ -437,7 +448,7 @@ pub fn wrapped(
         extra_letter_spacing: TRACKING * size,
         ..Default::default()
     };
-    job.append(text, 0.0, format);
+    job.append(translated.as_ref(), 0.0, format);
     job.wrap.max_width = width;
     painter.layout_job(job)
 }
@@ -453,6 +464,7 @@ pub fn wrapped_centred(
     width: f32,
     line_height: f32,
 ) -> Arc<egui::Galley> {
+    let translated = crate::translation::translate(text);
     let mut job = LayoutJob::default();
     let format = TextFormat {
         font_id: weight.font(size),
@@ -461,7 +473,7 @@ pub fn wrapped_centred(
         line_height: Some(line_height),
         ..Default::default()
     };
-    job.append(text, 0.0, format);
+    job.append(translated.as_ref(), 0.0, format);
     job.wrap.max_width = width;
     job.halign = egui::Align::Center;
     painter.layout_job(job)
@@ -490,9 +502,10 @@ pub fn dragged_by(held: &mut Option<(egui::Id, f32)>, response: &egui::Response)
 
 /// How wide `text` of one weight is at `size` points, as [`text`] draws it.
 pub fn text_width(painter: &Painter, text: &str, size: f32, weight: Weight) -> f32 {
+    let translated = crate::translation::translate(text);
     let mut job = LayoutJob::default();
     let format = TextFormat { font_id: weight.font(size), extra_letter_spacing: TRACKING * size, ..Default::default() };
-    job.append(text, 0.0, format);
+    job.append(translated.as_ref(), 0.0, format);
     painter.layout_job(job).size().x
 }
 

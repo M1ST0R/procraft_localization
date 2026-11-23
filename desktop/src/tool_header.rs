@@ -79,7 +79,8 @@ pub fn show_in(
             .iter()
             .map(|(label, chosen)| {
                 let ink = if *chosen { argb(CHOSEN) } else { argb(BUTTON) };
-                ui.painter().layout_no_wrap((*label).to_owned(), Weight::Regular.font(17.0), ink)
+                let translated = crate::translation::translate(label).into_owned();
+                ui.painter().layout_no_wrap(translated, Weight::Regular.font(17.0), ink)
             })
             .collect();
         let width: f32 = galleys.iter().map(|g| g.size().x + 26.0).sum();

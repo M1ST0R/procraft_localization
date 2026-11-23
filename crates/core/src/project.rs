@@ -1671,8 +1671,21 @@ fn beside(path: &Path) -> PathBuf {
 
 /// A PNG of RGBA8 pixels, carrying the colour profile `icc` (none if empty).
 pub(crate) fn write_png(path: &Path, width: u32, height: u32, rgba: &[u8], icc: &[u8]) -> Result<(), MobileError> {
-    let bytes = png_bytes(width, height, rgba, icc)?;
-    fs::write(path, bytes).map_err(|e| file_error("saving", e))
+    // Encode straight to the temporary file. Keeping the whole compressed PNG in another Vec
+    // needlessly raises peak memory for large canvases.
+    let file = fs::File::create(path).map_err(|e| file_error("saving", e))?;
+    let mut info = png::Info::with_size(width, height);
+    info.color_type = png::ColorType::Rgba;
+    info.bit_depth = png::BitDepth::Eight;
+    if !icc.is_empty() {
+        info.icc_profile = Some(std::borrow::Cow::Borrowed(icc));
+    }
+    let mut encoder = png::Encoder::with_info(file, info).map_err(|e| file_error("saving", e))?;
+    encoder.set_compression(png::Compression::Fast);
+    let mut writer = encoder.write_header().map_err(|e| file_error("saving", e))?;
+    writer.write_image_data(rgba).map_err(|e| file_error("saving", e))?;
+    writer.finish().map_err(|e| file_error("saving", e))?;
+    Ok(())
 }
 
 /// A PNG of premultiplied RGBA8 pixels (as the GPU gives them), none on failure but empty.
@@ -1858,7 +1871,8 @@ impl CanvasSession {
             (w, h, rgba, (icc, proof))
         };
         let (icc, proof) = icc;
-        let mut straight = straight_alpha(&rgba);
+        let mut straight = rgba;
+        straight_alpha_in_place(&mut straight);
         if let Some(table) = proof {
             table.apply_rgba(&mut straight, false);
         }
@@ -1892,6 +1906,26 @@ pub(crate) fn onto_white(rgba: &[u8]) -> Vec<u8> {
         out.extend_from_slice(&[over(r), over(g), over(b)]);
     }
     out
+}
+
+/// Converts premultiplied RGBA8 to straight alpha in the existing buffer. Processing bounded
+/// pieces side by side avoids allocating a second full-canvas pixel buffer during export.
+pub(crate) fn straight_alpha_in_place(rgba: &mut [u8]) {
+    debug_assert_eq!(rgba.len() % 4, 0, "RGBA data must contain whole pixels");
+    procraft_engine::par::each_part(rgba, 1 << 20, |piece| {
+        let (pixels, _) = piece.as_chunks_mut::<4>();
+        for [red, green, blue, alpha] in pixels.iter_mut() {
+            let alpha = u32::from(*alpha);
+            let un = |channel: u8| {
+                (u32::from(channel) * 255 + alpha / 2)
+                    .checked_div(alpha)
+                    .map_or(0, |value| value.min(255) as u8)
+            };
+            *red = un(*red);
+            *green = un(*green);
+            *blue = un(*blue);
+        }
+    });
 }
 
 pub(crate) fn straight_alpha(rgba: &[u8]) -> Vec<u8> {
@@ -2165,6 +2199,33 @@ mod signature_tests {
         assert_eq!(autosave_wait(every, Duration::from_millis(1500)), Duration::from_secs(6));
         assert_eq!(autosave_wait(every, Duration::from_secs(20)), AUTOSAVE_LONGEST);
         assert_eq!(autosave_wait(every, Duration::MAX), AUTOSAVE_LONGEST);
+    }
+
+    #[test]
+    fn straight_alpha_in_place_matches_the_allocating_conversion() {
+        let premultiplied = vec![
+            0, 0, 0, 0,
+            64, 32, 16, 128,
+            200, 150, 100, 255,
+            0, 0, 0, 1,
+            90, 45, 15, 180,
+        ];
+        let expected = straight_alpha(&premultiplied);
+        let mut actual = premultiplied;
+        straight_alpha_in_place(&mut actual);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn png_is_written_to_a_unicode_path_without_building_a_second_file_buffer() {
+        let dir = std::env::temp_dir().join(format!("procraft-png-экспорт-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("рисунок.png");
+        let rgba = vec![255, 0, 0, 255, 0, 255, 0, 128, 0, 0, 255, 0, 12, 34, 56, 255];
+        write_png(&path, 2, 2, &rgba, &[]).unwrap();
+        let bytes = fs::read(&path).unwrap();
+        assert_eq!(decode_png(std::io::Cursor::new(bytes), 2, 2).unwrap(), rgba);
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
