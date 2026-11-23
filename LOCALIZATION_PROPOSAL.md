@@ -1,100 +1,58 @@
-# Proposal: Community Localization for ProCraft
+# Proposal: Future localization architecture for ProCraft
 
-**Status:** community proposal / proof of concept  
-**Target:** Android (Kotlin + Jetpack Compose) and Desktop (Rust + egui)  
-**Motivation:** let users translate ProCraft, maintain their own terminology, and share language packs without maintaining separate application forks.
+**Status:** future architecture proposal; current Lang Pack MVP already exists on `main`  
+**Target:** Android (Kotlin/Jetpack Compose) and Desktop (Rust/egui)  
+**Goal:** maintainable community translations without a separate full application fork for every language.
 
-> **Implementation note (main branch):** the running MVP currently uses format v1 with exact English UI strings as keys, because it can be wired into the existing text-rendering boundary without a full catalog refactor. This document describes the longer-term stable-message-ID design; it is not the format currently consumed by the main-branch demo editor. See [the working demo format and UI](COMMUNITY_LANGUAGE_PACKS.md).
+## Current implementation versus proposed design
 
+The working `main`-branch MVP uses **format v1** with exact English UI strings as keys, because it is wired into the current Android and Desktop text-rendering boundaries. Users can create/edit/save/activate/import/export/share/delete packs today.
 
-## The problem
+This document describes the longer-term design. It is not a description of the currently serialized v1 format.
 
-ProCraft has a large interface, and its Android and desktop front ends share part of the functionality through the Rust core. A translation added only to Android string resources would therefore leave many tool names, adjustment names, brush labels, actions, and dynamic messages untranslated. Keeping a full fork for every language also makes translations difficult to maintain when upstream changes.
+Current implementation details: [format and behavior](docs/COMMUNITY_LANGUAGE_PACKS.md), [user guide](docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md), [public feature walkthrough](docs/COMMUNITY_LANGUAGE_PACKS_DISCUSSION.md).
 
-## The proposal
+## Why a future stable-ID design may help
 
-Introduce a small, versioned localization layer shared by both front ends.
+English source wording can change between upstream versions. In format v1, changing the source phrase may break matching with an existing translation. Stable IDs would separate translation identity from English wording.
 
-- Ship English as the built-in fallback catalog.
-- Give every user-visible string a stable key, independent of its current English wording.
-- Allow a user to select a built-in locale or import a community language pack.
-- Support multiple packs for one locale (for example, Russian — Community and Russian — Custom).
-- Provide an in-app editor for creating a pack, translating missing entries, reviewing changes, and exporting it.
-- Keep language packs as data-only files. They must never contain executable code or gain plugin permissions.
-- Validate pack compatibility and placeholders before activation.
+## Proposed direction
 
-The goal is to make localization maintainable without forcing the project to accept or ship every community translation.
+- Keep English as the built-in fallback.
+- Assign stable IDs to UI messages.
+- Support named placeholders and plural forms.
+- Make Android and Desktop use the same lookup semantics.
+- Preserve user translations when catalog entries are added or changed.
+- Show missing, changed and removed entries for translator review.
+- Keep packs data-only, without plugin or executable permissions.
 
-## User experience
+A shared Rust resolver is one possible implementation boundary, with platform-specific UI strings supported by the same catalog contract.
 
-1. Open **Preferences → Language**.
-2. Choose a built-in language or import a `.procraft-lang` file.
-3. Select a translation variant for that locale.
-4. Optionally duplicate it as a personal translation and edit strings.
-5. See untranslated or outdated entries in a review screen.
-6. Export the pack and share it with other users.
+## Proposed user flow
 
-A missing translation falls back to English. A malformed or incompatible pack is rejected with a useful error; it must never make the app unusable.
+1. Select a language or import a pack.
+2. Review missing and changed entries.
+3. Translate or edit entries.
+4. Validate placeholders and catalog compatibility.
+5. Activate and export/share the pack.
 
-## Proposed architecture
+## Compatibility/security requirements
 
-```text
-                  Language pack (.procraft-lang)
-                              |
-                       Parse + validate
-                              |
-                    Shared Rust localization API
-                     /                     \
-           UniFFI / Android               egui / Desktop
-          Jetpack Compose                 native UI
-                     \                     /
-                       Stable message keys
-                              |
-                    Built-in English catalog
-                         (fallback)
-```
+- Version the serialized format independently from catalog revisions.
+- Validate IDs, locale tags, metadata, sizes, structure and placeholders.
+- Reject malformed/incompatible files with useful errors.
+- Missing strings must never make the app unusable; use English fallback.
+- Imported data must not execute code or access plugins, files or network.
+- Preserve untranslated entries on export.
 
-The localization API should be UI-independent. Android and egui should request the same stable message keys, including named arguments and plural counts. The shared Rust core is a natural place for shared terminology and lookup rules; platform-only strings can live in the corresponding front end while using the same pack format.
+## Future stages
 
-## Language-pack format
+1. Inventory user-visible Android, Desktop and shared-core strings.
+2. Introduce stable IDs and an English source catalog.
+3. Implement shared validation/lookup semantics.
+4. Add catalog compatibility reports and translator review UI.
+5. Maintain cross-platform tests and a community sharing workflow.
 
-See [the format proposal](docs/COMMUNITY_LANGUAGE_PACKS.md), its [JSON Schema](schemas/procraft-language-pack.schema.json), and [the Russian sample](examples/ru-community.procraft-lang).
+## Repository scope
 
-The pack includes a format version, unique ID, locale, display name, author, target app version, fallback locale, and a map of stable message keys to translated strings. Placeholder names are preserved (for example, `{count}`).
-
-## Compatibility and updates
-
-- Stable message keys must not depend on English source text.
-- Each app release should expose a source-catalog version or hash.
-- On import, compare pack metadata with the app's catalog.
-- If new keys appear, keep the pack usable and mark those entries as untranslated.
-- If a key is removed or its placeholders change, show a review warning rather than silently discarding user work.
-- Exporting a pack should preserve metadata and untranslated entries.
-- The English catalog remains the final fallback.
-
-## Security and privacy
-
-Language packs are untrusted input. They should be parsed with size limits, schema validation, placeholder checks, and safe text rendering. A pack is only text data: no scripts, dynamic libraries, plugin API access, network access, or file access. Imported translations should not be automatically uploaded anywhere.
-
-## Suggested implementation stages
-
-1. **Catalog extraction:** inventory all Android, desktop, and shared-core user-visible text; introduce stable keys and an English source catalog.
-2. **Runtime lookup:** implement a small shared Rust resolver with fallback, named arguments, plural rules, and pack validation.
-3. **Platform integration:** expose the resolver through UniFFI for Android and use the same API from egui.
-4. **Language settings:** select, import, remove, and export packs.
-5. **Translation editor:** show source text, current translation, missing entries, and compatibility warnings.
-6. **Community workflow:** document pack creation and optionally add a curated directory later.
-
-## Acceptance criteria for an MVP
-
-- A user can import and activate a Russian pack on Android and Desktop.
-- The same stable key renders the same translation on both platforms.
-- Missing entries fall back to English without crashing.
-- Named placeholders and plural values are validated and rendered correctly.
-- Users can export a pack without losing untranslated entries.
-- Importing a pack cannot execute code or alter artwork files.
-- A source-catalog update reports added, removed, and changed keys.
-
-## Scope of this repository
-
-This branch is a proposal for maintainer discussion. It is intentionally separate from the Android Russian application build in `translation/russian`. The sample schema and pack describe the proposed interface; they are already implemented on the `main` branch as a working demo; this proposal describes a future architecture. The implementation should be adjusted with maintainer feedback before a production PR.
+`main` is the working Lang Pack demo; `russian` is the separate Russian-only community edition. The demo is available for maintainer feedback and community testing. The stable-ID design is a future improvement and should be discussed before a larger architectural migration.
