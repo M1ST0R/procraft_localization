@@ -1,8 +1,8 @@
 # Security Review Scope — Community Language Packs
 
 **Date:** 2026-11-23  
-**Target branch:** `fix/language-pack-translation-coverage`  
-**Reviewed commit:** `da3ffefa90500e42053ced894934824866e29b97`
+**Target branch:** `main`  
+**Reviewed commit:** `19568d8408835d68b5d9436516175b49e4da00a2`
 
 ## In scope
 
