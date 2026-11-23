@@ -15,7 +15,15 @@ Artifacts are built by GitHub Actions and retained for **30 days**. Use the newe
 - **Windows portable ZIP / MSI:** [Desktop workflow for russian](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Arussian). Download the `ProCraft-RU-Windows-x64` artifact and extract the portable ZIP.
 - **Linux packages:** the same Desktop workflow provides AppImage, DEB and tar.gz artifacts after a successful run.
 
-The community edition uses a separate Android package suffix and, after the packaging-identity fix, separate Windows MSI and Linux package identities. Wait for a successful build from the updated workflow before installing alongside upstream ProCraft.
+The Android build uses the `io.github.artcraftandroid.procraft.ru` application ID. Windows MSI and Linux DEB/AppImage/tar packages now have edition-specific product/package names, install locations and desktop IDs. New builds must complete successfully before you test side-by-side installation with upstream ProCraft.
+
+## Documentation and security
+
+- [Russian edition maintenance and build guide](docs/UPSTREAM_AND_ANDROID_BUILDS.md)
+- [Scoped security review](https://github.com/M1ST0R/procraft_localization/blob/main/security/language-packs-2026-11-23/REPORT.md)
+- [Supply-chain hardening details](https://github.com/M1ST0R/procraft_localization/blob/main/security/SUPPLY_CHAIN.md)
+
+The Language Packs editor is available only on [`main`](https://github.com/M1ST0R/procraft_localization/tree/main).
 
 ## Translation and updates
 
