@@ -5,7 +5,7 @@
   "name": "Русский — Community Demo",
   "author": "ProCraft Community",
   "app_version": "0.0.7-beta",
-  "catalog_version": "procraft-ui-source-3",
+  "catalog_version": "procraft-ui-source-2",
   "base_locale": "en",
   "strings": {
     "2D Grid": "Сетка 2D",
