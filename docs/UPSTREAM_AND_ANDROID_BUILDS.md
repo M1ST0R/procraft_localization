@@ -3,14 +3,14 @@
 ## Build an APK
 
 The workflow `.github/workflows/android-apk.yml` builds an ARM64 release APK when
-`translation/russian` is updated, and can also be started from **Actions → Android APK → Run workflow**.
+`russian` is updated, and can also be started from **Actions → Android APK → Run workflow**.
 
 After a successful run, download **ProCraft-RU-Android-arm64** from the run's Artifacts section.
 GitHub keeps this artifact for 30 days.
 
 ## Build desktop packages
 
-The workflow `.github/workflows/desktop-build.yml` builds the desktop app for Windows x64 and Linux x86_64 when relevant desktop, engine, plugin, asset or packaging files change on `translation/russian`. It can also be started manually from **Actions → Desktop RU builds → Run workflow**.
+The workflow `.github/workflows/desktop-build.yml` builds the desktop app for Windows x64 and Linux x86_64 when relevant desktop, engine, plugin, asset or packaging files change on `russian`. It can also be started manually from **Actions → Desktop builds → Run workflow**.
 
 After a successful run, download these artifacts:
 
@@ -55,7 +55,7 @@ The workflow currently falls back to the runner's debug key when the secrets are
 
 ## Bring in upstream ProCraft changes
 
-Keep translation-specific edits on `translation/russian`. Do not replace this branch with a fresh copy of upstream.
+Keep translation-specific edits on `russian`. Do not replace this branch with a fresh copy of upstream.
 
 One-time setup in a local clone:
 
@@ -67,7 +67,7 @@ git fetch upstream
 When upstream publishes changes:
 
 ```bash
-git switch translation/russian
+git switch russian
 git fetch upstream
 git merge upstream/main
 ```
@@ -77,12 +77,12 @@ For v0.0.7-beta, several standalone plugins were consolidated into larger plugin
 Resolve conflicts carefully, keeping upstream functional changes and reapplying the Russian strings or UI changes where upstream touched the same code. Then run the Android build/tests, commit the merge and push:
 
 ```bash
-git push origin translation/russian
+git push origin russian
 ```
 
 The push starts the APK workflow. Review the app on a tablet before sharing the new artifact.
 
-For a large upstream change, merge it on a separate update branch first and open a pull request into `translation/russian`. This makes conflicts and regressions easier to review.
+For a large upstream change, merge it on a separate update branch first and open a pull request into `russian`. This makes conflicts and regressions easier to review.
 
 ## Important versioning note
 
