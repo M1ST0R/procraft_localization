@@ -75,6 +75,7 @@ jobs:
           echo "code=$base" >> "$GITHUB_OUTPUT"
 
       - name: Configure release signing key
+        if: ${{ github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         env:
           KEYSTORE_BASE64: ${{ secrets.PROCRAFT_KEYSTORE_BASE64 }}
         shell: bash
@@ -89,7 +90,8 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
 
-      - name: Build APK
+      - name: Build signed APK (trusted branch only)
+        if: ${{ github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         working-directory: android
         env:
           PROCRAFT_KEYSTORE_PASSWORD: ${{ secrets.PROCRAFT_KEYSTORE_PASSWORD }}
@@ -105,10 +107,26 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/dist"
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-arm64.apk"
 
+      - name: Build demo APK (debug-signed; no signing secrets)
+        if: ${{ !(github.ref == 'refs/heads/russian' && github.actor == github.repository_owner && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
+        working-directory: android
+        env:
+          APP_VERSION: ${{ steps.version.outputs.name }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          ./gradlew --no-daemon :app:assembleRelease :app:lintRelease \
+            -Pprocraft.abis=arm64-v8a \
+            -Pprocraft.demoBuild=true \
+            "-Pprocraft.version=$APP_VERSION" \
+            "-Pprocraft.versionCode=$APP_VERSION_CODE"
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-Demo-arm64.apk"
+
       - name: Verify APK
         shell: bash
         run: |
-          APK="dist/ProCraft-RU-arm64.apk"
+          APK="$(find dist -maxdepth 1 -type f -name 'ProCraft-*.apk' -print -quit)"
+          test -n "$APK"
           APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
           "$APKSIGNER" verify --verbose "$APK"
           sha256sum "$APK" | tee dist/SHA256SUMS.txt
