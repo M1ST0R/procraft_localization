@@ -145,6 +145,20 @@ jobs:
       - name: Validate packaging shell scripts
         run: bash -n packaging/linux/package.sh packaging/linux/AppRun
 
+      - name: Create package checksums
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          files = sorted(p for p in Path("dist").iterdir() if p.is_file() and p.name != "SHA256SUMS.txt")
+          with Path("dist/SHA256SUMS.txt").open("w", encoding="utf-8", newline="\\n") as manifest:
+              for path in files:
+                  digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                  manifest.write(f"{digest}  {path.name}\\n")
+          PY
+
       - name: List packages
         run: ls -lh dist
 
