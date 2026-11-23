@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Fail CI when the Russian dictionaries or the published pack drift apart."""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from collections import Counter
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+CATALOG = ROOT / "assets/localization/ui-catalog.json"
+ANDROID_CATALOG = ROOT / "android/app/src/main/assets/localization/ui-catalog.json"
+RUST_DICTIONARY = ROOT / "desktop/src/translation.rs"
+KOTLIN_DICTIONARY = ROOT / "android/app/src/main/java/io/github/artcraftandroid/procraft/ui/Translation.kt"
+PACK = ROOT / "examples/ru-community.procraft-lang"
+PREVIEW = ROOT / "examples/ru-community-preview.json"
+
+RUST_PAIR = re.compile(r'^\s*("(?:\\.|[^"\\])*")\s*=>\s*("(?:\\.|[^"\\])*"),\s*$', re.MULTILINE)
+KOTLIN_PAIR = re.compile(r'^\s*("(?:\\.|[^"\\])*")\s+to\s+("(?:\\.|[^"\\])*"),?\s*$', re.MULTILINE)
+PLACEHOLDER = re.compile(r"\{[A-Za-z][A-Za-z0-9_]*\}")
+
+
+def fail(message: str) -> None:
+    print(f"translation audit: ERROR: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def load_pairs(pattern: re.Pattern[str], block: str, label: str) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for key_literal, value_literal in pattern.findall(block):
+        try:
+            key = json.loads(key_literal)
+            value = json.loads(value_literal)
+        except json.JSONDecodeError as error:
+            fail(f"{label} contains a string literal the audit cannot decode: {error}")
+        if key in result:
+            fail(f"{label} contains duplicate key {key!r}")
+        result[key] = value
+    if not result:
+        fail(f"could not parse any entries from {label}")
+    return result
+
+
+def read_json(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        fail(f"cannot read {path.relative_to(ROOT)}: {error}")
+
+
+catalog = read_json(CATALOG)
+android_catalog = read_json(ANDROID_CATALOG)
+if catalog != android_catalog:
+    fail("Android and shared source catalogs are not identical")
+if not isinstance(catalog, list) or not all(isinstance(item, str) for item in catalog):
+    fail("source catalog must be a JSON array of strings")
+if len(catalog) != len(set(catalog)):
+    fail("source catalog contains duplicate entries")
+
+rust_text = RUST_DICTIONARY.read_text(encoding="utf-8")
+rust_start = rust_text.find("let translated = match source {")
+rust_end = rust_text.find("\n    };\n    Cow::Borrowed", rust_start)
+if rust_start < 0 or rust_end < 0:
+    fail("could not isolate the Desktop translation match block")
+desktop = load_pairs(RUST_PAIR, rust_text[rust_start:rust_end], "Desktop dictionary")
+
+kotlin_text = KOTLIN_DICTIONARY.read_text(encoding="utf-8")
+kotlin_start = kotlin_text.find("private val russianUi = mapOf(")
+kotlin_end = kotlin_text.find("\n)\n\ninternal fun languageCatalog()", kotlin_start)
+if kotlin_start < 0 or kotlin_end < 0:
+    fail("could not isolate the Android russianUi map")
+android = load_pairs(KOTLIN_PAIR, kotlin_text[kotlin_start:kotlin_end], "Android dictionary")
+
+for label, dictionary in (("Desktop", desktop), ("Android", android)):
+    missing = [key for key in catalog if key not in dictionary]
+    empty = [key for key in catalog if not dictionary.get(key, "").strip()]
+    if missing:
+        fail(f"{label} dictionary is missing {len(missing)} catalog entries; first: {missing[:8]!r}")
+    if empty:
+        fail(f"{label} dictionary has {len(empty)} empty translations; first: {empty[:8]!r}")
+
+different = [
+    (key, desktop[key], android[key])
+    for key in catalog
+    if desktop[key] != android[key]
+]
+if different:
+    fail(f"Desktop/Android terminology diverges for {len(different)} entries; first: {different[:8]!r}")
+
+pack = read_json(PACK)
+preview = read_json(PREVIEW)
+if pack != preview:
+    fail("the importable .procraft-lang and readable JSON preview are not identical")
+if pack.get("format_version") != 1 or not isinstance(pack.get("strings"), dict):
+    fail("sample pack does not use the expected v1 strings format")
+pack_strings = pack["strings"]
+missing_pack = [key for key in catalog if key not in pack_strings]
+if missing_pack:
+    fail(f"sample pack is missing {len(missing_pack)} catalog entries; first: {missing_pack[:8]!r}")
+
+for key in catalog:
+    value = pack_strings.get(key)
+    if not isinstance(value, str) or not value.strip():
+        fail(f"sample pack has an empty or non-string value for {key!r}")
+    if value != desktop[key]:
+        fail(f"sample pack does not match the built-in dictionary for {key!r}")
+    if Counter(PLACEHOLDER.findall(key)) != Counter(PLACEHOLDER.findall(value)):
+        fail(f"sample pack changes placeholders in {key!r}")
+    if len(key) > 512 or len(value) > 4000:
+        fail(f"sample pack exceeds the v1 field limits for {key!r}")
+
+print(
+    "translation audit: OK — "
+    f"{len(catalog)} catalog entries, "
+    f"{len(desktop)} Desktop keys, "
+    f"{len(android)} Android keys, "
+    f"{len(pack_strings)} sample-pack entries; "
+    "catalogs, terminology and preview are synchronized."
+)
