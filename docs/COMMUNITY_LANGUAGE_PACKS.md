@@ -12,7 +12,7 @@ The main branch contains a working community translation manager. A user can cre
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
 
-The repository uses one maintained edition on `main`; the Language Packs manager is included.
+The repository maintains one edition on `main`, with the Language Packs manager included.
 
 ## Actions supported
 
@@ -65,7 +65,7 @@ The JSON Schema is in [`schemas/procraft-language-pack.schema.json`](../schemas/
 
 ## Sample pack
 
-[`examples/ru-community.procraft-lang`](../examples/ru-community.procraft-lang) is a small editable sample that can be imported from either supported platform.
+[`examples/ru-community.procraft-lang`](../examples/ru-community.procraft-lang) is a complete Russian sample containing all 1,374 catalog entries. Inspect the [readable JSON preview](../examples/ru-community-preview.json) on GitHub before importing it.
 
 ## Related documentation
 
