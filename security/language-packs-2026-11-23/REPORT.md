@@ -1,9 +1,9 @@
 # Security Review — ProCraft Community Language Packs
 
-**Review date:** 2026-11-23  
-**Review branch:** `audit/language-packs-2026-11-23`  
-**Target branch:** `fix/language-pack-translation-coverage`  
-**Reviewed source commit:** `7fe4f33844751b5bf7aa12a27267389cac3c2eef`  
+**Review date:** 2026-11-23
+**Review branch:** `main`
+**Target branch:** `main`
+**Reviewed source commit:** `19568d8408835d68b5d9436516175b49e4da00a2`
 **Assessment:** Scoped static source/configuration review. No confirmed exploitable vulnerability found in the reviewed language-pack path.
 
 ## 1. Executive summary
@@ -12,7 +12,7 @@ The review focused on the import, validation, storage, activation, export and sh
 
 The format is data-only JSON. The reviewed import paths do not interpret translation values as scripts, load them as plugins, or execute commands from pack content. Both implementations apply an input-size limit, validate pack identifiers before using them in file paths, constrain entry and string sizes, and reject placeholder mismatches.
 
-One consistency gap was found in Desktop metadata validation: its runtime validator did not enforce the schema's maximum lengths for `app_version`, `catalog_version` and `base_locale`. This was fixed in the target branch and regression checks were added. Android already enforced those limits.
+One consistency gap was found in Desktop metadata validation: its runtime validator did not enforce the schema's maximum lengths for `app_version`, `catalog_version` and `base_locale`. This was fixed before the demo was merged into `main`; regression checks were added. Android already enforced those limits.
 
 **No critical, high or medium exploitable issue was confirmed in the reviewed scope.** This statement is limited to the files and checks below; it is not a claim that the entire application or its dependencies are vulnerability-free.
 
@@ -43,8 +43,8 @@ Threat scenarios considered:
 
 ### F-01 — Desktop metadata length checks did not fully match the schema
 
-**Severity:** Low — input-validation consistency / hardening  
-**Status:** Fixed in target branch
+**Severity:** Low — input-validation consistency / hardening
+**Status:** Fixed in `main`
 
 Before the fix, the Desktop runtime validator checked locale syntax, the pack ID, display name, author, entry count, key/value lengths and placeholder consistency, but did not enforce the schema's total `locale` length limit or the limits for `app_version`, `catalog_version` and `base_locale`.
 
@@ -60,7 +60,7 @@ Regression assertions cover each limit in the Desktop language-pack tests.
 
 ### F-02 — No confirmed executable-content path in imported packs
 
-**Severity:** Informational  
+**Severity:** Informational
 **Status:** No issue found in reviewed path
 
 Pack content is deserialized as JSON data into a constrained structure. Translation values are used as text; the reviewed importer does not evaluate scripts, load native libraries, or register imported packs as plugins. Unknown JSON fields are rejected by the Desktop structure, and Android explicitly checks the allowed top-level fields.
@@ -69,14 +69,14 @@ This does not protect users from misleading, offensive or poor-quality translati
 
 ### F-03 — File identity and path construction
 
-**Severity:** Informational  
+**Severity:** Informational
 **Status:** No issue found in reviewed path
 
 Both implementations validate a pack ID against a restricted lowercase alphanumeric/dot/underscore/hyphen pattern before constructing the pack filename. IDs such as `../bad` are rejected by validation/tests. This prevents ordinary path traversal through a supplied pack ID in the reviewed pack storage path.
 
 ### F-04 — Resource-exhaustion controls
 
-**Severity:** Informational  
+**Severity:** Informational
 **Status:** Controls present
 
 The reviewed code applies:
@@ -122,13 +122,15 @@ Source-level regression coverage was added or retained for:
 - Desktop metadata length limits;
 - Desktop translation coverage for the newly translated UI labels.
 
-Build verification for the target feature branch:
+Build verification after moving the demo into `main`:
 
-- Android APK workflow: [run 45204091233](https://github.com/M1ST0R/procraft_localization/actions/runs/45204091233) — **passed**, artifact `ProCraft-RU-Android-arm64` was uploaded (Android source/test changes were already present in this run's commit).
-- Desktop Windows/Linux packaging: [run 45205688437](https://github.com/M1ST0R/procraft_localization/actions/runs/45205688437) — pending at the time of this report update; it targets source commit `7fe4f33844751b5bf7aa12a27267389cac3c2eef`.
-- Full pull-request CI: [run 45206244009](https://github.com/M1ST0R/procraft_localization/actions/runs/45206244009) — pending at the time of this report update.
+- Main-branch CI: [run 45212293121](https://github.com/M1ST0R/procraft_localization/actions/runs/45212293121) — the Rust format/whitespace step failed due to trailing whitespace in this report; it is being corrected and CI will rerun.
+- Main-branch Desktop packaging: [run 45212218743](https://github.com/M1ST0R/procraft_localization/actions/runs/45212218743) — in progress.
+- Main-branch Android APK: [run 45212218837](https://github.com/M1ST0R/procraft_localization/actions/runs/45212218837) — in progress.
+- Russian-branch CI: [run 45212052420](https://github.com/M1ST0R/procraft_localization/actions/runs/45212052420) — Rust formatting failed against pre-existing workspace formatting; the branch CI check is being narrowed to whitespace in the diff.
+- Russian-branch Android: [run 45212052434](https://github.com/M1ST0R/procraft_localization/actions/runs/45212052434) — in progress.
 
-Do not treat pending jobs as passed. Re-check the linked GitHub Actions runs before merging.
+Do not treat pending jobs as passed. Re-check the latest Actions runs.
 
 ## 6. Residual risks and recommended follow-up
 
