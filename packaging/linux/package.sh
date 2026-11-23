@@ -33,7 +33,14 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-BASENAME="procraft-$VERSION-linux-$ARCH"
+EDITION="${EDITION:-official}"
+case "$EDITION" in
+  official) PKG_NAME="procraft"; BIN_NAME="procraft"; APP_NAME="ProCraft"; APP_ID="procraft" ;;
+  langpack) PKG_NAME="procraft-langpack"; BIN_NAME="procraft-langpack"; APP_NAME="ProCraft LangPack Demo"; APP_ID="procraft-langpack" ;;
+  ru) PKG_NAME="procraft-ru"; BIN_NAME="procraft-ru"; APP_NAME="ProCraft RU"; APP_ID="procraft-ru" ;;
+  *) echo "unknown EDITION: $EDITION (expected official, langpack, or ru)" >&2; exit 2 ;;
+esac
+BASENAME="$PKG_NAME-$VERSION-linux-$ARCH"
 has() { case " $FORMATS " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 echo "==> ProCraft $VERSION for Linux $ARCH ($FORMATS)"
 
@@ -45,16 +52,18 @@ fi
 WORK="$TARGET_DIR/linux-package"
 STAGE="$WORK/root"
 rm -rf "$WORK"
-install -Dm755 "$TARGET_DIR/release/procraft" "$STAGE/usr/bin/procraft"
-strip "$STAGE/usr/bin/procraft" 2>/dev/null || true
-install -Dm644 "$HERE/procraft.desktop" "$STAGE/usr/share/applications/procraft.desktop"
-mkdir -p "$STAGE/usr/share/icons"
+install -Dm755 "$TARGET_DIR/release/procraft" "$STAGE/usr/bin/$BIN_NAME"
+strip "$STAGE/usr/bin/$BIN_NAME" 2>/dev/null || true
+mkdir -p "$STAGE/usr/share/applications" "$STAGE/usr/share/icons"
+sed -e "s|@@APP_NAME@@|$APP_NAME|g" -e "s|@@BIN_NAME@@|$BIN_NAME|g" -e "s|@@APP_ID@@|$APP_ID|g" \
+  "$HERE/procraft.desktop" > "$STAGE/usr/share/applications/$APP_ID.desktop"
 cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/usr/share/icons/"
+while IFS= read -r icon; do mv "$icon" "${icon%/procraft.png}/$APP_ID.png"; done < <(find "$STAGE/usr/share/icons/hicolor" -type f -name procraft.png)
 for f in LICENSE-MIT LICENSE-APACHE NOTICE ATTRIBUTION.md; do
-  install -Dm644 "$ROOT/$f" "$STAGE/usr/share/doc/procraft/$f"
+  install -Dm644 "$ROOT/$f" "$STAGE/usr/share/doc/$PKG_NAME/$f"
 done
 if command -v desktop-file-validate >/dev/null; then
-  desktop-file-validate "$STAGE/usr/share/applications/procraft.desktop"
+  desktop-file-validate "$STAGE/usr/share/applications/$APP_ID.desktop"
 fi
 
 # ---- .tar.gz -------------------------------------------------------------------------------------
@@ -76,13 +85,14 @@ fi
 
 # ---- AppImage ------------------------------------------------------------------------------------
 if has appimage; then
-  APPDIR="$WORK/ProCraft.AppDir"
+  APPDIR="$WORK/$PKG_NAME.AppDir"
   cp -R "$STAGE" "$APPDIR"
   rm -rf "$APPDIR/usr/share/doc"
-  install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
-  cp "$HERE/procraft.desktop" "$APPDIR/procraft.desktop"
-  cp "$ROOT/assets/app-icon/hicolor/256x256/apps/procraft.png" "$APPDIR/procraft.png"
-  ln -s procraft.png "$APPDIR/.DirIcon"
+  sed -e "s|@@BIN_NAME@@|$BIN_NAME|g" -e "s|@@APP_ID@@|$APP_ID|g" "$HERE/AppRun" > "$APPDIR/AppRun"
+  chmod +x "$APPDIR/AppRun"
+  cp "$STAGE/usr/share/applications/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
+  cp "$ROOT/assets/app-icon/hicolor/256x256/apps/procraft.png" "$APPDIR/$APP_ID.png"
+  ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
   TOOL="${APPIMAGETOOL:-$(command -v appimagetool || true)}"
   if [ -z "$TOOL" ]; then
     TOOL="$TARGET_DIR/appimagetool-$ARCH.AppImage"
