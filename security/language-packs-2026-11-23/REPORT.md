@@ -3,7 +3,7 @@
 **Review date:** 2026-11-23  
 **Review branch:** `audit/language-packs-2026-11-23`  
 **Target branch:** `fix/language-pack-translation-coverage`  
-**Reviewed source commit:** `68b28a38473b79bfac39cd022cfce20772815a08`  
+**Reviewed source commit:** `7fe4f33844751b5bf7aa12a27267389cac3c2eef`  
 **Assessment:** Scoped static source/configuration review. No confirmed exploitable vulnerability found in the reviewed language-pack path.
 
 ## 1. Executive summary
@@ -46,7 +46,7 @@ Threat scenarios considered:
 **Severity:** Low — input-validation consistency / hardening  
 **Status:** Fixed in target branch
 
-Before the fix, the Desktop runtime validator checked locale syntax, the pack ID, display name, author, entry count, key/value lengths and placeholder consistency, but did not consistently enforce the schema's total `locale` length limit or the limits for `app_version`, `catalog_version` and `base_locale`.
+Before the fix, the Desktop runtime validator checked locale syntax, the pack ID, display name, author, entry count, key/value lengths and placeholder consistency, but did not enforce the schema's total `locale` length limit or the limits for `app_version`, `catalog_version` and `base_locale`.
 
 The overall import limit was still 5 MB, and the missing field-length checks did not provide a demonstrated path to code execution or path traversal. However, the runtime contract was weaker than Android and the published schema.
 
@@ -124,8 +124,9 @@ Source-level regression coverage was added or retained for:
 
 Build workflows started for the target feature branch:
 
-- Android APK: [run 45204091233](https://github.com/M1ST0R/procraft_localization/actions/runs/45204091233)
-- Desktop Windows/Linux: [run 45204535819](https://github.com/M1ST0R/procraft_localization/actions/runs/45204535819)
+- Android APK: [run 45204091233](https://github.com/M1ST0R/procraft_localization/actions/runs/45204091233) (Android code/test commit `6ff62253f3c03c9d4f31efea9392f7a8fcde1e07`)
+- Desktop Windows/Linux: [run 45205688437](https://github.com/M1ST0R/procraft_localization/actions/runs/45205688437) (latest source commit `7fe4f33844751b5bf7aa12a27267389cac3c2eef`)
+- Full pull-request CI: [run 45205704582](https://github.com/M1ST0R/procraft_localization/actions/runs/45205704582)
 
 The CI runs were still in progress when this report was drafted. Their final result must be checked on GitHub Actions before treating the build/package verification as passed. The report must not be interpreted as claiming that pending jobs succeeded.
 
