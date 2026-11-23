@@ -1,7 +1,7 @@
 # The .deb (nfpm: https://nfpm.goreleaser.com). Run by package.sh, which stages the file tree,
 # puts its path for ${STAGE} (nfpm doesn't expand variables in `src`) and exports VERSION and
 # NFPM_ARCH.
-name: procraft
+name: @@PKG_NAME@@
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -45,8 +45,8 @@ recommends:
   - pipewire-bin | pulseaudio-utils | alsa-utils
 
 contents:
-  - src: ${STAGE}/usr/bin/procraft
-    dst: /usr/bin/procraft
+  - src: ${STAGE}/usr/bin/@@BIN_NAME@@
+    dst: /usr/bin/@@BIN_NAME@@
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/
