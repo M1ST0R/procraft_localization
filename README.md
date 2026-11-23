@@ -1,8 +1,10 @@
-## Russian community builds (this branch)
+# ProCraft Community Language Packs — Demo
 
-This branch is a **community-maintained Russian-language build** of ProCraft for Android, Windows and Linux. It is intended for Russian-speaking users who want a localized desktop and Android app before an official upstream localization is available. It is separate from the proposal for a reusable Community Language Packs system on [the main branch](https://github.com/M1ST0R/procraft_localization/tree/main).
+**This is the main branch and the language-pack demo edition.** The Russian-only build is maintained separately on the [`russian` branch](https://github.com/M1ST0R/procraft_localization/tree/russian).
 
-### Working community language-pack demo
+This demo includes an in-app translation manager for Android and Desktop. Users can create language packs, search and edit strings, save locally, import/export `.procraft-lang` files, switch languages and delete packs. Missing strings fall back to English; placeholders are validated.
+
+### Language-pack demo features
 
 This branch includes an in-app, file-based translation manager on Android and Desktop. Users can create a language, search the shared UI source catalog, edit strings, save packs locally, import/export `.procraft-lang` files, switch active translations and delete packs. Missing strings fall back to English, and placeholders are validated on import/save.
 
