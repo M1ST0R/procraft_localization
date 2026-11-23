@@ -66,6 +66,15 @@ Fixes now in the branch packaging code:
 
 Fresh Windows/Linux builds and install/upgrade/coexistence tests are still required before this finding can be closed as verified.
 
+### F-07 — Android release signing secrets were not restricted to trusted events
+**Severity:** High (credential exposure risk) — **Fixed**
+
+The previous Russian APK workflow configured the release keystore and passed signing secrets to an unconditional build step. This was unnecessarily broad and could expose the signing material to same-repository pull-request or other untrusted workflow executions.
+
+The workflow now exposes the keystore and passwords only when all conditions match: the ref is `russian`, the actor is the repository owner, and the event is a push or manual workflow dispatch. Pull requests and all other triggers use a debug-signed APK step with no signing secrets. The keystore file is removed in an `always()` cleanup step.
+
+This fix reduces workflow credential exposure. Repository-level secret settings and rulesets were not independently inspected.
+
 ## Platform notes
 
 ### Android
@@ -84,9 +93,10 @@ Fresh Windows/Linux builds and install/upgrade/coexistence tests are still requi
 
 ### GitHub Actions
 - Reviewed workflows request `contents: read`.
-- Android signing secrets are only used on the trusted owner push/manual run condition on `russian`; other builds use debug signing.
+- Android signing secrets are restricted to owner-triggered `push` and `workflow_dispatch` events on `russian`. Pull requests and all other triggers use a debug-signed APK and do not receive signing secrets. This restriction was applied after review of the previous unconditional signing step.
+- All third-party Actions used by the three workflows are pinned to full 40-character commit SHAs; the previous mutable action/toolchain references have been removed.
+- Workflow permissions are limited to `contents: read`, and checkout uses `persist-credentials: false`.
 - Repository-level branch protection, rulesets, collaborator permissions and secret settings were not available for review.
-- Actions currently use version tags and a toolchain action `master` reference. Pinning third-party actions to immutable SHAs and toolchain actions to reviewed versions is a supply-chain hardening follow-up.
 
 ## Verification
 
@@ -103,7 +113,9 @@ Do not mark the package-identity fix verified until fresh Desktop builds succeed
 
 ## Supply-chain hardening
 
-The related build workflows now pin third-party Actions to full commit SHAs. Tool installations are version-specific; nfpm 2.48.0, appimagetool 1.9.1 and AppImage runtime 20251108 are downloaded from versioned releases and SHA-256 verified. Checkout credential persistence is disabled and cargo-ndk uses version 4.1.2 with locked resolution. Details and exact digests are recorded in [SUPPLY_CHAIN.md](../SUPPLY_CHAIN.md).
+The related build workflows now pin third-party Actions to full commit SHAs. Tool installations are version-specific: nfpm 2.49.0, appimagetool 1.9.1 and AppImage runtime 20251108 are downloaded from versioned releases and SHA-256 verified; the Windows DXC archive is also hash-verified. The Linux AppImage tools are downloaded over HTTPS/TLS 1.2. Desktop artifacts include SHA-256 manifests. The Gradle distribution has a pinned SHA-256 in the wrapper properties. Details and exact digests are recorded in [SUPPLY_CHAIN.md](../SUPPLY_CHAIN.md).
+
+The standalone Gradle wrapper-validation job was removed after it failed to discover the nested Android wrapper JAR. The pinned `gradle/actions/setup-gradle` step performs wrapper validation automatically, and the Android job continues to execute the checked-in `android/gradlew` wrapper. The redundant job no longer causes a false CI failure.
 
 ## Follow-up
 
