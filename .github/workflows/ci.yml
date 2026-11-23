@@ -55,7 +55,7 @@ jobs:
       - run: cargo test --workspace
 
   android:
-    name: Android (clippy, lint, unit tests, release APK)
+    name: Android (lint, unit tests, APK build)
     if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-24.04
     steps:
