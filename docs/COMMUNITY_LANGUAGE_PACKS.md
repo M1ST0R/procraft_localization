@@ -12,7 +12,7 @@ The main branch contains a working community translation manager. A user can cre
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
 
-The `russian` branch is a separate Russian-only edition and does not include this manager.
+The repository uses one maintained edition on `main`; the Language Packs manager is included.
 
 ## Actions supported
 
@@ -47,7 +47,7 @@ Import/save validates the pack structure, metadata, pack ID, resource limits and
 
 - Maximum file size: 5 MiB (5 MB as shown in the UI)
 - Maximum string entries: 20,000
-- Source key length: 160 characters
+- Source key length: 512 characters
 - Translation value length: 4,000 characters
 - Maximum dynamic-template entries: 128
 - Metadata lengths and locale/ID formats are validated
