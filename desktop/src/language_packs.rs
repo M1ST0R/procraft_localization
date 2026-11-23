@@ -46,7 +46,7 @@ fn unknown_version() -> String {
     "unknown".to_owned()
 }
 fn catalog_version() -> String {
-    "procraft-ui-source-1".to_owned()
+    "procraft-ui-source-2".to_owned()
 }
 fn english() -> String {
     "en".to_owned()
