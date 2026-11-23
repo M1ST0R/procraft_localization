@@ -41,6 +41,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+        with:
+          persist-credentials: false
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
@@ -50,13 +52,13 @@ jobs:
       - name: Cache Rust
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: desktop-ru-windows-x64
+          key: desktop-langpack-windows-x64
 
       - name: Test desktop translations
         run: |
           cargo test -p procraft-desktop translation::tests
           cargo test -p procraft-desktop language_packs::tests
- 
+
       - name: Test PNG export helpers
         run: cargo test -p procraft-core --lib project::signature_tests
 
@@ -72,6 +74,20 @@ jobs:
         env:
           EDITION: langpack
         run: ./packaging/windows/package.ps1
+
+      - name: Create package checksums
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          files = sorted(p for p in Path("dist").iterdir() if p.is_file() and p.name != "SHA256SUMS.txt")
+          with Path("dist/SHA256SUMS.txt").open("w", encoding="utf-8", newline="\n") as manifest:
+              for path in files:
+                  digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                  manifest.write(f"{digest}  {path.name}\n")
+          PY
 
       - name: List packages
         shell: bash
@@ -100,13 +116,13 @@ jobs:
       - name: Cache Rust
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: desktop-ru-linux-x86_64
+          key: desktop-langpack-linux-x86_64
 
       - name: Test desktop translations
         run: |
           cargo test -p procraft-desktop translation::tests
           cargo test -p procraft-desktop language_packs::tests
- 
+
       - name: Test PNG export helpers
         run: cargo test -p procraft-core --lib project::signature_tests
 
