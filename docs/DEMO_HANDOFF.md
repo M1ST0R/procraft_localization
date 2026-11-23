@@ -1,6 +1,6 @@
 # Demo handoff: Community Language Packs
 
-**Branch:** `demo/community-language-packs`
+**Branch:** `main`
 
 **Base:** the Russian community build on ProCraft `v0.0.7-beta`
 **Purpose:** an end-to-end, in-app MVP that users can try, rather than a proposal or a static sample file.
@@ -31,7 +31,7 @@ Changes take effect at the UI text-rendering boundary. The active selection is p
 
 ## Quick acceptance test
 
-1. Install the Android APK or Desktop build from the **Actions** artifacts for this branch.
+1. Install the Android APK or Desktop build from the **Actions** artifacts for the `main` branch.
 2. Open Language packs and create a pack named `Español demo`, locale `es-ES`.
 3. Search for `Gallery`, enter `Galería`, save and check the app's Gallery label.
 4. Search for `Layers`, enter `Capas`, save and check the label changes too.
@@ -79,7 +79,7 @@ Both platforms ship the same source catalog at `assets/localization/ui-catalog.j
 
 ## CI and artifacts
 
-The branch runs three platform jobs:
+The `main` branch runs three workflows: CI, Android APK and Desktop builds.
 - Android ARM64 APK.
 - Windows x64 MSI and portable ZIP.
 - Linux x86_64 AppImage, DEB and tar.gz.
