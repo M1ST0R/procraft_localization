@@ -1,13 +1,12 @@
 # Maintainer handoff — Community Language Packs
 
 **Target branch:** `main` (default)  
-**Separate Russian edition:** `russian`  
 **Upstream baseline:** ProCraft `v0.0.7-beta`  
 **Purpose:** a working in-app demo, not a static mockup.
 
 ## What the demo delivers
 
-Android and Desktop users can create, edit, save, activate, import, export, share and delete community translation packs. Format v1 is data-only JSON, uses exact English UI text as keys and falls back to English for missing values. The built-in Russian dictionary remains a separate built-in choice.
+Android and Desktop users can create, edit, save, activate, import, export, share and delete community translation packs. Format v1 is data-only JSON, uses exact English UI text as keys and falls back to English for missing values. The built-in Russian dictionary remains selectable alongside installed custom packs.
 
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
@@ -50,12 +49,9 @@ The workflows are:
 
 Live workflow pages (choose a successful run and its Artifacts section):
 
-- [main CI](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
+- [Main action — coverage audit and Android checks](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
 - [main Android APK](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Amain)
 - [main Desktop builds](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Amain)
-- [russian CI](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Arussian)
-- [russian Android APK](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Arussian)
-- [russian Desktop builds](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Arussian)
 
 Artifacts expire after 30 days. A completed build proves that the workflow compiled and packaged its output; it does not replace manual smoke tests on a physical tablet and Windows/Linux systems.
 
@@ -64,7 +60,8 @@ Artifacts expire after 30 days. A completed build proves that the workflow compi
 - Source text is the key in format v1. Upstream wording changes can require translation updates.
 - Some generated text, plugin strings and UI text outside the wrappers may not be editable.
 - Sharing is file-based; there is no marketplace, remote sync, automatic update or moderation.
-- The source catalog contains 1,374 entries; the built-in Russian translation and custom packs are separate selections.
+- The source catalog contains 1,374 entries; Main verifies Android/Desktop coverage, identical terminology and the complete 1,379-entry sample pack.
+- [Readable full pack preview](../examples/ru-community-preview.json)
 - The future stable-message-ID proposal is in `LOCALIZATION_PROPOSAL.md`; do not confuse it with the current v1 format.
 
 ## Security
