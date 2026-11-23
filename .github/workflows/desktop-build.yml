@@ -5,6 +5,7 @@ on:
     branches:
       - translation/russian
       - demo/community-language-packs
+      - fix/windows-language-packs-window
     paths:
       - "desktop/**"
       - "crates/**"
