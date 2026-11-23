@@ -1,7 +1,7 @@
 # Security Review — Community Language Packs and Community Packaging
 
-**Review date:** 2026-11-23  
-**Scope:** language-pack import/storage/activation/export paths, related Android manifest/FileProvider, CI permissions and community package isolation  
+**Review date:** 2026-11-23
+**Scope:** language-pack import/storage/activation/export paths, related Android manifest/FileProvider, CI permissions and community package isolation
 **Assessment:** scoped static review. **No confirmed exploitable vulnerability** was found in the reviewed language-pack data path. This is not a full application or dependency audit.
 
 ## Executive summary
