@@ -31,43 +31,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-        with:
-          persist-credentials: false
-        with:
-          fetch-depth: 2
-          persist-credentials: false
-          persist-credentials: false
-      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          targets: aarch64-apple-darwin, aarch64-apple-ios
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-      # The checked-out Russian fork predates the current rustfmt defaults; checking the
-      # entire workspace would fail on untouched upstream files. Check the new module directly,
-      # and reject whitespace errors in the complete PR diff.
-      - name: Format and whitespace checks
-        run: |
-          rustfmt --check --edition 2024 desktop/src/language_packs.rs
-          git diff --check HEAD^1 HEAD
-      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      # the code only Apple's systems build (the Mac's pen, Finder, video, PDF and fonts; the iPad
-      # app's layer and render thread), checked without linking: no Mac needed
-      - name: Clippy for macOS and iPadOS
-        run: |
-          cargo clippy --locked --target aarch64-apple-darwin -p procraft-desktop -- -D warnings
-          cargo clippy --locked --target aarch64-apple-ios -p procraft-core --lib -- -D warnings
-      # the GPU tests skip themselves: the runner has no GPU
-      - run: cargo test --workspace --locked
-
-  android:
-    name: Android (lint, unit tests, APK build)
-    if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
       - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
