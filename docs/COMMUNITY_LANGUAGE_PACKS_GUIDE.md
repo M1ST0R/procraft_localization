@@ -1,123 +1,111 @@
-# Community Language Packs — User and Contributor Guide
+# Community Language Packs — User, Translator and Developer Guide
 
-This guide is for ProCraft users, volunteer translators and maintainers. It describes the working Language Packs manager in the Android and Desktop community builds.
+This guide explains the working Language Packs manager in the `main` branch for regular users, translators and contributors.
 
-## What the feature is for
+## 1. Where to find it
 
-A language pack translates visible interface text without rebuilding the app. It is a portable `.procraft-lang` file containing exact English source strings and their translated values, plus language metadata.
+**Android**
 
-The same file format is supported by Android and Desktop (Windows and Linux): create a pack on one platform, export it, then import it on another. Packs are data-only JSON. They are not plugins, applications or scripts and cannot add executable features.
-
-## Where to open it
+1. Open ProCraft.
+2. Go to **Settings**.
+3. Tap **Language packs**.
 
 **Windows / Linux Desktop**
-1. Launch ProCraft.
+
+1. Open ProCraft.
 2. Open **Preferences**.
 3. Select **Language Packs**.
 
+The `russian` branch is a Russian-only build and does not contain this editor.
+
+## 2. Create a translation from scratch
+
 **Android**
-1. Launch ProCraft.
-2. Open **Settings**.
-3. Select **Language packs**.
 
-The manager contains built-in language choices and the custom packs installed on this device.
+1. Tap **New**.
+2. Fill in **Name** (what appears in the language list).
+3. Fill in **Language code** (examples: `es-ES`, `de-DE`, `fr-FR`, `ru-RU`).
+4. Optionally fill in **Author**.
+5. Tap **Create**.
 
-## Create a translation
+**Desktop**
 
-1. In the manager select **New translation** (Desktop) or **New** (Android).
-2. Enter a display name, e.g. `Español`, `Deutsch` or `Français`.
-3. Enter a locale code, e.g. `es-ES`, `de-DE` or `fr-FR`.
-4. Optionally enter a translator or community name in **Author**.
-5. Select **Create and edit** (Desktop) or **Create** (Android).
+1. Click **New translation**.
+2. Enter the display name, locale and optional author.
+3. Click **Create and edit**.
 
-A new pack starts empty. It does not copy the built-in Russian dictionary.
+A new pack begins empty; it does not copy the built-in Russian dictionary.
 
-## Translate the interface
+## 3. Translate strings
 
-The editor displays the app's English source-string catalog and a field for each translation.
+The editor displays the original English source and an editable **Translation** field.
 
-- Keep the English source string unchanged. It is the lookup key used by the app.
-- Enter the translation into the editable field beside or below the source.
-- Use **Search source text** / **Search source strings** to filter the list.
-- Select **Save** when finished. The saved custom pack becomes active.
+1. Search using **Search source strings** (Android) or **Search source text** (Desktop).
+2. Find the exact source phrase you want to translate.
+3. Enter your translation in its field.
+4. Repeat for other entries.
+5. Press **Save**.
 
-Example:
+The pack is stored locally and becomes the active language. Empty entries use English fallback.
 
-| English source key | Russian value |
+### Example
+
+| Source text | Translation |
 |---|---|
 | `Language packs` | `Языковые пакеты` |
 | `Merge down` | `Объединить с нижним слоем` |
 | `Highlights` | `Света` |
 
-### Russian labels covered by the updated sample
+### Keep the source key exact
 
-| English source key | Russian translation |
-|---|---|
-| `Licenses` | Лицензии |
-| `Language packs` | Языковые пакеты |
-| `Maximum Speed Distance` | Порог скорости кисти |
-| `Cancel` | Отмена |
-| `Import` | Импортировать |
-| `Basics` | Основные |
-| `Ok` / `OK` | ОК |
-| `Combine down` / `Merge down` | Объединить с нижним слоем |
-| `Clipping mask` | Обтравочная маска |
-| `Gamma` | Гамма |
-| `Red` / `Green` / `Blue` | Красный / Зелёный / Синий |
-| `Cyan` / `Magenta` / `Yellow` | Голубой / Пурпурный / Жёлтый |
-| `Shadows` | Тени |
-| `Midtones` | Средние тона |
-| `Highlights` | Света |
+Format v1 uses exact English text as the key. Case, punctuation and spaces matter. For example, `Licenses` and `Licences` are different keys. Do not edit the source text; edit only the translation value.
 
-### Rules that matter
+### Preserve placeholders
 
-**Exact source keys:** Format v1 uses English UI text as keys. Capitalization, punctuation and spaces are significant. `Licenses` and `Licences` are separate entries.
+Keep placeholders such as `{count}`, `{used}` and `{maximum}` exactly. They can move to a natural position in the sentence but cannot be deleted or renamed. A mismatch is rejected.
 
-**Placeholders:** Preserve variables such as `{count}`, `{used}` and `{maximum}` exactly. They may be moved to a more natural position in the translated sentence, but must not be deleted, renamed or changed.
+## 4. Select a language
 
-**Empty fields:** An empty translation uses the original English text as a fallback.
+The manager offers:
 
-**No mixed-language fallback:** A custom pack does not silently inherit Russian. If an entry is missing from a custom pack, the English source string is shown. The built-in Russian dictionary is a separate selection.
+- **English (source strings):** original English UI text.
+- **Русский — встроенный:** bundled Russian translation.
+- **Installed custom pack:** the community translation you imported or created.
 
-## Choose the active language
+Select/tap the language row to activate it. The selection is saved.
 
-The manager provides three kinds of choice:
+Custom packs do **not** inherit Russian. Missing or empty entries show English.
 
-- **English (source strings):** displays the English source wording.
-- **Русский — встроенный:** activates the Russian dictionary bundled with the community build.
-- **Installed custom pack:** activates the selected community translation.
+## 5. Import a pack shared by another person
 
-On Desktop select the pack row; on Android tap it. The active selection is retained by the app.
+1. Open Language Packs.
+2. On Android tap **Import**; on Desktop click **Import .procraft-lang**.
+3. Select the file.
+4. Wait for validation.
+5. The pack appears in the installed list and is activated.
 
-## Import a translation
+If the pack ID already exists locally with different content, the app rejects the import rather than overwriting your installed pack silently. Keep a backup/export before changing an existing translation.
 
-1. Open the manager.
-2. Select **Import .procraft-lang** on Desktop or **Import** on Android.
-3. Choose the file.
-4. The app validates it before installation.
-5. The imported pack appears in the installed list and becomes active automatically.
+## 6. Export and share
 
-A pack ID identifies the pack. If the same ID is already installed with different contents, the import is rejected rather than silently replacing the existing pack.
+Select an installed custom pack.
 
-## Export and share
+- **Export:** save a `.procraft-lang` file to a location you choose.
+- **Share:** Android opens the system share sheet. Desktop exports the pack and reveals it in the file manager where supported.
 
-1. Select an installed custom pack.
-2. Choose **Export** and save the `.procraft-lang` file.
-3. Send the file to another user or translator.
+Send the exported file to another translator or user. The file can be imported on Android or Desktop. Built-in English and Russian choices are not custom files and cannot be exported from these buttons.
 
-On Android, **Share** opens the system sharing sheet. On Desktop, **Share** exports the file and reveals it in the file manager where supported.
+## 7. Edit, update or delete a pack
 
-Built-in English and Russian choices are bundled dictionaries, not custom packs, so they are not exported by these controls.
+- **Edit:** reopen the editor, search for entries and change translations.
+- **Save:** stores your changes and activates the pack.
+- **Delete:** removes that custom pack from this device. If it was active, the app returns to a built-in language choice.
 
-## Edit, update and delete
+Export a backup before making large edits.
 
-Select an installed custom pack and choose **Edit** to continue working on it. Search for a source string, update the translation and save.
+## 8. File format
 
-**Delete** removes the selected custom pack from this device. If that pack is active, ProCraft switches back to the built-in Russian choice. Keep an exported backup before making substantial edits.
-
-## File format
-
-The file extension is `.procraft-lang`. Format version 1 is JSON. A minimal example:
+A `.procraft-lang` file is UTF-8 JSON. Example:
 
 ```json
 {
@@ -137,37 +125,65 @@ The file extension is `.procraft-lang`. Format version 1 is JSON. A minimal exam
 }
 ```
 
-The `strings` object maps exact English keys to translated values. `catalog_version` records which source catalog the pack was created against; the current revision is `procraft-ui-source-2`. This catalog revision does not change `format_version`.
+The `strings` object maps exact English UI keys to translation values. Catalog revision `procraft-ui-source-2` is metadata and does not change format v1.
 
-The importer applies size and structure limits, including a 5 MB maximum file size, up to 20,000 entries, source keys up to 160 characters, translated values up to 4,000 characters and at most 128 dynamic-template entries. Pack IDs, locale codes and metadata also have validation rules. See the [JSON Schema](../schemas/procraft-language-pack.schema.json).
+The importer limits the file to 5 MiB, 20,000 strings, source keys up to 160 characters, values up to 4,000 characters and 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. The [JSON Schema](../schemas/procraft-language-pack.schema.json) documents the contract.
 
-## Developer notes
+## 9. Troubleshooting
 
-The shared source catalog is `assets/localization/ui-catalog.json`; Android ships the same catalog at `android/app/src/main/assets/localization/ui-catalog.json`. Keep these files identical.
+**A label is still English**
+1. Confirm your custom pack is active.
+2. Search for the exact text, including case and punctuation.
+3. If the source exists, translate it and save.
+4. If it is absent, report the exact label, screen/menu and screenshot.
 
-- Desktop rendering-boundary translations live in `desktop/src/translation.rs`.
-- Desktop pack parsing, storage and UI live in `desktop/src/language_packs.rs`.
-- Android rendering-boundary translations live in `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/Translation.kt`.
-- Android pack parsing, storage and Compose UI live in `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/LanguagePacks.kt`.
-- The shared format is described by `schemas/procraft-language-pack.schema.json`.
-- The example pack is `examples/ru-community.procraft-lang`.
+**A translation is clipped or overlaps**
+Report platform, window size or device resolution, display scaling/orientation and a screenshot. It may require a UI layout fix.
 
-When adding a translatable label, add its exact source text to the shared catalog and both platform dictionaries (where that UI exists). Add or update regression tests, bump `catalog_version` when the catalog changes, keep the Android catalog copy byte-identical to the shared one and update this guide if the user-facing workflow changes. Do not bump the format version unless the serialized structure or validation contract changes.
+**Import fails**
+Check that the file is a valid `.procraft-lang` pack, UTF-8 JSON, within size/entry limits, and that placeholders are unchanged. If the ID already exists with different contents, rename the pack ID in your own file before importing or export/backup and remove the old local pack first.
 
-## Troubleshooting and contributing
+**I expected my pack to inherit Russian**
+Custom packs intentionally fall back to English, not to the built-in Russian dictionary.
 
-If a label remains English:
-1. Confirm the intended pack is active.
-2. Search for the exact visible text, including case and punctuation.
-3. If it exists in the catalog, add the translation and save.
-4. If it does not exist, report the exact wording, the screen or menu where it appears and a screenshot if possible.
+## 10. Contributing and sharing
 
-For clipped or overlapping labels, include the platform, window size or screen resolution, display scaling and a screenshot. This may require a layout fix rather than a shorter translation.
+There is no online pack marketplace, automatic update service or remote translation sync. Community sharing is file-based. You can report missing strings or propose translations through GitHub Issues or Pull Requests.
 
-There is no online translation marketplace or automatic synchronization in this demo. Packs are shared as files and contributions can be submitted through repository issues or pull requests.
+For translation reports, include:
 
-## Security and privacy
+- exact source text;
+- platform and screen/menu;
+- screenshot;
+- proposed translation, if available.
 
-A pack contains text data, not executable code. Importers bound the input size, validate the JSON structure and check placeholder consistency before storing the pack. Android stores packs in app-private files; Desktop stores them under the app data directory.
+## 11. Developer/contributor notes
 
-Validation cannot determine whether a translation is accurate, respectful or trustworthy. Only import packs from sources you trust. The security review is documented separately under `security/`.
+Source files:
+
+| Area | File |
+|---|---|
+| Shared source catalog | `assets/localization/ui-catalog.json` |
+| Android catalog mirror | `android/app/src/main/assets/localization/ui-catalog.json` |
+| Android dictionary/rendering lookup | `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/Translation.kt` |
+| Android pack parser/storage/UI | `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/LanguagePacks.kt` |
+| Desktop dictionary/rendering lookup | `desktop/src/translation.rs` |
+| Desktop pack parser/storage/UI | `desktop/src/language_packs.rs` |
+| Format schema | `schemas/procraft-language-pack.schema.json` |
+| Sample pack | `examples/ru-community.procraft-lang` |
+
+When adding a source label:
+
+1. Add the exact source phrase to the shared catalog.
+2. Keep the Android catalog copy byte-identical.
+3. Add platform dictionary entries where built-in translations are maintained.
+4. Add/update regression tests.
+5. Bump `catalog_version` when catalog content changes.
+6. Do not bump `format_version` unless the pack serialization/validation contract changes.
+7. Update this guide and the public discussion document if the UI workflow changes.
+
+## 12. Security
+
+Packs are untrusted data. Import validation bounds file size, entry counts and lengths; validates IDs/metadata; and checks placeholders. Imported text is not executable code and does not grant plugin permissions. Still, import packs from sources you trust: a malicious or offensive translation can mislead users even if it cannot execute code.
+
+See the separate [security review](../security/language-packs-2026-11-23/REPORT.md).
