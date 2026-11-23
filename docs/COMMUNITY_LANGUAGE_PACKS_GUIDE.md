@@ -34,7 +34,7 @@ The repository now maintains one edition on `main`, including this editor.
 2. Enter the display name, locale and optional author.
 3. Click **Create and edit**.
 
-A new pack begins empty; it does not copy the built-in Russian dictionary.
+A new pack begins empty; it does not copy the built-in Russian dictionary. To inspect a complete working example before importing it, open [the full Russian pack preview](../examples/ru-community-preview.json).
 
 ## 3. Translate strings
 
@@ -171,6 +171,7 @@ Source files:
 | Desktop pack parser/storage/UI | `desktop/src/language_packs.rs` |
 | Format schema | `schemas/procraft-language-pack.schema.json` |
 | Sample pack | `examples/ru-community.procraft-lang` |
+| Readable JSON preview | `examples/ru-community-preview.json` |
 
 When adding a source label:
 
