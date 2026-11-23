@@ -1,13 +1,12 @@
-name: Main
+name: CI
 
-# Main validation gate for the maintained edition. Platform packages are built by their own workflows.
+# Cross-platform validation for both community editions. Platform packages are built by their own workflows.
 on:
   push:
     branches:
       - main
+      - russian
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -25,6 +24,7 @@ env:
 jobs:
   translation-audit:
     name: Russian translation coverage and pack validation
+    if: ${{ github.ref == 'refs/heads/main' || github.base_ref == 'main' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
