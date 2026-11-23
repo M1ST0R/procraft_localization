@@ -123,7 +123,7 @@ if has appimage; then
   fi
   if [ ! -f "$TOOL" ]; then
     TMP_TOOL="$TOOL.part"
-    curl --fail --location --silent --show-error --retry 3 -o "$TMP_TOOL" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
+    curl --fail --location --silent --show-error --retry 3 --proto '=https' --tlsv1.2 -o "$TMP_TOOL" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
     echo "$APPIMAGETOOL_SHA256  $TMP_TOOL" | sha256sum --check --strict
     mv "$TMP_TOOL" "$TOOL"
   fi
@@ -135,7 +135,7 @@ if has appimage; then
   fi
   if [ ! -f "$RUNTIME" ]; then
     TMP_RUNTIME="$RUNTIME.part"
-    curl --fail --location --silent --show-error --retry 3 -o "$TMP_RUNTIME" "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
+    curl --fail --location --silent --show-error --retry 3 --proto '=https' --tlsv1.2 -o "$TMP_RUNTIME" "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
     echo "$RUNTIME_SHA256  $TMP_RUNTIME" | sha256sum --check --strict
     mv "$TMP_RUNTIME" "$RUNTIME"
   fi
