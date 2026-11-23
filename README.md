@@ -2,8 +2,6 @@
 
 This repository maintains **one community edition** of upstream ProCraft on `main`: the Russian UI build with the in-app Community Language Packs editor.
 
-## Downloads
-
 ## Main Action
 
 [**Main workflow — translation coverage, Android lint and tests**](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
