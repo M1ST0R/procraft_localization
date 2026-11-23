@@ -1387,6 +1387,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "← Packs" => "← Пакеты",
         "□ + Pen" => "□ + перо",
         "□ + Touch" => "□ + касание",
+        _ => source,
     };
     Cow::Borrowed(translated)
 }
