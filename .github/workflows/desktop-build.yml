@@ -67,6 +67,8 @@ jobs:
 
       - name: Build and package Windows desktop
         shell: pwsh
+        env:
+          EDITION: langpack
         run: ./packaging/windows/package.ps1
 
       - name: List packages
@@ -114,7 +116,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends desktop-file-utils
 
       - name: Build and package Linux desktop
+        env:
+          EDITION: langpack
         run: bash packaging/linux/package.sh
+
+      - name: Validate packaging shell scripts
+        run: bash -n packaging/linux/package.sh packaging/linux/AppRun
 
       - name: List packages
         run: ls -lh dist
