@@ -11,8 +11,8 @@
 | Atomic Desktop pack-file replacement | Low | Follow-up | Ordinary filesystem writes currently used |
 | Fuzz/property tests and Android/Desktop parser parity | Medium | Follow-up | Not performed |
 | Windows MSI and Linux package identity isolation | High compatibility | Implemented; build/manual verification pending | Edition-specific product/package IDs, install paths, app IDs and portable names |
-| Fresh Windows/Linux builds after identity fix | Build validation | Pending | See live Desktop workflow pages |
+| Fresh Windows/Linux builds after identity and supply-chain fixes | Build validation | Pending | See live Desktop workflow pages |
 | Verify coexistence/upgrades/uninstall of community and upstream editions | Manual validation | Pending | Required before closing F-06 |
-| Pin Actions/toolchain to immutable reviewed versions | Supply-chain hardening | Follow-up | Current workflows use tags and a toolchain action master reference |
+| Pin Actions/toolchain to immutable reviewed versions | Supply-chain hardening | Fixed | Third-party Actions use full commit SHAs; toolchain reference is commit-pinned |
 | Verify rulesets, branch protection, secret permissions | Owner action | Pending | Requires repo administration |
 | Full dependency audit and independent security review | Follow-up | Not performed | Outside scope of this review |
