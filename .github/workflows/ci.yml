@@ -32,7 +32,10 @@ jobs:
         with:
           persist-credentials: false
         with:
+          persist-credentials: false
+        with:
           fetch-depth: 2
+          persist-credentials: false
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
         with:
@@ -42,15 +45,15 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Whitespace check
         run: git diff --check HEAD^1 HEAD
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       # the code only Apple's systems build (the Mac's pen, Finder, video, PDF and fonts; the iPad
       # app's layer and render thread), checked without linking: no Mac needed
       - name: Clippy for macOS and iPadOS
         run: |
-          cargo clippy --target aarch64-apple-darwin -p procraft-desktop -- -D warnings
-          cargo clippy --target aarch64-apple-ios -p procraft-core --lib -- -D warnings
+          cargo clippy --locked --target aarch64-apple-darwin -p procraft-desktop -- -D warnings
+          cargo clippy --locked --target aarch64-apple-ios -p procraft-core --lib -- -D warnings
       # the GPU tests skip themselves: the runner has no GPU
-      - run: cargo test --workspace
+      - run: cargo test --workspace --locked
 
   android:
     name: Android (lint, unit tests, APK build)
@@ -58,6 +61,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
@@ -99,3 +104,10 @@ jobs:
             done
           done
           echo "every library's segments are aligned to 16 KB"
+
+  gradle-wrapper:
+    name: Gradle wrapper validation
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
