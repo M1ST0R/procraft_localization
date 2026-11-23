@@ -1,10 +1,10 @@
 # The .deb (nfpm: https://nfpm.goreleaser.com). Run by package.sh, which stages the file tree,
-# puts its path for ${STAGE} (nfpm doesn't expand variables in `src`) and exports VERSION and
-# NFPM_ARCH.
+# substitutes the staged paths and package identity before nfpm parses this YAML.
+# Arch and version are environment-backed values; keep their template scalars quoted.
 name: @@PKG_NAME@@
-arch: ${NFPM_ARCH}
+arch: "${NFPM_ARCH}"
 platform: linux
-version: ${VERSION}
+version: "${VERSION}"
 # semver: 0.0.3-beta becomes 0.0.3~beta, so a beta sorts before its release
 version_schema: semver
 release: 1
