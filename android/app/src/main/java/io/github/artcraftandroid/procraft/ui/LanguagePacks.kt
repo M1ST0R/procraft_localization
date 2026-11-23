@@ -279,9 +279,9 @@ internal object LanguagePacks {
             "Language pack is larger than 5 MB."
         }
         validateJsonDepth(raw)
-        val versionToken = Regex("""(?s)"format_version"\\s*:\\s*([^,\\s}]+)""")
+        val versionToken = Regex("""(?s)"format_version"\s*:\s*([^,\s}]+)""")
             .find(raw)?.groupValues?.get(1)
-        require(versionToken != null && Regex("""(?:0|[1-9]\\d*)""").matches(versionToken)) {
+        require(versionToken != null && Regex("""(?:0|[1-9]\d*)""").matches(versionToken)) {
             "The pack format version must be an integer."
         }
         val root = JSONObject(raw)
