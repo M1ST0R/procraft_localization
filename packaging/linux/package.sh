@@ -98,7 +98,7 @@ if has appimage; then
   cp "$ROOT/assets/app-icon/hicolor/256x256/apps/procraft.png" "$APPDIR/$APP_ID.png"
   ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
   # Pin both the AppImage packer and runtime to versioned upstream assets.
-  # AppImage tool and runtime are executable build inputs; verify SHA-256 on every run.
+  # Both are executable build inputs; verify their SHA-256 on every run, including cache hits.
   APPIMAGETOOL_VERSION="1.9.1"
   RUNTIME_VERSION="20251108"
   case "$ARCH" in
@@ -118,35 +118,31 @@ if has appimage; then
   TOOL="$TARGET_DIR/appimagetool-$APPIMAGETOOL_VERSION-$ARCH.AppImage"
   RUNTIME="$TARGET_DIR/appimage-runtime-$RUNTIME_VERSION-$ARCH"
 
-  if [ -f "$TOOL" ] && ! printf '%s  %s\\n' "$APPIMAGETOOL_SHA256" "$TOOL" | sha256sum --check --status; then
+  if [ -f "$TOOL" ] && ! echo "$APPIMAGETOOL_SHA256  $TOOL" | sha256sum --check --status; then
     rm -f "$TOOL"
   fi
   if [ ! -f "$TOOL" ]; then
     TMP_TOOL="$TOOL.part"
-    curl --fail --location --silent --show-error --retry 3 \\
-      -o "$TMP_TOOL" \\
-      "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
-    printf '%s  %s\\n' "$APPIMAGETOOL_SHA256" "$TMP_TOOL" | sha256sum --check --strict
+    curl --fail --location --silent --show-error --retry 3 -o "$TMP_TOOL" "https://github.com/AppImage/appimagetool/releases/download/$APPIMAGETOOL_VERSION/appimagetool-$ARCH.AppImage"
+    echo "$APPIMAGETOOL_SHA256  $TMP_TOOL" | sha256sum --check --strict
     mv "$TMP_TOOL" "$TOOL"
   fi
-  printf '%s  %s\\n' "$APPIMAGETOOL_SHA256" "$TOOL" | sha256sum --check --strict
+  echo "$APPIMAGETOOL_SHA256  $TOOL" | sha256sum --check --strict
   chmod +x "$TOOL"
 
-  if [ -f "$RUNTIME" ] && ! printf '%s  %s\\n' "$RUNTIME_SHA256" "$RUNTIME" | sha256sum --check --status; then
+  if [ -f "$RUNTIME" ] && ! echo "$RUNTIME_SHA256  $RUNTIME" | sha256sum --check --status; then
     rm -f "$RUNTIME"
   fi
   if [ ! -f "$RUNTIME" ]; then
     TMP_RUNTIME="$RUNTIME.part"
-    curl --fail --location --silent --show-error --retry 3 \\
-      -o "$TMP_RUNTIME" \\
-      "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
-    printf '%s  %s\\n' "$RUNTIME_SHA256" "$TMP_RUNTIME" | sha256sum --check --strict
+    curl --fail --location --silent --show-error --retry 3 -o "$TMP_RUNTIME" "https://github.com/AppImage/type2-runtime/releases/download/$RUNTIME_VERSION/runtime-$ARCH"
+    echo "$RUNTIME_SHA256  $TMP_RUNTIME" | sha256sum --check --strict
     mv "$TMP_RUNTIME" "$RUNTIME"
   fi
-  printf '%s  %s\\n' "$RUNTIME_SHA256" "$RUNTIME" | sha256sum --check --strict
+  echo "$RUNTIME_SHA256  $RUNTIME" | sha256sum --check --strict
   chmod +x "$RUNTIME"
 
-  # Provide the verified runtime explicitly; appimagetool must not fetch the moving "continuous" asset.
+  # Supply the verified runtime explicitly; do not fetch the moving "continuous" release.
   ARCH="$ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOL" --runtime-file "$RUNTIME" --no-appstream "$APPDIR" "$DIST/$BASENAME.AppImage"
   echo "wrote $DIST/$BASENAME.AppImage"
 fi
