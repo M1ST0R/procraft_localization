@@ -371,7 +371,12 @@ fn validate(pack: &LanguagePack) -> Result<(), String> {
     if !valid_locale(&pack.locale) || pack.name.trim().is_empty() || pack.name.len() > 80 {
         return Err("Invalid language-pack name or locale.".to_owned());
     }
-    if pack.author.len() > 120 || pack.strings.len() > MAX_STRINGS {
+    if pack.author.len() > 120
+        || pack.app_version.len() > 40
+        || pack.catalog_version.len() > 80
+        || pack.base_locale.len() > 35
+        || pack.strings.len() > MAX_STRINGS
+    {
         return Err("Language-pack metadata or string count exceeds the format limits.".to_owned());
     }
     if pack.strings.keys().filter(|source| source.contains('{')).count() > MAX_TEMPLATE_STRINGS {
@@ -715,6 +720,16 @@ mod tests {
         assert!(validate(&pack).is_err());
         pack.id = "es.community".to_owned();
         pack.strings.insert("X".to_owned(), "x".repeat(4001));
+        assert!(validate(&pack).is_err());
+
+        pack.strings.clear();
+        pack.app_version = "v".repeat(41);
+        assert!(validate(&pack).is_err());
+        pack.app_version = "0.0.7-beta".to_owned();
+        pack.catalog_version = "c".repeat(81);
+        assert!(validate(&pack).is_err());
+        pack.catalog_version = catalog_version();
+        pack.base_locale = "b".repeat(36);
         assert!(validate(&pack).is_err());
     }
 }
