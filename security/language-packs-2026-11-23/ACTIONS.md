@@ -1,14 +1,18 @@
-# Security Review Actions — Community Language Packs
+# Security review actions — Language Packs and Community Packaging
 
 | Item | Priority | Status | Notes |
 |---|---|---|---|
-| Align Desktop metadata length validation with the schema and Android | Low | Fixed | Added limits for locale, app_version, catalog_version and base_locale plus regression checks |
-| Strict UTF-8 decoding on Android import and stored-pack read | Hardening | Present | Malformed byte sequences are rejected |
-| Restrict format_version to integer 1 on Android | Hardening | Present | Floating-point 1.0 is rejected |
-| Enforce pack ID constraints before constructing storage paths | Hardening | Present | IDs outside the allowed pattern are rejected |
-| Bound imported file size and translation-entry resources | Hardening | Present | 5 MB and documented entry/string/template limits |
-| Keep Android FileProvider non-exported and scoped to cache exports | Hardening | Present | Manifest and shared_files.xml reviewed |
-| Use atomic replacement for Desktop pack writes | Low | Follow-up | Desktop currently uses ordinary filesystem writes |
-| Add fuzz/property-based parser and placeholder tests | Medium | Follow-up | Test Android/Desktop parser parity |
-| Verify GitHub branch protections and release secret access | Owner action | Pending | Requires repository/organization administration access |
-| Run full dependency/supply-chain and independent security review | Follow-up | Not performed | Outside this scoped source review |
+| Align Desktop metadata length validation with schema/Android | Low | Fixed | Locale, app_version, catalog_version, base_locale plus tests |
+| Strict UTF-8 import/read on Android | Hardening | Present | Invalid byte sequences rejected |
+| Require integer format_version=1 on Android | Hardening | Present | Floating 1.0 rejected |
+| Validate pack ID before path construction | Hardening | Present | Traversal-like IDs rejected |
+| Bound file size, entries, string lengths and template count | Hardening | Present | Limits and placeholder checks |
+| Android FileProvider non-exported and scoped to cache exports | Hardening | Present | Manifest and XML reviewed |
+| Atomic Desktop pack-file replacement | Low | Follow-up | Ordinary filesystem writes currently used |
+| Fuzz/property tests and Android/Desktop parser parity | Medium | Follow-up | Not performed |
+| Windows MSI and Linux package identity isolation | High compatibility | Implemented; build/manual verification pending | Edition-specific product/package IDs, install paths, app IDs and portable names |
+| Fresh Windows/Linux builds after identity fix | Build validation | Pending | See live Desktop workflow pages |
+| Verify coexistence/upgrades/uninstall of community and upstream editions | Manual validation | Pending | Required before closing F-06 |
+| Pin Actions/toolchain to immutable reviewed versions | Supply-chain hardening | Follow-up | Current workflows use tags and a toolchain action master reference |
+| Verify rulesets, branch protection, secret permissions | Owner action | Pending | Requires repo administration |
+| Full dependency audit and independent security review | Follow-up | Not performed | Outside scope of this review |
