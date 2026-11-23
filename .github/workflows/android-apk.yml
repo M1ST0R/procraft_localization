@@ -5,6 +5,7 @@ on:
     branches:
       - translation/russian
       - demo/community-language-packs
+      - fix/language-pack-translation-coverage
     paths:
       - "android/**"
       - "crates/**"
