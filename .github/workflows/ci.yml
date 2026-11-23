@@ -3,6 +3,10 @@ name: CI
 # Run for pull requests and manual dispatch on either edition branch. Builds are handled by the
 # separate Android APK and Desktop builds workflows.
 on:
+  push:
+    branches:
+      - main
+      - russian
   pull_request:
   workflow_dispatch:
 
