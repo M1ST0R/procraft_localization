@@ -449,9 +449,14 @@ pub fn show(ctx: &egui::Context) {
         }
         let mut open = state.open;
         egui::Window::new(tr("Community language packs"))
+            .id(egui::Id::new("community_language_packs_manager"))
             .open(&mut open)
+            .order(egui::Order::Foreground)
+            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
             .default_width(760.0)
             .default_height(640.0)
+            .min_width(640.0)
+            .min_height(420.0)
             .resizable(true)
             .show(ctx, |ui| {
                 if let Some(error) = state.error.take() {
