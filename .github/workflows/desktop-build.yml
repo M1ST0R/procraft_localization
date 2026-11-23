@@ -1,9 +1,10 @@
-name: Desktop RU builds
+name: Desktop builds
 
 on:
   push:
     branches:
-      - translation/russian
+      - main
+      - russian
     paths:
       - "desktop/**"
       - "crates/**"
@@ -20,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-ru-${{ github.ref }}-${{ github.sha }}
+  group: desktop-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 env:
@@ -73,7 +74,7 @@ jobs:
       - name: Upload Windows packages
         uses: actions/upload-artifact@v4
         with:
-          name: ProCraft-RU-Windows-x64
+          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Windows-x64' || 'ProCraft-RU-Windows-x64' }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
@@ -117,7 +118,7 @@ jobs:
       - name: Upload Linux packages
         uses: actions/upload-artifact@v4
         with:
-          name: ProCraft-RU-Linux-x86_64
+          name: ${{ github.ref == 'refs/heads/main' && 'ProCraft-LangPack-Linux-x86_64' || 'ProCraft-RU-Linux-x86_64' }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
