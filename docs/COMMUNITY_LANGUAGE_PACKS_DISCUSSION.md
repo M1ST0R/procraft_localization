@@ -120,6 +120,7 @@ Language packs are data-only text. Import does not grant plugin permissions, exe
 - [Schema](../schemas/procraft-language-pack.schema.json)
 - [Sample pack](../examples/ru-community.procraft-lang)
 - [Security report](../security/language-packs-2026-11-23/REPORT.md)
+- [Supply-chain hardening](../security/SUPPLY_CHAIN.md)
 - [Repository review](REPOSITORY_REVIEW.md)
 
 ## Discussion
