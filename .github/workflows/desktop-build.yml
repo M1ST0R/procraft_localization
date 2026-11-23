@@ -129,8 +129,8 @@ jobs:
       - name: Install verified packaging tools
         shell: bash
         run: |
-          NFPM_VERSION="2.48.0"
-          NFPM_SHA256="6d7f9a28b2f397934403950fcbba83f598b08d02edbe79a0815b3b4897341750"
+          NFPM_VERSION="2.49.0"
+          NFPM_SHA256="2afaa5ffb5e3493402e31e7c67a5a1fb42133e3f66fc315ca0051934125561c7"
           NFPM_ARCHIVE="$RUNNER_TEMP/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz"
           curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 \
             "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz" \
@@ -150,6 +150,20 @@ jobs:
         run: |
           bash -n packaging/linux/package.sh
           bash -n packaging/linux/AppRun
+
+      - name: Create package checksums
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          files = sorted(p for p in Path("dist").iterdir() if p.is_file() and p.name != "SHA256SUMS.txt")
+          with Path("dist/SHA256SUMS.txt").open("w", encoding="utf-8", newline="\\n") as manifest:
+              for path in files:
+                  digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                  manifest.write(f"{digest}  {path.name}\\n")
+          PY
 
       - name: List packages
         run: ls -lh dist
