@@ -20,6 +20,28 @@ PREVIEW = ROOT / "examples/ru-community-preview.json"
 RUST_PAIR = re.compile(r'^\s*("(?:\\.|[^"\\])*")\s*=>\s*("(?:\\.|[^"\\])*"),\s*$', re.MULTILINE)
 KOTLIN_PAIR = re.compile(r'^\s*("(?:\\.|[^"\\])*")\s+to\s+("(?:\\.|[^"\\])*"),?\s*$', re.MULTILINE)
 PLACEHOLDER = re.compile(r"\{[A-Za-z][A-Za-z0-9_]*\}")
+EXPECTED_TERMS = {
+    "Licenses": "Лицензии",
+    "Language packs": "Языковые пакеты",
+    "Maximum Speed Distance": "Порог скорости кисти",
+    "Cancel": "Отмена",
+    "Import": "Импортировать",
+    "Basics": "Основные",
+    "Ok": "ОК",
+    "Combine down": "Объединить с нижним слоем",
+    "Merge down": "Объединить с нижним слоем",
+    "Clipping mask": "Обтравочная маска",
+    "Gamma": "Гамма",
+    "Red": "Красный",
+    "Green": "Зелёный",
+    "Blue": "Синий",
+    "Cyan": "Голубой",
+    "Magenta": "Пурпурный",
+    "Yellow": "Жёлтый",
+    "Shadows": "Тени",
+    "Midtones": "Средние тона",
+    "Highlights": "Света",
+}
 
 
 def fail(message: str) -> None:
@@ -89,6 +111,10 @@ different = [
 if different:
     fail(f"Desktop/Android terminology diverges for {len(different)} entries; first: {different[:8]!r}")
 
+for key, expected in EXPECTED_TERMS.items():
+    if desktop.get(key) != expected or android.get(key) != expected:
+        fail(f"requested UI label {key!r} must be translated as {expected!r}")
+
 pack = read_json(PACK)
 preview = read_json(PREVIEW)
 if pack != preview:
@@ -96,16 +122,18 @@ if pack != preview:
 if pack.get("format_version") != 1 or not isinstance(pack.get("strings"), dict):
     fail("sample pack does not use the expected v1 strings format")
 pack_strings = pack["strings"]
-missing_pack = [key for key in catalog if key not in pack_strings]
+missing_pack = [key for key in desktop if key not in pack_strings]
 if missing_pack:
-    fail(f"sample pack is missing {len(missing_pack)} catalog entries; first: {missing_pack[:8]!r}")
+    fail(f"sample pack is missing {len(missing_pack)} built-in entries; first: {missing_pack[:8]!r}")
 
-for key in catalog:
+for key, expected_value in desktop.items():
     value = pack_strings.get(key)
     if not isinstance(value, str) or not value.strip():
         fail(f"sample pack has an empty or non-string value for {key!r}")
-    if value != desktop[key]:
+    if value != expected_value:
         fail(f"sample pack does not match the built-in dictionary for {key!r}")
+
+for key, value in pack_strings.items():
     if Counter(PLACEHOLDER.findall(key)) != Counter(PLACEHOLDER.findall(value)):
         fail(f"sample pack changes placeholders in {key!r}")
     if len(key) > 512 or len(value) > 4000:
