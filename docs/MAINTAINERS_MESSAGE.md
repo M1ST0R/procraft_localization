@@ -2,7 +2,7 @@
 
 Hello ProCraft maintainers,
 
-This repository now contains a working community localization demo on `main`, rather than only a proposal. Android and Desktop users can create, edit, save, activate, import, export, share and delete file-based `.procraft-lang` packs. The maintained `main` branch now carries both the Russian UI and the Language Packs manager.
+This repository now contains a working community localization demo on `main`, rather than only a proposal. Android and Desktop users can create, edit, save, activate, import, export, share and delete file-based `.procraft-lang` packs. The `russian` branch remains a separate Russian-only community build.
 
 The current MVP is wired into the existing text-rendering boundaries and uses exact English UI strings as keys (format v1). It is intentionally simple, data-only, offline and cross-platform. The public walkthrough, user guide, schema, sample pack, acceptance checklist and scoped security report are linked from the README.
 
