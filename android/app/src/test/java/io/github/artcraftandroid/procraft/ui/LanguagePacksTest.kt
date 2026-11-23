@@ -65,7 +65,11 @@ class LanguagePacksTest {
             .put("format_version", 1)
             .put("id", "ru.community.demo")
             .put("locale", "ru-RU")
-            .put("name", "Русский")
+            .put("name", "Русский — Community Demo")
+            .put("author", "ProCraft Community")
+            .put("app_version", "0.0.7-beta")
+            .put("catalog_version", "procraft-ui-source-2")
+            .put("base_locale", "en")
             .put("strings", strings)
             .toString()
 
