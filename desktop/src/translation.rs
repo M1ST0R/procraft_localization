@@ -1389,7 +1389,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "□ + Touch" => "□ + касание",
         _ => source,
     };
-    Cow::Borrowed(translated)
+    if translated == source { translate_dynamic(source) } else { Cow::Borrowed(translated) }
 }
 
 /// Short labels for the six narrow tabs in the Actions panel.
