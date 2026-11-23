@@ -1,74 +1,75 @@
-# Community Language Packs — working demo
+# Community Language Packs — Current implementation
 
-The `main` branch contains a working, data-only language-pack manager in the Android and Desktop apps.
+**Edition:** `main`  
+**Platforms:** Android, Windows and Linux Desktop  
+**Pack format:** `.procraft-lang`, JSON format v1  
+**Catalog revision:** `procraft-ui-source-2`
 
-## What works
+## What the feature does
 
-Open **Advanced settings → Language packs**:
+The main branch contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The feature is file-based and works offline.
 
-- Create a translation with a display name, locale and author.
-- Search the app's source-string catalog and edit translations.
-- Save a pack locally and continue editing it later.
-- Switch between English source strings, the built-in Russian dictionary and installed community packs.
-- Import another `.procraft-lang` file.
-- Export the selected pack to a portable `.procraft-lang` file.
-- Delete an installed pack.
+- Android: **Settings → Language packs**
+- Desktop: **Preferences → Language Packs**
 
-The Android editor is reachable from **Settings → Language packs**. On Desktop it is in **Preferences → Language Packs**.
+The `russian` branch is a separate Russian-only edition and does not include this manager.
 
-A pack exported on Android can be imported on Desktop and vice versa. Both apps ship the same source catalog at `assets/localization/ui-catalog.json` (also copied into Android assets).
+## Actions supported
 
-## Format v1
+- **New / New translation:** create a pack with a display name, locale tag and optional author.
+- **Search:** find source UI strings.
+- **Edit:** reopen an installed custom pack.
+- **Save:** save changes locally and activate the saved pack.
+- **Import:** validate and install a `.procraft-lang` file. A successfully imported pack is activated.
+- **Export:** write the selected custom pack to a portable file.
+- **Share:** Android opens the system share sheet; Desktop exports and reveals the file in the file manager where supported.
+- **Delete:** remove a custom pack from this device.
+- **English (source strings):** use original English UI text.
+- **Русский — встроенный:** use the built-in Russian dictionary.
+- **Installed custom pack:** use that pack's own values.
 
-The MVP uses exact English UI strings as keys. This is deliberately compatible with the current rendering-boundary translators, so a user can translate actual visible strings without waiting for a full stable-message-ID migration.
+A custom pack does not inherit built-in Russian. Empty or missing entries display English.
 
-Example:
+## Format v1 and catalog revision
 
-```json
-{
-  "format_version": 1,
-  "id": "es.community",
-  "locale": "es-ES",
-  "name": "Español — Community",
-  "author": "Community contributor",
-  "app_version": "0.0.7-beta",
-  "catalog_version": "procraft-ui-source-2",
-  "base_locale": "en",
-  "strings": {
-    "Gallery": "Galería",
-    "New canvas": "Nuevo lienzo",
-    "Layers": "Capas"
-  }
-}
-```
+The file stores exact English source UI strings as keys and translated values as strings. Capitalization, punctuation and spaces are significant. A wording change upstream may cause an old entry to stop matching; format v1 does not use stable message IDs yet.
 
-Fields:
+The source catalog currently contains **1,374 entries**. Both apps ship the same catalog:
 
-- `format_version`: currently `1`.
-- `id`: unique portable pack ID, lowercase letters/digits plus `.`, `_` or `-`.
-- `locale`, `name`, `author`: language metadata.
-- `app_version` and `catalog_version`: the source build/catalog this pack was created against; the current catalog revision is `procraft-ui-source-2`.
-- `base_locale`: the language of source strings, currently `en`.
-- `strings`: exact English source string → translated string.
+- `assets/localization/ui-catalog.json`
+- `android/app/src/main/assets/localization/ui-catalog.json`
 
-## Fallback and validation
+The files must remain identical. Catalog revision `procraft-ui-source-2` is metadata; it is not the serialized format version. Do not change `format_version` unless the file structure or validation contract changes.
 
-- An empty or missing translation uses the English source text.
-- Selecting **English (source strings)** disables the built-in Russian dictionary.
-- Selecting **Русский — встроенный** uses the bundled Russian dictionary and its dynamic labels.
-- Custom packs do not silently inherit Russian: they use their own translated value or English fallback.
-- Imports are limited to 5 MB and 20,000 entries; string keys and values have length limits.
-- Placeholders such as `{count}` must be preserved exactly. A pack with a mismatched placeholder is rejected.
-- Packs are JSON data only. No scripts, libraries, plugins, network access or executable payloads are loaded.
+## Validation and limits
 
-## Current MVP limitations
+Import/save validates the pack structure, metadata, pack ID, resource limits and placeholders.
 
-- v1 keys are English source strings, not stable IDs. If upstream changes the English wording, that entry may need updating.
-- Some generated or parameterized text and plugin-provided content may not appear as editable catalog entries yet.
-- There is no online translation marketplace or automatic synchronization. Sharing is file-based: export the pack and send it to another user.
-- The built-in Russian dictionary remains bundled as a special built-in choice; it is not automatically exported as a user pack.
-- The main-branch demo proves the full create/edit/save/import/export/switch flow. It is an MVP implementation intended for maintainer review, not the final long-term localization architecture.
+- Maximum file size: 5 MiB (5 MB as shown in the UI)
+- Maximum string entries: 20,000
+- Source key length: 160 characters
+- Translation value length: 4,000 characters
+- Maximum dynamic-template entries: 128
+- Metadata lengths and locale/ID formats are validated
+- Named placeholders (such as `{count}`) must match between source and translation
+
+The JSON Schema is in [`schemas/procraft-language-pack.schema.json`](../schemas/procraft-language-pack.schema.json).
+
+## Known limitations
+
+- English text is used as the key; upstream wording changes can break matching.
+- Some generated/parameterized text, plugin text or UI text outside the translation boundary may not be included in the editor catalog.
+- This is not a hosted marketplace, cloud sync, moderation system or automatic pack updater.
+- The built-in Russian dictionary is a separate built-in choice and is not exported as a custom pack.
+- Translation quality, terminology consistency and layout fit require human review.
 
 ## Sample pack
 
-See [`examples/ru-community.procraft-lang`](../examples/ru-community.procraft-lang). It uses the same format as the in-app manager and can be imported directly.
+[`examples/ru-community.procraft-lang`](../examples/ru-community.procraft-lang) is a small editable sample that can be imported from either supported platform.
+
+## Related documentation
+
+- [User/translator guide](COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
+- [Public feature discussion and walkthrough](COMMUNITY_LANGUAGE_PACKS_DISCUSSION.md)
+- [Maintainer acceptance tests](DEMO_HANDOFF.md)
+- [Scoped security review](../security/language-packs-2026-11-23/REPORT.md)
