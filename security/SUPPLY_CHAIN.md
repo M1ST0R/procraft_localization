@@ -22,9 +22,9 @@ When updating an Action, resolve the intended release tag to its commit SHA, rev
 
 ## Build tool versions and lockfiles
 
-- Rust toolchain: `1.99.0` (explicitly selected in each Rust workflow).
+- Rust toolchain: `1.99.0` (explicitly selected in the Android native and Desktop workflows).
 - Android NDK: `29.0.14206865`.
-- Java: Temurin 17. The setup action verifies authoritative vendor checksums when provided.
+- Java: Temurin 17 via `actions/setup-java`. The distribution and major version are pinned; the upstream patch release can change over time.
 - `cargo-ndk`: exact version `4.1.2`, installed with `--locked`.
 - WiX Toolset and UI/Util extensions: `5.0.2`.
 - nfpm: `2.48.0`, downloaded from its versioned release and checked against a pinned SHA-256 digest.
