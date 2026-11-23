@@ -55,7 +55,7 @@
       "propertyNames": {
         "type": "string",
         "minLength": 1,
-        "maxLength": 160
+        "maxLength": 512
       },
       "additionalProperties": {
         "type": "string",
