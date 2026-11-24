@@ -1,18 +1,18 @@
 # Community Language Packs — Current implementation
 
-**Edition:** `main`  
+**Edition:** `main` Lang Pack profile  
 **Platforms:** Android, Windows and Linux Desktop  
 **Pack format:** `.procraft-lang`, JSON format v1  
 **Catalog revision:** `procraft-ui-source-3`
 
 ## What the feature does
 
-The main branch contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The feature is file-based and works offline.
+The main branch's Lang Pack profile contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The feature is file-based and works offline.
 
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
 
-The repository maintains one edition on `main`, with the Language Packs manager included.
+The repository maintains one source branch with two build profiles: Lang Pack Demo includes the Language Packs manager, while Russian Edition disables the manager.
 
 ## Actions supported
 
