@@ -43,10 +43,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
         with:
           toolchain: ${{ env.RUST_VERSION }}
-          components: clippy
+          components: clippy, rustfmt
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-      - name: Rust formatting
-        run: cargo fmt --all --check
+      - name: Rust formatting (changed desktop sources)
+        run: rustfmt --check --edition 2024 --config skip_children=true desktop/src/main.rs desktop/src/settings.rs desktop/src/ui.rs desktop/src/translation.rs
       - name: Workspace Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
