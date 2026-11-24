@@ -1,7 +1,6 @@
 name: CI
 
-# Run for pull requests and manual dispatch on either edition branch. Builds are handled by the
-# separate Android APK and Desktop builds workflows.
+# Validate the Russian Edition branch. APK and Desktop packaging run in separate workflows.
 on:
   push:
     branches:
