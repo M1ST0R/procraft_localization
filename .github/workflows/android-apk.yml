@@ -120,20 +120,29 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/dist"
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ProCraft-RU-Demo-arm64.apk"
 
-      - name: Verify APK
+      - name: Verify APK packages and signatures
         shell: bash
         run: |
-          APK="$(find dist -maxdepth 1 -type f -name 'ProCraft-*.apk' -print -quit)"
-          test -n "$APK"
-          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
-          "$APKSIGNER" verify --verbose "$APK"
           AAPT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)aapt"
-          EXPECTED_PACKAGE="io.github.artcraftandroid.procraft.ru"
-          "$AAPT" dump badging "$APK" | grep -F "package: name='$EXPECTED_PACKAGE'" >/dev/null || {
-            echo "Unexpected APK package ID; expected $EXPECTED_PACKAGE" >&2
-            exit 1
-          }
-          sha256sum "$APK" | tee dist/SHA256SUMS.txt
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
+          found=0
+          for APK in dist/ProCraft-*.apk; do
+            test -f "$APK" || continue
+            found=1
+            name="$(basename "$APK")"
+            case "$name" in
+              ProCraft-RU-arm64.apk) EXPECTED_PACKAGE="io.github.artcraftandroid.procraft.ru" ;;
+              ProCraft-RU-Demo-arm64.apk) EXPECTED_PACKAGE="io.github.artcraftandroid.procraft.ru.demo" ;;
+              *) echo "Unexpected APK filename: $name" >&2; exit 1 ;;
+            esac
+            "$APKSIGNER" verify --verbose "$APK"
+            "$AAPT" dump badging "$APK" | grep -F "package: name='$EXPECTED_PACKAGE'" >/dev/null || {
+              echo "Unexpected package ID in $name; expected $EXPECTED_PACKAGE" >&2
+              exit 1
+            }
+          done
+          test "$found" -eq 1
+          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
 
       - name: Upload installable APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
