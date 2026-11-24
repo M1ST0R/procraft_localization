@@ -60,7 +60,7 @@ Both branches contain exactly three workflow files:
 - `.github/workflows/android-apk.yml`
 - `.github/workflows/desktop-build.yml`
 
-The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. Push and PR triggers are branch-specific (`main` checks main; `russian` checks russian). The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing. Main CI runs strict workspace Clippy and source/config whitespace checks; Russian CI runs strict desktop and Android-target Clippy. APK workflows also assert the expected application ID before uploading.
+The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. Push and PR triggers are branch-specific (`main` checks main; `russian` checks russian). The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing. Main CI runs strict workspace Clippy; Russian CI runs strict desktop and Android-target Clippy. APK workflows also assert the expected application ID before uploading.
 
 ## Repository governance
 
