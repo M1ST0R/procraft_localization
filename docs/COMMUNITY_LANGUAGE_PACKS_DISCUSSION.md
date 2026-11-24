@@ -1,6 +1,6 @@
 # Community Language Packs — Public feature walkthrough and discussion draft
 
-**Status:** working demo on `main`. **Platforms:** Android, Windows and Linux Desktop. **Format:** `.procraft-lang` JSON v1. The separate `russian` branch is Russian-only and does not include the manager.
+**Status:** working demo on the `main` Lang Pack profile. **Platforms:** Android, Windows and Linux Desktop. **Format:** `.procraft-lang` JSON v1. The Russian Edition is built from the same source with the manager disabled; see [Edition Profiles](EDITION_PROFILES.md).
 
 ## What is this?
 
@@ -112,7 +112,7 @@ Language packs are data-only text. Import does not grant plugin permissions, exe
 ## Links
 
 - [Main Lang Pack demo](https://github.com/M1ST0R/procraft_localization/tree/main)
-- [Russian-only edition](https://github.com/M1ST0R/procraft_localization/tree/russian)
+- [Edition profiles](EDITION_PROFILES.md) (Lang Pack Demo and Russian Edition)
 - [README and downloads](../README.md)
 - [User/contributor guide](COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
 - [Format/behavior notes](COMMUNITY_LANGUAGE_PACKS.md)
