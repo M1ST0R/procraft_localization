@@ -1,6 +1,6 @@
 # Community Language Packs — User, Translator and Developer Guide
 
-This guide explains the working Language Packs manager in the `main` branch for regular users, translators and contributors.
+This guide explains the working Language Packs manager in the `main` Lang Pack profile for regular users, translators and contributors.
 
 ## 1. Where to find it
 
@@ -16,7 +16,7 @@ This guide explains the working Language Packs manager in the `main` branch for 
 2. Open **Preferences**.
 3. Select **Language Packs**.
 
-The repository now maintains one edition on `main`, including this editor.
+The repository now maintains one source branch with two profiles. The Lang Pack profile includes this editor; the Russian Edition profile disables it.
 
 ## 2. Create a translation from scratch
 
