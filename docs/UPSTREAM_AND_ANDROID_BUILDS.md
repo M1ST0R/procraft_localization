@@ -1,13 +1,11 @@
-# Russian Edition — legacy build and maintenance guide
+# Russian Edition — build and maintenance guide
 
-> **Archived maintenance path.** This branch is retained temporarily while [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6) consolidates both editions into build profiles. Do not continue feature development or upstream sync on this branch. After the profile PR is validated and merged, remove this branch from GitHub.
+> **Active branch policy.** The repository intentionally keeps two independent long-lived branches: `main` for the Community Language Packs demo and `russian` for the standalone Russian-translation edition. Do not merge the editions or create another permanent edition branch.
 
-This guide describes how to build the legacy Russian snapshot only; it is not the maintenance guide for the consolidated source.
+- `russian`: built-in Russian UI for Android, Windows and Linux; no Community Language Packs manager/editor.
+- `main`: Community Language Packs demo, including the built-in Russian language and custom-pack editor.
 
-- `russian`: standalone Russian-language UI edition.
-- `main`: Community Language Packs demo (custom pack manager).
-
-The Russian branch does **not** include the Language Packs editor. It keeps the built-in Russian translation and does not add the editor's dependencies or UI.
+Maintain and update this branch independently. Apply Russian translation and Russian-build fixes here; keep demo-only custom language-pack functionality on `main`.
 
 ## 1. Get the latest builds
 
@@ -19,7 +17,7 @@ Use the live GitHub Actions pages:
 
 Open the newest run for the `russian` branch, check that its conclusion is **success**, then download its artifact from the **Artifacts** section.
 
-Actions artifacts are temporary and are currently retained for 30 days. They are community test builds, not permanent upstream releases.
+Actions artifacts are temporary and are currently retained for 30 days. They are community test builds, not permanent upstream releases. The published [release 0.0.4](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4) is the `main` Lang Pack Demo build, not a Russian Edition release.
 
 ### Android (ARM64)
 
