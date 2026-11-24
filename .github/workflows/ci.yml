@@ -1,6 +1,6 @@
 name: CI
 
-# Fast validation only. Packaging is handled by dedicated release workflows.
+# Fast validation only. Packaging is handled by the Android APK and Desktop builds workflows.
 on:
   push:
     branches:
@@ -46,6 +46,16 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Diff whitespace check
+        shell: bash
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            git fetch --no-tags --depth=1 origin "$base"
+            git diff --check "$base" HEAD
+          else
+            git show --check --oneline HEAD
+          fi
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
