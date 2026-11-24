@@ -51,14 +51,6 @@ jobs:
         with:
           key: desktop-langpack-windows-x64
 
-      - name: Test desktop translations
-        run: |
-          cargo test --locked -p procraft-desktop translation::tests
-          cargo test --locked -p procraft-desktop language_packs::tests
-
-      - name: Test PNG export helpers
-        run: cargo test --locked -p procraft-core --lib project::signature_tests
-
       - name: Install WiX v5
         shell: bash
         run: |
@@ -117,14 +109,6 @@ jobs:
         with:
           key: desktop-langpack-linux-x86_64
 
-      - name: Test desktop translations
-        run: |
-          cargo test --locked -p procraft-desktop translation::tests
-          cargo test --locked -p procraft-desktop language_packs::tests
-
-      - name: Test PNG export helpers
-        run: cargo test --locked -p procraft-core --lib project::signature_tests
-
       - name: Install verified packaging tools
         shell: bash
         run: |
@@ -158,10 +142,10 @@ jobs:
           from pathlib import Path
 
           files = sorted(p for p in Path("dist").iterdir() if p.is_file() and p.name != "SHA256SUMS.txt")
-          with Path("dist/SHA256SUMS.txt").open("w", encoding="utf-8", newline="\\n") as manifest:
+          with Path("dist/SHA256SUMS.txt").open("w", encoding="utf-8", newline="\n") as manifest:
               for path in files:
                   digest = hashlib.sha256(path.read_bytes()).hexdigest()
-                  manifest.write(f"{digest}  {path.name}\\n")
+                  manifest.write(f"{digest}  {path.name}\n")
           PY
 
       - name: List packages

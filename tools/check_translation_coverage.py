@@ -96,7 +96,7 @@ if len(catalog) != len(set(catalog)):
 
 rust_text = RUST_DICTIONARY.read_text(encoding="utf-8")
 rust_start = rust_text.find("let translated = match source {")
-rust_end = rust_text.find("\n    };\n    Cow::Borrowed", rust_start)
+rust_end = rust_text.find("\n    };", rust_start)
 if rust_start < 0 or rust_end < 0:
     fail("could not isolate the Desktop translation match block")
 desktop = load_pairs(RUST_PAIR, rust_text[rust_start:rust_end], "Desktop dictionary")

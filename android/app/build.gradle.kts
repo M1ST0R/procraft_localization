@@ -229,4 +229,5 @@ dependencies {
     implementation(libs.androidx.input.motionprediction)
     implementation(libs.jna) { artifact { type = "aar" } }
     testImplementation(libs.junit)
+    testImplementation("org.json:json:20250517")
 }
