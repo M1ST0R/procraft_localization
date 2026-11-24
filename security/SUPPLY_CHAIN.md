@@ -1,9 +1,9 @@
 # Supply-chain hardening — GitHub Actions and build tools
 
 **Last updated:** 2026-11-23  
-**Applies to:** `main` (Lang Pack Demo) and `russian` (Russian Edition)
+**Applies to:** `main` and the `edition-profiles` consolidation PR (both Lang Pack Demo and Russian Edition build profiles). The `russian` branch is a legacy snapshot pending retirement.
 
-This document records the controls applied to the repository's CI and packaging workflows. Both existing edition branches were updated directly. No additional branch is required.
+This document records the controls applied to the repository's CI and packaging workflows. The current workflows are maintained on `main` and tested on `edition-profiles`. Avoid parallel maintenance of the legacy `russian` branch; retire it after consolidation.
 
 ## GitHub Actions pinned to immutable commit SHAs
 
@@ -65,7 +65,7 @@ The Windows packaging script pins DXC `v1.9.2609`, verifies the downloaded ZIP u
 
 - The CI, Android APK and Desktop workflows request only `contents: read`.
 - Every checkout step sets `persist-credentials: false`; build jobs do not need a write-capable Git credential after checkout.
-- The Russian Android release keystore is available only to owner-triggered push/manual runs on the `russian` branch. Pull requests and other triggers use a debug-signed test APK and do not receive signing secrets.
+- The current edition-profile Android workflow builds both editions as debug-signed test APKs and does not expose signing secrets to pull requests. Production release signing should be introduced only through a dedicated trusted release workflow.
 - All workflows cancel obsolete runs for the same branch when a newer commit arrives.
 - Artifacts include SHA-256 manifests and expire after 30 days. They are temporary test artifacts, not permanent releases.
 
@@ -90,9 +90,9 @@ These are recorded limitations, not claims of a fully hermetic or reproducible b
 ## Maintenance checklist
 
 1. Resolve each intended GitHub Action release tag to its full commit SHA and review the upstream source before updating it.
-2. Update the same action pin in both `main` and `russian`.
+2. Update the same action pin in `main` and verify it on the edition-profile PR.
 3. For downloaded tools, update the version, exact URL and SHA-256 together.
 4. Verify hashes against the upstream release metadata before committing.
 5. Keep mutable `master`, `main`, `latest` and `continuous` references out of executable build inputs.
-6. Run CI, Android APK and Desktop workflows on both edition branches after changing build tooling.
+6. Run CI, Android APK and Desktop workflows for both edition profiles after changing build tooling.
 7. Never expose Android signing secrets to pull-request builds or untrusted actors.
