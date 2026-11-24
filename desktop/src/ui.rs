@@ -1074,7 +1074,10 @@ impl Interface {
                 }
                 Some(Said::Licences) => self.licences = true,
                 #[cfg(feature = "language-packs")]
-                Some(Said::LanguagePacks) => { self.language_packs = true; crate::language_packs::open(); }
+                Some(Said::LanguagePacks) => {
+                    self.language_packs = true;
+                    crate::language_packs::open();
+                }
                 Some(Said::Done => self.settings = false,
                 None => {}
             }

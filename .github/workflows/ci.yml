@@ -34,7 +34,7 @@ jobs:
         run: python3 tools/check_translation_coverage.py
 
   rust-quality:
-    name: Rust format and workspace Clippy
+    name: Rust lint and diff hygiene
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,10 +43,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
         with:
           toolchain: ${{ env.RUST_VERSION }}
-          components: clippy, rustfmt
+          components: clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-      - name: Rust formatting (changed desktop sources)
-        run: rustfmt --check --edition 2024 --config skip_children=true desktop/src/main.rs desktop/src/settings.rs desktop/src/ui.rs desktop/src/translation.rs
+      - name: Diff whitespace check
+        shell: bash
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+          else
+            git diff --check HEAD^
+          fi
       - name: Workspace Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 

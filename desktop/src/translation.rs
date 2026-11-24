@@ -7,7 +7,9 @@ use std::borrow::Cow;
 
 pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
     #[cfg(feature = "language-packs")]
-    if let Some(translated) = crate::language_packs::translate_override(source) { return translated; }
+    if let Some(translated) = crate::language_packs::translate_override(source) {
+        return translated;
+    }
     let translated = match source {
         "2D Grid" => "Сетка 2D",
         "2D Guide visibility" => "Показать направляющую 2D",
