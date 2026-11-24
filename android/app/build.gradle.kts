@@ -149,6 +149,7 @@ android {
         targetSdk = 36
         versionCode = appVersionCode
         versionName = appVersion
+        buildConfigField("boolean", "LANGUAGE_PACKS_ENABLED", languagePacksEnabled.toString())
         ndk { abiFilters.addAll(rustAbis) }
     }
 
@@ -171,7 +172,7 @@ android {
             // The demo is debug-signed and therefore gets its own ID; it can coexist with
             // an already installed release-signed Russian community build.
             applicationIdSuffix = if (languagePacksEnabled) ".ru.demo" else ".ru"
-            buildConfigField("Boolean", "LANGUAGE_PACKS_ENABLED", languagePacksEnabled.toString())
+
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
