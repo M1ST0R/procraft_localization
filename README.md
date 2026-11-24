@@ -225,8 +225,3 @@ Build time dependencies:
 - **The demo painting**, *Dusk*, is our own, made in the app.
 
 <br>
-
-## Misc info for myself
-
-Try to use [semantic commit](https://kapeli.com/cheat_sheets/Semantic_Commits.docset/Contents/Resources/Documents/index)
-messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc.
