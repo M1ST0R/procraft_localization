@@ -33,6 +33,23 @@ jobs:
       - name: Validate dictionaries and sample pack
         run: python3 tools/check_translation_coverage.py
 
+  rust-quality:
+    name: Rust format and workspace Clippy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Rust formatting
+        run: cargo fmt --all --check
+      - name: Workspace Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+
   desktop-tests:
     name: Desktop tests (${{ matrix.edition }})
     strategy:
@@ -40,6 +57,7 @@ jobs:
       matrix:
         edition: [langpack, ru]
     runs-on: ubuntu-24.04
+    # The profile feature is only defined by procraft-desktop, so lint it separately per edition.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,6 +68,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Desktop translation tests
         run: cargo test --locked -p procraft-desktop translation::tests ${{ matrix.edition == 'ru' && '--no-default-features' || '--features language-packs' }}
+      - name: Desktop Clippy (${{ matrix.edition }})
+        run: cargo clippy --locked -p procraft-desktop --all-targets ${{ matrix.edition == 'ru' && '--no-default-features' || '--features language-packs' }} -- -D warnings
       - name: Language-pack runtime tests
         if: matrix.edition == 'langpack'
         run: cargo test --locked -p procraft-desktop language_packs::tests
@@ -85,6 +105,9 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;29.0.14206865" > /dev/null
           set -o pipefail
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+      - name: Android Rust Clippy
+        if: matrix.edition == 'langpack'
+        run: cargo ndk -t arm64-v8a --platform 26 clippy --locked -p procraft-core --lib -- -D warnings
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       - name: Android unit tests (x86_64)
         working-directory: android
