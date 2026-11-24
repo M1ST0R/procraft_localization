@@ -9,7 +9,7 @@ Community localization and packaging for [upstream ProCraft](https://github.com/
 - Android ARM64 APK: [download](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/ProCraft-LangPack-arm64.apk)
 - Windows x64 installer: [MSI](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-windows-x64.msi)
 - Windows x64 portable: [ZIP](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-windows-x64-portable.zip)
-- Linux x86_64: [AppImage](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.AppImage), [DEB](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-linux-x86_64.deb), [tar.gz](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-linux-x86_64.tar.gz)
+- Linux x86_64: [AppImage](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.AppImage), [DEB](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.deb), [tar.gz](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.tar.gz)
 - [SHA-256 manifest](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/SHA256SUMS.txt)
 
 ## Edition consolidation
