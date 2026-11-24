@@ -12,6 +12,15 @@ The repository has exactly two long-lived branches:
 
 The default branch is `main`. The rejected build-profile proposal in [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6) was closed without merging on 2026-11-24. Its temporary `edition-profiles` branch was deleted. The live branch list was checked after cleanup and contains only `main` and `russian`.
 
+## Tree hygiene
+
+| Branch | Tree entries | Tracked files | Approx. tracked size |
+|---|---:|---:|---:|
+| `main` | 1,077 | 924 | 39.48 MB |
+| `russian` | 1,058 | 909 | 39.05 MB |
+
+A path scan found no tracked backup, temporary, build-output, prototype, cache or generated-junk files. Large bundled assets (brush sets, fonts, environment HDRs and the walkthrough media) are intentional application content.
+
 ## Resolved findings
 
 | Finding | Priority | Status |
@@ -24,7 +33,7 @@ The default branch is `main`. The rejected build-profile proposal in [PR #6](htt
 | Build tool installs were version ranges or mutable downloads | Medium/High | cargo-ndk and nfpm pinned; nfpm archive checksum verified; appimagetool/runtime checksums verified |
 | Checkout left token credentials in local Git config | Medium | Checkout uses `persist-credentials: false` |
 | Main security report had trailing whitespace | Low (CI hygiene) | Fixed |
-| Russian Clippy baseline failed on duplicate match arms, collapsible ifs and unnecessary dereference | Medium (CI reliability) | Translation and gallery code fixed in russian; new CI pending |
+| Russian Clippy baseline failed on duplicate match arms, collapsible ifs and unnecessary dereference | Medium (CI reliability) | Translation/gallery cleanup completed; strict Desktop and Android-target Clippy checks added to Russian CI; current run pending |
 | Russian docs described old branch/workflow/release state and confused the feature availability | High (documentation correctness) | README, maintenance guide, maintainer message and language-pack note corrected |
 | CI job label implied Clippy/tests while it actually ran Android/Gradle validation | Medium (clarity) | Renamed to Android native build/lint/unit-test job |
 
@@ -36,7 +45,13 @@ Both branches contain exactly three workflow files:
 - `.github/workflows/android-apk.yml`
 - `.github/workflows/desktop-build.yml`
 
-The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing.
+The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. Push and PR triggers are branch-specific (`main` checks main; `russian` checks russian). The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing. Main CI now runs strict workspace Clippy; Russian CI runs strict desktop and Android-target Clippy.
+
+## Repository governance
+
+- Branch metadata reports both `main` and `russian` as unprotected.
+- The GitHub rulesets endpoint returned an empty list. The branch-protection endpoint was inaccessible to this connection (403), so required checks/reviews cannot be independently confirmed beyond the unprotected metadata.
+- Release tag `0.0.4` points to commit `07f48c17ee32fd65244edee35c6b8c23e7a7259a`. GitHub marks the release non-immutable; tag protection was not verified.
 
 ## Packaging isolation
 
@@ -56,6 +71,6 @@ The implementation is present in the two branches. Do not mark the fix fully ver
 
 ## Release and current verification
 
-The published [ProCraft Community 0.0.4 release](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4) is the `main` Lang Pack Demo build based on upstream `v0.0.7-beta`. It contains Android ARM64, Windows x64 (MSI and portable ZIP), and Linux x86_64 (AppImage, DEB and tar.gz) assets plus a SHA-256 manifest. It is not a Russian Edition release; `russian` builds are distributed through their own Actions artifacts.
+The published [ProCraft Community 0.0.4 release](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4) is the `main` Lang Pack Demo build based on upstream `v0.0.7-beta`. It contains six platform binaries (Android ARM64, Windows x64 MSI + portable ZIP, Linux x86_64 AppImage + DEB + tar.gz) plus `SHA256SUMS.txt`. Release API metadata exposes SHA-256 digests, but the manifest contents could not be independently retrieved for cross-checking. The release is not marked immutable. It is not a Russian Edition release; `russian` builds are distributed through their own Actions artifacts.
 
-Use the live [main Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Amain) and [russian Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Arussian) pages. A successful run proves only the checks and package steps that actually ran. It does not replace physical-device smoke tests or side-by-side installation/upgrade/uninstall checks on Windows and Linux. Confirm the latest run for the branch and commit before publishing new workflow artifacts.
+Latest verification after the new package-ID/Clippy checks were added is still running: main CI and APK validation are pending/in progress; Russian CI, Android and Desktop matrices are pending. Previously successful runs are linked from the live [main Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Amain) and [russian Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Arussian) pages, but older artifacts predate these workflow changes. A successful run proves only the checks and package steps that actually ran. It does not replace physical-device smoke tests or side-by-side installation/upgrade/uninstall checks on Windows and Linux. Confirm the latest run for the branch and commit before publishing new workflow artifacts.
