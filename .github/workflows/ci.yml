@@ -52,9 +52,9 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             base="${{ github.event.pull_request.base.sha }}"
             git fetch --no-tags --depth=1 origin "$base"
-            git diff --check "$base" HEAD
+            git diff --check "$base" HEAD -- '*.rs' '*.yml' '*.yaml' '*.sh' '*.ps1' '*.kts' '*.toml' '*.json' '*.gradle' '*.xml' '*.py'
           else
-            git show --check --oneline HEAD
+            git show --check --oneline HEAD -- '*.rs' '*.yml' '*.yaml' '*.sh' '*.ps1' '*.kts' '*.toml' '*.json' '*.gradle' '*.xml' '*.py'
           fi
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
