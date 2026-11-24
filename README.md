@@ -5,7 +5,18 @@ This repository provides **two community editions** of upstream ProCraft.
 | Branch | Edition | What it contains |
 |---|---|---|
 | [`main`](https://github.com/M1ST0R/procraft_localization/tree/main) | **Lang Pack Demo** | Russian UI, full translation catalog and the in-app editor for creating, importing, editing, exporting and sharing language packs. |
-| [`russian`](https://github.com/M1ST0R/procraft_localization/tree/russian) | **Russian Edition** | Separate Russian UI build without the Community Language Packs manager. |
+| [`russian`](https://github.com/M1ST0R/procraft_localization/tree/russian) | **Russian Edition** | Independently maintained Russian-translation build; it does not include the Community Language Packs demo/editor. |
+
+## Latest published release
+
+[**ProCraft Community 0.0.4**](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4) is based on upstream **ProCraft v0.0.7-beta**. These release assets are the `main` Community Language Packs Demo build, with the built-in Russian translation and the language-pack manager.
+
+- **Android ARM64:** [APK](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/ProCraft-LangPack-arm64.apk)
+- **Windows x64:** [MSI installer](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-windows-x64.msi) · [portable ZIP](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-windows-x64-portable.zip)
+- **Linux x86_64:** [AppImage](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.AppImage) · [DEB](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.deb) · [tar.gz](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.tar.gz)
+- **Integrity:** [SHA-256 manifest](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/SHA256SUMS.txt)
+
+The `russian` branch is built independently; its test packages are published as GitHub Actions artifacts, not as part of release `0.0.4`.
 
 ## CI
 
@@ -234,7 +245,3 @@ Build time dependencies:
 
 <br>
 
-## Misc info for myself
-
-Try to use [semantic commit](https://kapeli.com/cheat_sheets/Semantic_Commits.docset/Contents/Resources/Documents/index)
-messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc.
