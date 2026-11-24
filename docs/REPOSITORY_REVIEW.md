@@ -8,7 +8,7 @@
 - Default branch: main.
 - Existing edition branches before this work: main (Lang Pack Demo) and russian (Russian-only snapshot).
 - Temporary consolidation branch: edition-profiles.
-- main and russian are diverged. Their merge base is 6ebe9e49d0055e827e4ffcd8679c93cfa4c96a7a; main is 258 commits ahead and russian is 57 commits ahead.
+- main and russian are diverged. Their merge base is 6ebe9e49d0055e827e4ffcd8679c93cfa4c96a7a; main is 258 commits ahead and russian is 58 commits ahead.
 - The Russian branch's unique diff is mostly branch-specific CI/docs and packaging identity. Main already contains the important package-isolation and supply-chain controls and several code-level cleanup fixes. The Russian branch should be retired only after both profiles on the consolidation branch pass.
 - GitHub branch metadata reports main, russian and edition-profiles as **unprotected**. Repository rulesets were not independently inspected. No required status checks or review gate is confirmed.
 
@@ -18,6 +18,7 @@
 |---|---:|---:|---:|
 | main | 1,077 | 924 | 39.47 MB |
 | russian | 1,058 | 909 | 39.05 MB |
+| edition-profiles | 1,078 | 925 | 39.48 MB |
 
 No obvious temporary, backup, prototype, or obsolete path names were found in the tree scan. The largest files are intentional documentation media:
 
@@ -40,7 +41,10 @@ The README's personal “Misc info for myself” note is removed in the consolid
 - External Actions are pinned by full commit SHA; checkout credential persistence is disabled; workflows request contents: read.
 - Packaging scripts verify pinned tool downloads, and packages include SHA-256 manifests.
 - Main commit 07f48c1 has successful CI and Desktop builds; Android APK build succeeded on be7e5f6, with Android sources unchanged in the later Desktop-only commit.
-- Edition profile tests are in progress on draft PR #6. No profile build or installation test is marked verified until the latest matrix finishes.
+- Edition-profile CI run 45347342998 passed all jobs (both Desktop profiles, Android unit tests for both profiles, translation audit and Rust lint).
+- On latest PR run 45347343005, Windows and Linux Lang Pack packages passed; Russian Windows/Linux builds were still running at review time.
+- Latest Android run 45347342973: Russian APK built, signature verified and uploaded; Lang Pack APK build was still running. Package-ID validation is being added to the APK workflow.
+- Side-by-side installation and real-device/desktop smoke tests have not been performed in this environment.
 
 ## Current cleanup changes
 
@@ -51,10 +55,11 @@ The README's personal “Misc info for myself” note is removed in the consolid
 
 ## Remaining validation
 
-1. Complete both profile CI matrices on edition-profiles.
+1. Complete both profile build matrices on edition-profiles.
 2. Verify Android Lang Pack and Russian APKs on a device; confirm package IDs and settings visibility.
 3. Verify Windows MSI/portable and Linux AppImage/DEB/tar.gz for both profiles.
 4. Confirm separate install/upgrade/uninstall behavior alongside upstream ProCraft and the Lang Pack build.
 5. Merge the verified profile branch to main, then delete the legacy russian branch.
-6. Enable protection for main: require PRs and successful CI checks, block force pushes, and optionally require review. Protect release tags as well.
+6. Enable protection for main: require PRs and successful CI checks, block force pushes, and optionally require review. The rulesets endpoint currently returns no rulesets; the branch-protection endpoint is inaccessible to this connection (403), so direct protection status cannot be independently confirmed. Protect release tags as well.
 7. Re-run the security/dependency audit if the consolidation changes permissions, file handling or packaging.
+8. The connector cannot delete branch refs. After PR #6 is merged and both profiles are accepted, manually delete the legacy `russian` branch in GitHub.
