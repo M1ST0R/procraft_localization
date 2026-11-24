@@ -76,6 +76,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # pinned commit 2026-11-15
         with:
           toolchain: ${{ env.RUST_VERSION }}
+          components: clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Desktop translation tests
         run: cargo test --locked -p procraft-desktop translation::tests ${{ matrix.edition == 'ru' && '--no-default-features' || '--features language-packs' }}
@@ -107,6 +108,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-linux-android, x86_64-linux-android
+          components: clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --version "4.1.2" --locked
@@ -116,6 +118,7 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;29.0.14206865" > /dev/null
           set -o pipefail
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
       - name: Android Rust Clippy
         if: matrix.edition == 'langpack'
         run: cargo ndk -t arm64-v8a --platform 26 clippy --locked -p procraft-core --lib -- -D warnings
