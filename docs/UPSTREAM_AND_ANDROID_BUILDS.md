@@ -1,70 +1,39 @@
-# Building and updating the ProCraft community editions
+# Building, testing and updating ProCraft Community Builds
 
-This repository has two branches with different purposes:
+The goal is one maintained source branch with two edition profiles. The consolidation work is currently on the temporary edition-profiles branch and has not been merged into main yet.
 
-- `main` — Lang Pack Demo: built-in Russian translations, the Community Language Packs editor and the full sample pack.
-- `russian` — Russian Edition: a separate Russian UI build without the Language Packs manager.
+## Edition profiles
 
-Keep the branches separate. Do not copy one branch over the other.
+See [Edition Profiles](EDITION_PROFILES.md) for the exact Cargo, Android and packaging switches.
 
-## Main branch — Lang Pack Demo
+- **Lang Pack Demo**: built-in Russian translation and the Community Language Packs editor.
+- **Russian Edition**: built-in Russian translation; the manager is disabled.
 
-- [CI — translation coverage and Android checks](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
-- [Android ARM64 APK](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Amain)
-- [Windows and Linux Desktop packages](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Amain)
+Do not make parallel feature changes on the legacy russian branch. Its unique commits have been reviewed against main; the profile branch is the consolidation candidate.
 
-Artifacts are retained for 30 days. Download them from a successful workflow run.
+## Current release
 
-- Android artifact: `ProCraft-LangPack-Android-arm64` (debug-signed test APK).
-- Windows artifact: `ProCraft-LangPack-Windows-x64` (MSI and portable ZIP).
-- Linux artifact: `ProCraft-LangPack-Linux-x86_64` (AppImage, DEB and tar.gz).
+The latest release is [0.0.4](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4), based on ProCraft 0.0.7-beta. It contains the Lang Pack Demo builds and checksum manifest.
 
-The CI workflow audits all 1,374 catalog entries, checks identical Android/Desktop Russian values, validates the full sample pack and its JSON preview, then runs Android lint and unit tests.
+## CI and artifacts
 
-## Russian branch — Russian Edition
+- [CI](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml)
+- [Android APK](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml)
+- [Desktop packages](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml)
 
-- [CI](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Arussian)
-- [Android ARM64 APK](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Arussian)
-- [Windows and Linux Desktop packages](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Arussian)
+Download artifacts only from successful runs of the commit/profile being tested. Workflow artifacts are temporary (30-day retention) and are not a replacement for tagged releases.
 
-Artifacts are retained for 30 days.
+## Updating from upstream
 
-- Android package ID: `io.github.artcraftandroid.procraft.ru`.
-- Windows artifact: `ProCraft-RU-Windows-x64`.
-- Linux artifact: `ProCraft-RU-Linux-x86_64`.
-
-The Russian branch uses release signing secrets only for trusted owner-triggered pushes/manual runs. Pull requests and other builds use a temporary debug key. A debug-signed APK may not update an installation signed with a different certificate.
-
-Secrets, if release signing is configured:
-
-- `PROCRAFT_KEYSTORE_BASE64`
-- `PROCRAFT_KEYSTORE_PASSWORD`
-- `PROCRAFT_KEY_ALIAS`
-- `PROCRAFT_KEY_PASSWORD`
-
-Keep the keystore and passwords in secure offline backups. Losing the key prevents updating installs signed with that key.
-
-## Update from upstream
-
-Do not replace either community branch with a fresh upstream checkout. Preserve community changes and merge upstream changes into the branch being maintained.
-
-One-time clone setup:
+Use the consolidated source branch after it is merged into main. Do not replace community files with a fresh upstream checkout.
 
 ```bash
 git remote add upstream https://github.com/artcraft-android/procraft.git
 git fetch upstream
-```
-
-Update the selected branch:
-
-```bash
-git switch main       # or: git switch russian
-git fetch upstream
+git switch main
 git merge upstream/main
 ```
 
-For the ProCraft v0.0.7-beta baseline, upstream consolidated several standalone plugins into larger plugins (including Krita Brushes, ColorDrop tools, Interface, Effects, Layer fills and Layer tools). Keep upstream plugin manifests and bundled files. Do not restore obsolete standalone plugin folders when carrying community changes forward.
+Resolve conflicts by preserving upstream functional changes, then update translation dictionaries/catalog and pack preview as needed. Run both edition profiles in CI and verify the packaging outputs before publishing.
 
-Resolve conflicts by keeping upstream functional changes and reapplying the relevant Russian translation changes only where needed. On `main`, also update both translation dictionaries, the sample pack and its readable preview when the source catalog changes. Run the CI workflow and the package workflows for the branch you updated; test APKs on an Android tablet and Desktop packages on their target OS.
-
-For a larger update, create a short-lived branch and PR into `main` or `russian` so conflicts and regressions are visible.
+The current upstream baseline in release 0.0.4 is ProCraft v0.0.7-beta. Update baseline references in documentation as part of any upstream sync.

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - edition-profiles
     paths:
       - "desktop/**"
       - "crates/**"
@@ -30,7 +31,11 @@ env:
 
 jobs:
   windows:
-    name: Windows x64 (MSI + portable ZIP)
+    name: Windows x64 (${{ matrix.edition }})
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [langpack, ru]
     runs-on: windows-2025
     defaults:
       run:
@@ -49,7 +54,7 @@ jobs:
       - name: Cache Rust
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: desktop-langpack-windows-x64
+          key: desktop-${{ matrix.edition }}-windows-x64
 
       - name: Install WiX v5
         shell: bash
@@ -61,7 +66,7 @@ jobs:
       - name: Build and package Windows desktop
         shell: pwsh
         env:
-          EDITION: langpack
+          EDITION: ${{ matrix.edition }}
         run: ./packaging/windows/package.ps1
 
       - name: Create package checksums
@@ -85,13 +90,17 @@ jobs:
       - name: Upload Windows packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ProCraft-LangPack-Windows-x64
+          name: ProCraft-${{ matrix.edition == 'langpack' && 'LangPack' || 'RU' }}-Windows-x64
           path: dist/*
           if-no-files-found: error
           retention-days: 30
 
   linux:
-    name: Linux x86_64 (AppImage + DEB + tar.gz)
+    name: Linux x86_64 (${{ matrix.edition }})
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [langpack, ru]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -107,7 +116,7 @@ jobs:
       - name: Cache Rust
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: desktop-langpack-linux-x86_64
+          key: desktop-${{ matrix.edition }}-linux-x86_64
 
       - name: Install verified packaging tools
         shell: bash
@@ -126,7 +135,7 @@ jobs:
 
       - name: Build and package Linux desktop
         env:
-          EDITION: langpack
+          EDITION: ${{ matrix.edition }}
         run: bash packaging/linux/package.sh
 
       - name: Validate packaging shell scripts
@@ -154,7 +163,7 @@ jobs:
       - name: Upload Linux packages
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ProCraft-LangPack-Linux-x86_64
+          name: ProCraft-${{ matrix.edition == 'langpack' && 'LangPack' || 'RU' }}-Linux-x86_64
           path: dist/*
           if-no-files-found: error
           retention-days: 30

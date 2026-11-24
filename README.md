@@ -1,57 +1,49 @@
 # ProCraft Community Builds
 
-This repository provides **two community editions** of upstream ProCraft.
+Community localization and packaging for [upstream ProCraft](https://github.com/artcraft-android/procraft). The current public release is **0.0.4**, based on upstream **v0.0.7-beta**.
 
-| Branch | Edition | What it contains |
-|---|---|---|
-| [`main`](https://github.com/M1ST0R/procraft_localization/tree/main) | **Lang Pack Demo** | Russian UI, full translation catalog and the in-app editor for creating, importing, editing, exporting and sharing language packs. |
-| [`russian`](https://github.com/M1ST0R/procraft_localization/tree/russian) | **Russian Edition** | Separate Russian UI build without the Community Language Packs manager. |
+## Latest release
+
+[**Download ProCraft Community 0.0.4**](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4)
+
+- Android ARM64 APK: [download](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/ProCraft-LangPack-arm64.apk)
+- Windows x64 installer: [MSI](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-windows-x64.msi)
+- Windows x64 portable: [ZIP](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-windows-x64-portable.zip)
+- Linux x86_64: [AppImage](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-beta-linux-x86_64.AppImage), [DEB](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-linux-x86_64.deb), [tar.gz](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/procraft-langpack-0.0.7-linux-x86_64.tar.gz)
+- [SHA-256 manifest](https://github.com/M1ST0R/procraft_localization/releases/download/0.0.4/SHA256SUMS.txt)
+
+## Edition consolidation
+
+The two editions are being consolidated into a **single maintained codebase with build profiles**. Work is in the temporary [edition-profiles branch](https://github.com/M1ST0R/procraft_localization/tree/edition-profiles) and is not merged into main yet.
+
+- **Lang Pack Demo** — Russian UI, catalog, and the Community Language Packs manager.
+- **Russian Edition** — built-in Russian UI, with the Language Packs manager disabled in the build profile.
+
+The old russian branch is a legacy snapshot while the profile builds and tests are being verified. Its packaging, CI and translation fixes have been reviewed against main; do not continue parallel feature development there.
 
 ## CI
 
-[**CI workflow — translation coverage, Android lint and tests**](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
+- [Main CI](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml)
+- [Android APK builds](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml)
+- [Desktop builds](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml)
 
-The CI workflow checks that all 1,377 source-catalog entries are translated on Android and Desktop, verifies the documented compact Desktop labels, and validates the complete sample pack and its readable preview. It also runs Android unit tests and Desktop translation/core tests. Separate workflows build the Android APK and Windows/Linux packages.
-
-## Downloads
-
-Builds are produced by GitHub Actions and retained for **30 days**. Download artifacts from a completed, successful run; these are community test builds, not signed official releases.
-
-**Lang Pack Demo — `main`:**
-- **Android ARM64:** [Android APK workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Amain). Download `ProCraft-LangPack-Android-arm64`.
-- **Windows:** [Desktop build workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Amain). Download `ProCraft-LangPack-Windows-x64`; choose the portable ZIP to run without installation.
-- **Linux:** use the same Desktop workflow; download `ProCraft-LangPack-Linux-x86_64` for AppImage, DEB and tar.gz packages.
-
-**Russian Edition — `russian`:**
-- **Android ARM64:** [Russian APK workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Arussian).
-- **Windows / Linux:** [Russian Desktop workflow](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Arussian); download `ProCraft-RU-Windows-x64` or `ProCraft-RU-Linux-x86_64`.
-
-The main-branch Android APK is debug-signed and may not update an earlier install signed with a different key. Desktop packages use edition-specific identities to avoid overwriting upstream ProCraft.
+The edition-profile branch is configured to validate both profiles. Do not treat the branch as ready for merge until all matrix jobs pass and the installs are smoke-tested on target platforms.
 
 ## Community Language Packs
 
-The Community Language Packs manager is included in the maintained `main` edition:
+- [User and translator guide](docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
+- [Feature overview](docs/COMMUNITY_LANGUAGE_PACKS_DISCUSSION.md)
+- [Format and limitations](docs/COMMUNITY_LANGUAGE_PACKS.md)
+- [JSON Schema](schemas/procraft-language-pack.schema.json)
+- [Importable Russian pack](examples/ru-community.procraft-lang)
+- [Full Russian preview](examples/ru-community-preview.json)
+- [Translation audit](tools/check_translation_coverage.py)
+- [Security review scope/report](security/language-packs-2026-11-23/REPORT.md)
+- [Supply-chain hardening](security/SUPPLY_CHAIN.md)
+- [Repository audit and cleanup](docs/REPOSITORY_REVIEW.md)
+- [Edition build profiles](docs/EDITION_PROFILES.md)
 
-- Android: **Settings → Language packs**
-- Windows/Linux: **Preferences → Language Packs**
-
-- [Public feature walkthrough and discussion draft](docs/COMMUNITY_LANGUAGE_PACKS_DISCUSSION.md)
-- [Detailed user and translator guide](docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
-- [Format, behavior and limitations](docs/COMMUNITY_LANGUAGE_PACKS.md)
-- [Maintainer handoff and acceptance tests](docs/DEMO_HANDOFF.md)
-- [Security review (separate report)](security/language-packs-2026-11-23/REPORT.md)
-- [Security remediation checklist](security/language-packs-2026-11-23/ACTIONS.md)
-- [Supply-chain hardening and verified build inputs](security/SUPPLY_CHAIN.md)
-- [Repository review and cleanup notes](docs/REPOSITORY_REVIEW.md)
-- **Full pack preview:** [read the complete Russian translation as JSON](examples/ru-community-preview.json)
-- **Importable pack:** [download `ru-community.procraft-lang`](examples/ru-community.procraft-lang)
-- **Translation audit:** [`tools/check_translation_coverage.py`](tools/check_translation_coverage.py)
-
-## Community Edition Notes
-
-Both branches track upstream ProCraft and preserve upstream attribution/licensing. The `main` branch carries the Language Packs manager and a Russian dictionary checked against all 1,377 source-catalog entries; the CI workflow prevents missing entries or Android/Desktop terminology drift from silently returning. Layout and translation quality still require human review.
-
-**Upstream project:** [artcraft-android/procraft](https://github.com/artcraft-android/procraft). The original upstream overview and screenshots continue below.
+**Upstream project:** [artcraft-android/procraft](https://github.com/artcraft-android/procraft).
 
 ---
 
