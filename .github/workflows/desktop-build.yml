@@ -15,6 +15,20 @@ on:
       - "Cargo.lock"
       - "android/gradle.properties"
       - ".github/workflows/desktop-build.yml"
+  pull_request:
+    branches:
+      - main
+      - edition-profiles
+    paths:
+      - "desktop/**"
+      - "crates/**"
+      - "plugins/**"
+      - "assets/**"
+      - "packaging/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "android/gradle.properties"
+      - ".github/workflows/desktop-build.yml"
   workflow_dispatch:
 
 permissions:
