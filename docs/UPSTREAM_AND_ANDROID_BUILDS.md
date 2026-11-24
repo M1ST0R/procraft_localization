@@ -19,7 +19,7 @@ Artifacts are retained for 30 days. Download them from a successful workflow run
 - Windows artifact: `ProCraft-LangPack-Windows-x64` (MSI and portable ZIP).
 - Linux artifact: `ProCraft-LangPack-Linux-x86_64` (AppImage, DEB and tar.gz).
 
-The CI workflow audits all 1,374 catalog entries, checks identical Android/Desktop Russian values, validates the full sample pack and its JSON preview, then runs Android lint and unit tests.
+The CI workflow audits all 1,377 catalog entries, checks identical Android/Desktop Russian values, validates the full sample pack and its JSON preview, then runs Android lint and unit tests.
 
 ## Russian branch — Russian Edition
 
