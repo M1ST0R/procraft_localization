@@ -447,7 +447,8 @@ impl Library {
                 (false, true) => "",
                 (false, false) => name,
             };
-            let (tapped, at) = panel::header_title(ui, look, body, heading, 20.0, true, self.title_menu.is_open());
+            let translated_heading = crate::translation::translate(heading);
+            let (tapped, at) = panel::header_title(ui, look, body, translated_heading.as_ref(), 20.0, true, self.title_menu.is_open());
             title_row = at;
             if tapped {
                 self.title_menu.open();

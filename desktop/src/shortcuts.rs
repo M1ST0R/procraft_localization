@@ -97,14 +97,14 @@ fn lay_out(painter: &egui::Painter, groups: Vec<ShortcutGroup>) -> Vec<Laid> {
                 .into_iter()
                 .map(|r| {
                     let keys = galley(r.keys, KEYS_WIDTH - 12.0, TITLE, Weight::Medium);
-                    let does = galley(r.does, COLUMN - KEYS_WIDTH, INK, Weight::Regular);
+                    let does = galley(crate::translation::translate(&r.does).into_owned(), COLUMN - KEYS_WIDTH, INK, Weight::Regular);
                     (keys, does)
                 })
                 .collect();
             let height = HEADING_HEIGHT
                 + rows.iter().map(|(k, d)| k.size().y.max(d.size().y) + ROW_GAP).sum::<f32>()
                 + GROUP_GAP;
-            Laid { heading: g.heading, rows, height }
+            Laid { heading: crate::translation::translate(&g.heading).into_owned(), rows, height }
         })
         .collect()
 }
@@ -157,7 +157,8 @@ fn panel(ctx: &egui::Context, closable: bool, groups: Vec<ShortcutGroup>) -> boo
         ui.painter().rect_filled(panel, 28, argb(FILL));
         ui.painter().rect_stroke(panel, 28, Stroke::new(1.0, argb(EDGE)), StrokeKind::Inside);
         let title = pos2(panel.left() + PAD, panel.top() + PAD);
-        text(ui.painter(), title, Align2::LEFT_TOP, "Keyboard shortcuts", 24.0, Weight::Bold, argb(TITLE));
+        let heading = crate::translation::translate("Keyboard shortcuts");
+        text(ui.painter(), title, Align2::LEFT_TOP, heading.as_ref(), 24.0, Weight::Bold, argb(TITLE));
         let body = Rect::from_min_max(
             pos2(panel.left() + PAD, panel.top() + PAD + TITLE_HEIGHT + 16.0),
             pos2(panel.right() - PAD, panel.bottom() - PAD - done_height),

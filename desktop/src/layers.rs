@@ -1346,12 +1346,14 @@ impl Layers {
             |ui| {
                 let places: Vec<_> = menu::option_rows(rect.left(), rect.top() + 7.0, rect.width(), count).collect();
                 for (&row, r) in places.iter().zip(&rows) {
-                    if menu::option(ui, look, row, &r.label, r.switch_on.unwrap_or(false), r.enabled, false) {
+                    let label = crate::translation::translate(&r.label);
+                    if menu::option(ui, look, row, label.as_ref(), r.switch_on.unwrap_or(false), r.enabled, false) {
                         chosen = Some(r.option);
                     }
                 }
                 for (&row, a) in places.iter().skip(rows.len()).zip(&actions) {
-                    if menu::option(ui, look, row, &a.label, false, true, false) {
+                    let label = crate::translation::translate(&a.label);
+                    if menu::option(ui, look, row, label.as_ref(), false, true, false) {
                         action = Some(a.key.clone());
                     }
                 }

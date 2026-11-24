@@ -195,7 +195,8 @@ impl Library {
         }
         let name_at = Rect::from_min_size(card.min + vec2(10.0, 10.0), vec2(card.width() - 20.0, 18.0));
         if !self.rename_field(ui, session, i, name_at, 14.0) {
-            let name = one_line(ui, &library.name, 14.0, Weight::SemiBold, argb(PANEL_TITLE), name_at.width());
+            let translated_name = crate::translation::translate(&library.name);
+            let name = one_line(ui, translated_name.as_ref(), 14.0, Weight::SemiBold, argb(PANEL_TITLE), name_at.width());
             painter.galley(name_at.min, name, argb(PANEL_TITLE));
         }
         // the one in use's shown set; another's first with a brush chosen in it
@@ -213,7 +214,8 @@ impl Library {
             let ink = if selected { Color32::WHITE } else { argb(PANEL_TITLE) };
             let icon = icons::SET_ICONS.get(set.icon as usize).unwrap_or(&icons::BRUSH_SET);
             look.icon(ui, icon, pos2(row.left() + 10.0, row.center().y), 18.0, ink);
-            let name = one_line(ui, &set.name, 8.0, Weight::Regular, ink, row.width() - 22.0);
+            let translated_name = crate::translation::translate(&set.name);
+            let name = one_line(ui, translated_name.as_ref(), 8.0, Weight::Regular, ink, row.width() - 22.0);
             painter.galley(pos2(row.left() + 20.0, row.center().y - name.size().y / 2.0), name, ink);
             y += CARD_SET_ROW + CARD_SET_GAP;
         }
@@ -235,7 +237,8 @@ impl Library {
                 let tint = if crate::look::light() { Color32::BLACK } else { Color32::WHITE };
                 painter.image(stroke.id(), row, uv, tint);
             }
-            let name = one_line(ui, &b.name, 8.0, Weight::Regular, argb(PANEL_TITLE), width - 4.0);
+            let translated_name = crate::translation::translate(&b.name);
+            let name = one_line(ui, translated_name.as_ref(), 8.0, Weight::Regular, argb(PANEL_TITLE), width - 4.0);
             painter.galley(row.min + vec2(3.0, 1.0), name, argb(PANEL_TITLE));
             y += CARD_BRUSH + 2.0;
         }

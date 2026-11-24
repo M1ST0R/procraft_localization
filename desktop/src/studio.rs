@@ -1261,7 +1261,8 @@ impl Studio {
                             ui.add_space(gap(above, None));
                             let (row, _) = ui.allocate_exact_size(vec2(width, 23.0), Sense::hover());
                             let at = pos2(row.left() + 8.0, row.center().y);
-                            text(ui.painter(), at, Align2::LEFT_CENTER, &label, 21.0, Weight::Bold, argb(HEADER));
+                            let translated_label = crate::translation::translate(&label);
+                            text(ui.painter(), at, Align2::LEFT_CENTER, translated_label.as_ref(), 21.0, Weight::Bold, argb(HEADER));
                             ui.add_space(gap(Edge::Title, Some(&PLUGIN_ROW)));
                             let options: Vec<&str> = choices.iter().map(String::as_str).collect();
                             self.choice_rows(ui, look, session, &key, &options, width);
@@ -1352,11 +1353,12 @@ impl Studio {
                 look.icon(ui, &icons::MENU_TICK, pos2(row.right() - 14.0 - 17.0, row.center().y), 34.0, Color32::WHITE);
             }
             let ink = if on { Color32::WHITE } else { argb(DIM) };
+            let translated_label = crate::translation::translate(label);
             text(
                 ui.painter(),
                 pos2(row.left() + 16.0, row.center().y),
                 Align2::LEFT_CENTER,
-                label,
+                translated_label.as_ref(),
                 17.0,
                 Weight::Regular,
                 ink,

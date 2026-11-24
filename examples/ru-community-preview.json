@@ -5,7 +5,7 @@
   "name": "Русский — Community Demo",
   "author": "ProCraft Community",
   "app_version": "0.0.7-beta",
-  "catalog_version": "procraft-ui-source-2",
+  "catalog_version": "procraft-ui-source-3",
   "base_locale": "en",
   "strings": {
     "2D Grid": "Сетка 2D",
@@ -1386,6 +1386,9 @@
     "‹ Settings": "‹ Настройки",
     "← Packs": "← Пакеты",
     "□ + Pen": "□ + перо",
-    "□ + Touch": "□ + касание"
+    "□ + Touch": "□ + касание",
+    "Clipping Mask": "Обтравочная маска",
+    "Combine Down": "Объединить с нижним слоем",
+    "Merge Down": "Объединить с нижним слоем"
   }
 }

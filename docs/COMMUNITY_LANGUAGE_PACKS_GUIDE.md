@@ -115,7 +115,7 @@ A `.procraft-lang` file is UTF-8 JSON. Example:
   "name": "Español — Community",
   "author": "Community contributor",
   "app_version": "0.0.7-beta",
-  "catalog_version": "procraft-ui-source-2",
+  "catalog_version": "procraft-ui-source-3",
   "base_locale": "en",
   "strings": {
     "Gallery": "Galería",
@@ -125,7 +125,7 @@ A `.procraft-lang` file is UTF-8 JSON. Example:
 }
 ```
 
-The `strings` object maps exact English UI keys to translation values. Catalog revision `procraft-ui-source-2` is metadata and does not change format v1.
+The `strings` object maps exact English UI keys to translation values. Catalog revision `procraft-ui-source-3` is metadata and does not change format v1.
 
 The importer limits the file to 5 MiB, 20,000 strings, source keys up to 512 characters, values up to 4,000 characters and 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. The [JSON Schema](../schemas/procraft-language-pack.schema.json) documents the contract.
 

@@ -83,7 +83,7 @@ Format v1 is UTF-8 JSON. Exact English source phrases are keys, including case, 
   "name": "Español — Community",
   "author": "Community contributor",
   "app_version": "0.0.7-beta",
-  "catalog_version": "procraft-ui-source-2",
+  "catalog_version": "procraft-ui-source-3",
   "base_locale": "en",
   "strings": {
     "Gallery": "Galería",
@@ -93,9 +93,9 @@ Format v1 is UTF-8 JSON. Exact English source phrases are keys, including case, 
 }
 ```
 
-The source catalog has approximately 1,374 entries. Keep placeholders such as `{count}`, `{used}` and `{maximum}` exactly; they may move within the translated sentence, but cannot be removed or renamed.
+The source catalog has 1,377 entries. Keep placeholders such as `{count}`, `{used}` and `{maximum}` exactly; they may move within the translated sentence, but cannot be removed or renamed.
 
-Validation limits include 5 MiB file size, 20,000 entries, source keys up to 160 characters, values up to 4,000 characters and up to 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. See the JSON Schema linked below.
+Validation limits include 5 MiB file size, 20,000 entries, source keys up to 512 characters, values up to 4,000 characters and up to 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. See the JSON Schema linked below.
 
 ## Limitations
 

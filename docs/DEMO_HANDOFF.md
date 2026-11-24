@@ -61,7 +61,7 @@ Artifacts expire after 30 days. A completed build proves that the workflow compi
 - Source text is the key in format v1. Upstream wording changes can require translation updates.
 - Some generated text, plugin strings and UI text outside the wrappers may not be editable.
 - Sharing is file-based; there is no marketplace, remote sync, automatic update or moderation.
-- The source catalog contains 1,374 entries; CI verifies Android/Desktop coverage, the intentional compact Desktop labels and the complete sample pack.
+- The source catalog contains 1,377 entries; CI verifies Android/Desktop coverage, the intentional compact Desktop labels and the complete sample pack.
 - [Readable full pack preview](../examples/ru-community-preview.json)
 - The future stable-message-ID proposal is in `LOCALIZATION_PROPOSAL.md`; do not confuse it with the current v1 format.
 

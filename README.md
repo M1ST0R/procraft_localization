@@ -11,7 +11,7 @@ This repository provides **two community editions** of upstream ProCraft.
 
 [**CI workflow — translation coverage, Android lint and tests**](https://github.com/M1ST0R/procraft_localization/actions/workflows/ci.yml?query=branch%3Amain)
 
-The CI workflow checks that all 1,374 source-catalog entries are translated on Android and Desktop, verifies the documented compact Desktop labels, and validates the complete sample pack and its readable preview. It also runs the Android build, lint and unit tests.
+The CI workflow checks that all 1,377 source-catalog entries are translated on Android and Desktop, verifies the documented compact Desktop labels, and validates the complete sample pack and its readable preview. It also runs Android unit tests and Desktop translation/core tests. Separate workflows build the Android APK and Windows/Linux packages.
 
 ## Downloads
 
@@ -49,7 +49,7 @@ The Community Language Packs manager is included in the maintained `main` editio
 
 ## Community Edition Notes
 
-Both branches track upstream ProCraft and preserve upstream attribution/licensing. The `main` branch carries the Language Packs manager and a Russian dictionary checked against all 1,374 source-catalog entries; the CI workflow prevents missing entries or Android/Desktop terminology drift from silently returning. Layout and translation quality still require human review.
+Both branches track upstream ProCraft and preserve upstream attribution/licensing. The `main` branch carries the Language Packs manager and a Russian dictionary checked against all 1,377 source-catalog entries; the CI workflow prevents missing entries or Android/Desktop terminology drift from silently returning. Layout and translation quality still require human review.
 
 **Upstream project:** [artcraft-android/procraft](https://github.com/artcraft-android/procraft). The original upstream overview and screenshots continue below.
 

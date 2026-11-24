@@ -46,7 +46,7 @@ private const val MAX_PACK_BYTES = 5 * 1024 * 1024
 private const val MAX_PACK_STRINGS = 20_000
 private const val MAX_PACK_JSON_DEPTH = 32
 private const val MAX_TEMPLATE_STRINGS = 128
-private const val PACK_CATALOG_VERSION = "procraft-ui-source-2"
+private const val PACK_CATALOG_VERSION = "procraft-ui-source-3"
 private const val PACK_APP_VERSION = "0.0.7-beta"
 
 private val PackInk = Color(0xFFFFFFFF)

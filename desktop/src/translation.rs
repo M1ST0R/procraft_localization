@@ -1604,6 +1604,8 @@ mod tests {
             ("Licenses", "Лицензии"),
             ("Language packs", "Языковые пакеты"),
             ("Maximum Speed Distance", "Порог скорости кисти"),
+            ("Soft Airbrush", "Мягкий аэрограф"),
+            ("Pencils", "Карандаши"),
             ("Cancel", "Отмена"),
             ("Import", "Импортировать"),
             ("Basics", "Основные"),

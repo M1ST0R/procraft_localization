@@ -60,7 +60,7 @@ class LanguagePacksTest {
     @Test
     fun acceptsLongSourceKeysUsedByTheFullCatalog() {
         val key = "A".repeat(175)
-        val raw = """{"format_version":1,"id":"ru.community.demo","locale":"ru-RU","name":"Русский — Community Demo","author":"ProCraft Community","app_version":"0.0.7-beta","catalog_version":"procraft-ui-source-2","base_locale":"en","strings":{"$key":"Перевод"}}""
+        val raw = "{\"format_version\":1,\"id\":\"ru.community.demo\",\"locale\":\"ru-RU\",\"name\":\"Русский — Community Demo\",\"author\":\"ProCraft Community\",\"app_version\":\"0.0.7-beta\",\"catalog_version\":\"procraft-ui-source-3\",\"base_locale\":\"en\",\"strings\":{\"$key\":\"Перевод\"}}"
 
         val decoded = LanguagePacks.decode(raw)
         assertEquals("Перевод", decoded.strings[key])

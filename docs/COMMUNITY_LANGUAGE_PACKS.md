@@ -3,7 +3,7 @@
 **Edition:** `main`  
 **Platforms:** Android, Windows and Linux Desktop  
 **Pack format:** `.procraft-lang`, JSON format v1  
-**Catalog revision:** `procraft-ui-source-2`
+**Catalog revision:** `procraft-ui-source-3`
 
 ## What the feature does
 
@@ -34,12 +34,12 @@ A custom pack does not inherit built-in Russian. Empty or missing entries displa
 
 The file stores exact English source UI strings as keys and translated values as strings. Capitalization, punctuation and spaces are significant. A wording change upstream may cause an old entry to stop matching; format v1 does not use stable message IDs yet.
 
-The source catalog currently contains **1,374 entries**. Both apps ship the same catalog:
+The source catalog currently contains **1,377 entries**. Both apps ship the same catalog:
 
 - `assets/localization/ui-catalog.json`
 - `android/app/src/main/assets/localization/ui-catalog.json`
 
-The files must remain identical. Catalog revision `procraft-ui-source-2` is metadata; it is not the serialized format version. Do not change `format_version` unless the file structure or validation contract changes.
+The files must remain identical. Catalog revision `procraft-ui-source-3` is metadata; it is not the serialized format version. Do not change `format_version` unless the file structure or validation contract changes.
 
 ## Validation and limits
 
@@ -65,7 +65,7 @@ The JSON Schema is in [`schemas/procraft-language-pack.schema.json`](../schemas/
 
 ## Sample pack
 
-[`examples/ru-community.procraft-lang`](../examples/ru-community.procraft-lang) is a complete Russian sample containing all 1,374 catalog entries. Inspect the [readable JSON preview](../examples/ru-community-preview.json) on GitHub before importing it.
+[`examples/ru-community.procraft-lang`](../examples/ru-community.procraft-lang) is a complete Russian sample containing all 1,377 catalog entries. Inspect the [readable JSON preview](../examples/ru-community-preview.json) on GitHub before importing it.
 
 ## Related documentation
 
