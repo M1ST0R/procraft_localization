@@ -137,23 +137,25 @@ private fun SettingsScreen(prefs: android.content.SharedPreferences, onDone: () 
     var licences by remember { mutableStateOf(false) }
     var languagePacks by remember { mutableStateOf(false) }
     if (licences) return Licences { licences = false }
-    if (languagePacks) return LanguagePacksPage { languagePacks = false }
+    if (BuildConfig.LANGUAGE_PACKS_ENABLED && languagePacks) return LanguagePacksPage { languagePacks = false }
     Box(Modifier.fillMaxSize().background(Back).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("ProCraft", color = Ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text("Done", color = Blue, fontSize = 17.sp, modifier = Modifier.clickable(onClick = onDone).padding(8.dp))
             }
-            Row(
-                Modifier.fillMaxWidth().padding(top = 18.dp).clip(RoundedCornerShape(12.dp)).background(Group)
-                    .clickable { languagePacks = true }.padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text("Language packs", color = Ink, fontSize = 17.sp)
-                    Text("Create, edit, import and export translations", color = Dim, fontSize = 13.sp)
+            if (BuildConfig.LANGUAGE_PACKS_ENABLED) {
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 18.dp).clip(RoundedCornerShape(12.dp)).background(Group)
+                        .clickable { languagePacks = true }.padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Language packs", color = Ink, fontSize = 17.sp)
+                        Text("Create, edit, import and export translations", color = Dim, fontSize = 13.sp)
+                    }
+                    Text("›", color = Dim, fontSize = 20.sp)
                 }
-                Text("›", color = Dim, fontSize = 20.sp)
             }
             for ((heading, rows) in Groups) {
                 Text(heading.uppercase(), color = Dim, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 6.dp))

@@ -34,6 +34,7 @@ mod layer_choice;
 mod layers;
 mod library;
 mod licences;
+#[cfg(feature = "language-packs")]
 mod language_packs;
 mod lighting;
 mod liquify;

@@ -2,6 +2,8 @@
 resolver = "3"
 members = ["crates/engine", "crates/gpu", "crates/core", "android/bindgen", "desktop"]
 
+# Edition build profiles: Lang Pack Demo includes the manager; Russian Edition excludes it.
+
 [workspace.package]
 version = "0.0.1"
 edition = "2024"

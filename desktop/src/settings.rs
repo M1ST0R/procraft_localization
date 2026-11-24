@@ -153,6 +153,7 @@ pub enum Said {
     /// A setting changed (kept already).
     Changed,
     Licences,
+    #[cfg(feature = "language-packs")]
     LanguagePacks,
     Done,
 }
@@ -224,6 +225,7 @@ pub fn show(ctx: &egui::Context, prefs: &mut Prefs) -> Option<Said> {
                         y += h;
                     }
                 }
+                #[cfg(feature = "language-packs")]
                 // Community language packs: create, edit, import and export translations.
                 ui.add_space(24.0);
                 let (pack_row, pack_response) = ui.allocate_exact_size(vec2(width, 49.0), Sense::click());

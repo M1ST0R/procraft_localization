@@ -49,7 +49,9 @@ val appVersionCode: Int = run {
 // but it can't update a published release; or, with -Pprocraft.unsigned=true, not signed at all.
 val releaseKeystore: String? = providers.environmentVariable("PROCRAFT_KEYSTORE").orNull
 val unsignedRelease: Boolean = providers.gradleProperty("procraft.unsigned").orNull == "true"
-val demoBuild: Boolean = providers.gradleProperty("procraft.demoBuild").orNull == "true"
+val edition: String = providers.gradleProperty("procraft.edition").getOrElse("langpack")
+require(edition in setOf("langpack", "ru")) { "procraft.edition must be langpack or ru" }
+val languagePacksEnabled: Boolean = edition == "langpack"
 
 /** rustup's `cargo` (Android Studio may not see rustup's PATH), else `cargo` from PATH; `CARGO` overrides. */
 val cargoExecutable: String = run {
@@ -168,7 +170,8 @@ android {
         release {
             // The demo is debug-signed and therefore gets its own ID; it can coexist with
             // an already installed release-signed Russian community build.
-            applicationIdSuffix = if (demoBuild) ".ru.demo" else ".ru"
+            applicationIdSuffix = if (languagePacksEnabled) ".ru.demo" else ".ru"
+            buildConfigField("Boolean", "LANGUAGE_PACKS_ENABLED", languagePacksEnabled.toString())
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -186,6 +189,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

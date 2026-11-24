@@ -229,6 +229,7 @@ pub struct Interface {
     /// Advanced settings' page is up.
     settings: bool,
     /// The in-app community translation editor is open.
+    #[cfg(feature = "language-packs")]
     language_packs: bool,
     /// The single touch gestures companion, with Advanced settings' switch on.
     companion: crate::companion::Companion,
@@ -327,6 +328,7 @@ impl Interface {
             time_lapse: crate::timelapse::TimeLapseUi::default(),
             studio: crate::studio::Studio::default(),
             settings: false,
+            #[cfg(feature = "language-packs")]
             language_packs: false,
             named: None,
             model: false,
@@ -1071,12 +1073,14 @@ impl Interface {
                     }
                 }
                 Some(Said::Licences) => self.licences = true,
+                #[cfg(feature = "language-packs")]
                 Some(Said::LanguagePacks) => { self.language_packs = true; crate::language_packs::open(); }
-                Some(Said::Done) => self.settings = false,
+                Some(Said::Done => self.settings = false,
                 None => {}
             }
         }
         // Draw the manager after the settings page so its native window remains on top.
+        #[cfg(feature = "language-packs")]
         if self.language_packs {
             crate::language_packs::show(ctx);
         }

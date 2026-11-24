@@ -45,7 +45,9 @@ has() { case " $FORMATS " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 echo "==> ProCraft $VERSION for Linux $ARCH ($FORMATS)"
 
 if [ "$SKIP_BUILD" = 0 ]; then
-  (cd "$ROOT" && cargo build --release --locked -p procraft-desktop)
+  CARGO_EDITION_ARGS=()
+  if [ "$EDITION" = "langpack" ]; then CARGO_EDITION_ARGS=(--features language-packs); else CARGO_EDITION_ARGS=(--no-default-features); fi
+  (cd "$ROOT" && cargo build --release --locked -p procraft-desktop "${CARGO_EDITION_ARGS[@]}")
 fi
 
 # ---- the tree every format holds -----------------------------------------------------------------

@@ -1423,7 +1423,7 @@ private val trackedTime = Regex("""^([0-9]+)h ([0-9]+)m$""")
 private val layerSetCount = Regex("""^([0-9]+) of ([0-9]+)$""")
 
 internal fun localizeUiText(source: String): String {
-    LanguagePacks.override(source)?.let { return it }
+    if (io.github.artcraftandroid.procraft.BuildConfig.LANGUAGE_PACKS_ENABLED) LanguagePacks.override(source)?.let { return it }
     russianUi[source]?.let { return it }
     if (source == source.uppercase()) {
         russianUi.entries.firstOrNull { it.key.uppercase() == source }?.let { return it.value }
