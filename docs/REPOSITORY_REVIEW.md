@@ -37,6 +37,20 @@ A path scan found no tracked backup, temporary, build-output, prototype, cache o
 | Russian docs described old branch/workflow/release state and confused the feature availability | High (documentation correctness) | README, maintenance guide, maintainer message and language-pack note corrected |
 | CI job label implied Clippy/tests while it actually ran Android/Gradle validation | Medium (clarity) | Renamed to Android native build/lint/unit-test job |
 
+
+## Live audit snapshot (2026-11-24)
+
+The repository tree was re-scanned through the GitHub Git Trees API after cleanup:
+
+- `main`: commit `33c53a96438a49fe89bd1ed7ae7b66e2f6e927e7`, 1,077 tree entries / 924 tracked files.
+- `russian`: commit `844c3628810f8d667cdd943e04c36ba0d151a23e`, 1,058 tree entries / 909 tracked files.
+- Branch list: exactly `main` and `russian`; no additional branch remains.
+- Both trees retain exactly the three edition workflows (CI, Android APK, Desktop builds). The one-time cleanup workflow is no longer tracked.
+- Automated filename scan found no tracked backup, temporary, log, cache, bytecode, prototype, or build-output artifacts.
+- The branch-only files on `main` are the language-pack manager, catalog, tests, demo documentation/sample, coverage audit and security review materials. `russian` has no demo-only files from that list.
+
+This is a tree hygiene and repository-structure check, not a line-by-line audit of the upstream ProCraft codebase.
+
 ## Workflow structure
 
 Both branches contain exactly three workflow files:
