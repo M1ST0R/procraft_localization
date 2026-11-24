@@ -1,6 +1,8 @@
-# Russian Edition — build, install and maintenance guide
+# Russian Edition — legacy build and maintenance guide
 
-This document applies to the `russian` branch only.
+> **Archived maintenance path.** This branch is retained temporarily while [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6) consolidates both editions into build profiles. Do not continue feature development or upstream sync on this branch. After the profile PR is validated and merged, remove this branch from GitHub.
+
+This guide describes how to build the legacy Russian snapshot only; it is not the maintenance guide for the consolidated source.
 
 - `russian`: standalone Russian-language UI edition.
 - `main`: Community Language Packs demo (custom pack manager).

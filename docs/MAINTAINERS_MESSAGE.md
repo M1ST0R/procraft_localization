@@ -1,4 +1,6 @@
-# Maintainer discussion — Russian community edition
+# Historical maintainer message — Russian community edition
+
+> This message is preserved as history. The standalone Russian branch is being consolidated into edition profiles in [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6). Do not use this document as the current project roadmap.
 
 Hello ProCraft maintainers,
 

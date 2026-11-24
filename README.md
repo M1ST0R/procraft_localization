@@ -1,11 +1,14 @@
-# ProCraft — Russian Edition
+# ProCraft — Russian Edition (Legacy branch)
 
-This `russian` branch contains the community Russian-language UI for Android, Windows and Linux. It **does not** include the Community Language Packs editor.
+> **Legacy snapshot — do not continue feature development here.** The Russian Edition is being consolidated with Lang Pack Demo into build profiles in [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6). This branch is retained temporarily while profile builds and tests are validated; it will be deleted after consolidation.
 
-| Branch | Edition |
+This branch contains the community Russian-language UI for Android, Windows and Linux. It does not include the Community Language Packs editor.
+
+| Source | Edition / status |
 |---|---|
-| [`russian`](https://github.com/M1ST0R/procraft_localization/tree/russian) | **Russian Edition** — Russian UI only |
-| [`main`](https://github.com/M1ST0R/procraft_localization/tree/main) | **Lang Pack Demo** — local community translation editor |
+| [main](https://github.com/M1ST0R/procraft_localization/tree/main) | Current release source: Lang Pack Demo |
+| [PR #6 / edition-profiles](https://github.com/M1ST0R/procraft_localization/pull/6) | Consolidation candidate: both editions from one source |
+| russian | Legacy Russian-only snapshot; no further changes planned |
 
 ## Downloads
 
@@ -30,7 +33,7 @@ The Language Packs editor is available only on [`main`](https://github.com/M1ST0
 - Russian text is applied at Android Compose and Desktop egui text-rendering boundaries.
 - Untranslated labels, plugin-provided strings and user content can remain in English.
 - Report missing text with the exact label, screen/menu, screenshot and device/window dimensions.
-- To update the Russian branch with upstream changes, follow [the maintenance guide](docs/UPSTREAM_AND_ANDROID_BUILDS.md).
+- This branch is frozen during consolidation. Do not update it independently; track [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6) and the main branch after it merges.
 
 **Upstream project:** [artcraft-android/procraft](https://github.com/artcraft-android/procraft). The upstream overview, screenshots and build instructions continue below.
 
@@ -196,7 +199,7 @@ Build time dependencies:
 | `crates/core` | what both apps share above the renderer: the canvas session, every touch and gesture, the tools' state (adjustments, transform, selection, crop, Recolor) and which of them a button ends, the gallery, presets, gradients, time-lapse, the brush library's files, the layer menu, exports and their file names, and keyboard shortcuts; with the Android app's UniFFI bindings |
 | `android` | the Android app (Gradle) |
 | `desktop` | the desktop app (egui) for Windows and Linux |
-| `packaging` | the desktop app's Windows installer and Linux packages, as the release workflow builds them |
+| `packaging` | the desktop app's Windows installer and Linux packages, as the Desktop builds workflow builds them |
 
 *Builds are only tested on Windows 11.*
 
