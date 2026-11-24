@@ -2,7 +2,9 @@
 resolver = "3"
 members = ["crates/engine", "crates/gpu", "crates/core", "android/bindgen", "desktop"]
 
-# Edition build profiles: Lang Pack Demo includes the manager; Russian Edition excludes it.
+[workspace.metadata.editions]
+langpack = "cargo build --features language-packs"
+russian = "cargo build --no-default-features"
 
 [workspace.package]
 version = "0.0.1"
