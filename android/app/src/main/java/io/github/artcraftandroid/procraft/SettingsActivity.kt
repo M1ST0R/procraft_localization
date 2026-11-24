@@ -60,7 +60,7 @@ import io.github.artcraftandroid.procraft.ui.LanguagePacksPage
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        io.github.artcraftandroid.procraft.ui.LanguagePacks.load(this)
+        if (BuildConfig.LANGUAGE_PACKS_ENABLED) io.github.artcraftandroid.procraft.ui.LanguagePacks.load(this)
         val prefs = getSharedPreferences("interface", Context.MODE_PRIVATE)
         val plugins = keptPlugins(this, prefs)
         Pc.accentGiven = Pc.accentOf(plugins)

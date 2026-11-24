@@ -1402,7 +1402,9 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
 /// These are deliberately shorter than the full translations so they fit without touching.
 pub fn tab_label<'a>(source: &'a str) -> Cow<'a, str> {
     #[cfg(feature = "language-packs")]
-    if let Some(translated) = crate::language_packs::translate_override(source) { return translated;}
+    if let Some(translated) = crate::language_packs::translate_override(source) {
+        return translated;
+    }
     match source {
         "Add" => Cow::Borrowed("Добавить"),
         "Canvas" => Cow::Borrowed("Холст"),
