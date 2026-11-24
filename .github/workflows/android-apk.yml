@@ -105,6 +105,12 @@ jobs:
           test -n "$APK"
           APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
           "$APKSIGNER" verify --verbose "$APK"
+          AAPT="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)aapt"
+          EXPECTED_PACKAGE="io.github.artcraftandroid.procraft.ru.demo"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='$EXPECTED_PACKAGE'" >/dev/null || {
+            echo "Unexpected APK package ID; expected $EXPECTED_PACKAGE" >&2
+            exit 1
+          }
           sha256sum "$APK" | tee dist/SHA256SUMS.txt
 
       - name: Upload installable APK
