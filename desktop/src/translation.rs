@@ -1416,14 +1416,6 @@ pub fn tab_label<'a>(source: &'a str) -> Cow<'a, str> {
     }
 }
 
-fn translate_lowercase_heading(source: &str) -> Option<&'static str> {
-    Some(match source {
-        "accessibility" => "СПЕЦИАЛЬНЫЕ ВОЗМОЖНОСТИ",
-        "drag and drop export" => "ЭКСПОРТ ПЕРЕТАСКИВАНИЕМ",
-        _ => return None,
-    })
-}
-
 fn translate_dynamic<'a>(source: &'a str) -> Cow<'a, str> {
     if let Some(rest) = source.strip_prefix("Share ") {
         return Cow::Owned(format!("Поделиться {}", translate(rest).as_ref()));
