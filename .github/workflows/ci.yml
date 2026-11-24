@@ -49,7 +49,12 @@ jobs:
         shell: bash
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+            base="${{ github.event.pull_request.base.sha }}"
+            git fetch --no-tags --depth=1 origin "$base"
+            git diff --check "$base" HEAD
+          elif [ "$GITHUB_REF" = "refs/heads/edition-profiles" ]; then
+            git fetch --no-tags --depth=1 origin main
+            git diff --check origin/main HEAD
           else
             git diff --check HEAD^
           fi

@@ -79,8 +79,11 @@ Write-Output "ProCraft $Version for Windows $Arch"
 if (-not $SkipBuild) {
   # the C runtime linked in; only for this target, so build scripts and proc-macros are as ever
   Set-Item -Path ('env:CARGO_TARGET_' + ($Target.ToUpper() -replace '-', '_') + '_RUSTFLAGS') -Value '-C target-feature=+crt-static'
-  $CargoEditionArgs = if ($Edition -eq 'langpack') { @('--features', 'language-packs') } else { @('--no-default-features') }
-  Invoke-Native 'cargo build' { cargo build --release --locked -p procraft-desktop --target $Target @CargoEditionArgs }
+  if ($Edition -eq 'langpack') {
+    Invoke-Native 'cargo build' { cargo build --release --locked -p procraft-desktop --target $Target --features language-packs }
+  } else {
+    Invoke-Native 'cargo build' { cargo build --release --locked -p procraft-desktop --target $Target --no-default-features }
+  }
 }
 $Exe = Join-Path $TargetDir "$Target\release\procraft.exe"
 
