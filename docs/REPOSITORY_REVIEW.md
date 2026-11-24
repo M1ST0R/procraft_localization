@@ -36,13 +36,14 @@ A path scan found no tracked backup, temporary, build-output, prototype, cache o
 | Russian Clippy baseline failed on duplicate match arms, collapsible ifs and unnecessary dereference | Medium (CI reliability) | Translation/gallery cleanup completed; strict Desktop and Android-target Clippy checks added to Russian CI; current run pending |
 | Russian docs described old branch/workflow/release state and confused the feature availability | High (documentation correctness) | README, maintenance guide, maintainer message and language-pack note corrected |
 | CI job label implied Clippy/tests while it actually ran Android/Gradle validation | Medium (clarity) | Renamed to Android native build/lint/unit-test job |
+| APK package identity was not checked in workflow validation | Medium (install/update safety) | Main APK verifies `.ru.demo`; Russian workflow verifies `.ru` and `.ru.demo` APKs when both are produced |
 
 
 ## Live audit snapshot (2026-11-24)
 
 The repository tree was re-scanned through the GitHub Git Trees API after cleanup:
 
-- `main`: commit `33c53a96438a49fe89bd1ed7ae7b66e2f6e927e7`, 1,077 tree entries / 924 tracked files.
+- `main`: commit `b1d05ac4046f2dc28b053c12fd3d3f3dc1480dac`, 1,077 tree entries / 924 tracked files.
 - `russian`: commit `844c3628810f8d667cdd943e04c36ba0d151a23e`, 1,058 tree entries / 909 tracked files.
 - Branch list: exactly `main` and `russian`; no additional branch remains.
 - Both trees retain exactly the three edition workflows (CI, Android APK, Desktop builds). The one-time cleanup workflow is no longer tracked.
@@ -59,7 +60,7 @@ Both branches contain exactly three workflow files:
 - `.github/workflows/android-apk.yml`
 - `.github/workflows/desktop-build.yml`
 
-The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. Push and PR triggers are branch-specific (`main` checks main; `russian` checks russian). The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing. Main CI now runs strict workspace Clippy; Russian CI runs strict desktop and Android-target Clippy.
+The workflows request read-only `contents` permissions. Checkout steps disable credential persistence. Third-party Actions are pinned by full commit SHA. Push and PR triggers are branch-specific (`main` checks main; `russian` checks russian). The Android signing secrets are restricted to the trusted owner-triggered signing path; other APK builds use debug signing. Main CI runs strict workspace Clippy and source/config whitespace checks; Russian CI runs strict desktop and Android-target Clippy. APK workflows also assert the expected application ID before uploading.
 
 ## Repository governance
 
@@ -87,4 +88,4 @@ The implementation is present in the two branches. Do not mark the fix fully ver
 
 The published [ProCraft Community 0.0.4 release](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4) is the `main` Lang Pack Demo build based on upstream `v0.0.7-beta`. It contains six platform binaries (Android ARM64, Windows x64 MSI + portable ZIP, Linux x86_64 AppImage + DEB + tar.gz) plus `SHA256SUMS.txt`. Release API metadata exposes SHA-256 digests, but the manifest contents could not be independently retrieved for cross-checking. The release is not marked immutable. It is not a Russian Edition release; `russian` builds are distributed through their own Actions artifacts.
 
-Latest verification after the new package-ID/Clippy checks were added is still running: main CI and APK validation are pending/in progress; Russian CI, Android and Desktop matrices are pending. Previously successful runs are linked from the live [main Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Amain) and [russian Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Arussian) pages, but older artifacts predate these workflow changes. A successful run proves only the checks and package steps that actually ran. It does not replace physical-device smoke tests or side-by-side installation/upgrade/uninstall checks on Windows and Linux. Confirm the latest run for the branch and commit before publishing new workflow artifacts.
+Latest verification after package-ID/Clippy checks were added is in progress: main CI run `45350226319` (commit `b1d05ac`) and APK run `45349626213`; Russian CI run `45349759415`, Android run `45349759521` and Desktop run `45349759403` (commit `844c362`) are still running. Previously successful runs are linked from the live [main Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Amain) and [russian Actions](https://github.com/M1ST0R/procraft_localization/actions?query=branch%3Arussian) pages, but older artifacts predate these workflow changes. A successful run proves only the checks and package steps that actually ran. It does not replace physical-device smoke tests or side-by-side installation/upgrade/uninstall checks on Windows and Linux. Confirm the latest run for the branch and commit before publishing new workflow artifacts.
