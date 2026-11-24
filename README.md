@@ -1,18 +1,17 @@
-# ProCraft — Russian Edition (Legacy branch)
+# ProCraft — Russian Translation Edition
 
-> **Legacy snapshot — do not continue feature development here.** The Russian Edition is being consolidated with Lang Pack Demo into build profiles in [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6). This branch is retained temporarily while profile builds and tests are validated; it will be deleted after consolidation.
+This is one of the repository's **two maintained edition branches**. It contains the standalone Russian-language edition for Android, Windows and Linux.
 
-This branch contains the community Russian-language UI for Android, Windows and Linux. It does not include the Community Language Packs editor.
+## Branch layout
 
-| Source | Edition / status |
-|---|---|
-| [main](https://github.com/M1ST0R/procraft_localization/tree/main) | Current release source: Lang Pack Demo |
-| [PR #6 / edition-profiles](https://github.com/M1ST0R/procraft_localization/pull/6) | Consolidation candidate: both editions from one source |
-| russian | Legacy Russian-only snapshot; no further changes planned |
+- [`russian`](https://github.com/M1ST0R/procraft_localization/tree/russian) — Russian UI edition with the built-in translation. The Community Language Packs demo/editor is not part of this edition.
+- [`main`](https://github.com/M1ST0R/procraft_localization/tree/main) — Community Language Packs demo, including the built-in Russian language and the in-app editor for custom packs.
+
+Keep these editions separate. Apply Russian-translation and Russian-build fixes to `russian`; keep the custom language-pack demo and editor on `main`. Do not merge the demo-only editor into this branch or create another permanent edition branch.
 
 ## Downloads
 
-Artifacts are built by GitHub Actions and retained for **30 days**. Use the newest successful workflow run. Community builds may be debug-signed; they are not official upstream releases.
+Artifacts are built by GitHub Actions and retained for **30 days**. Use the newest successful workflow run. Community builds may be debug-signed; they are not official upstream releases. The published [release 0.0.4](https://github.com/M1ST0R/procraft_localization/releases/tag/0.0.4) belongs to the `main` Lang Pack Demo; it is not a Russian Edition package.
 
 - **Russian APK (Android ARM64):** [Android APK workflow for russian](https://github.com/M1ST0R/procraft_localization/actions/workflows/android-apk.yml?query=branch%3Arussian)
 - **Windows portable ZIP / MSI:** [Desktop workflow for russian](https://github.com/M1ST0R/procraft_localization/actions/workflows/desktop-build.yml?query=branch%3Arussian). Download the `ProCraft-RU-Windows-x64` artifact and extract the portable ZIP.
@@ -33,7 +32,7 @@ The Language Packs editor is available only on [`main`](https://github.com/M1ST0
 - Russian text is applied at Android Compose and Desktop egui text-rendering boundaries.
 - Untranslated labels, plugin-provided strings and user content can remain in English.
 - Report missing text with the exact label, screen/menu, screenshot and device/window dimensions.
-- This branch is frozen during consolidation. Do not update it independently; track [PR #6](https://github.com/M1ST0R/procraft_localization/pull/6) and the main branch after it merges.
+- Maintain this branch independently for the built-in Russian translation and its platform-specific packaging. Keep the Community Language Packs manager and other demo-only features on `main`.
 
 **Upstream project:** [artcraft-android/procraft](https://github.com/artcraft-android/procraft). The upstream overview, screenshots and build instructions continue below.
 
@@ -218,7 +217,3 @@ Build time dependencies:
 
 <br>
 
-## Misc info for myself
-
-Try to use [semantic commit](https://kapeli.com/cheat_sheets/Semantic_Commits.docset/Contents/Resources/Documents/index)
-messages. Use `feat:` / `fix:` / `chore:` / `docs:` / etc.
