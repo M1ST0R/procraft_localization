@@ -66,4 +66,21 @@ class LanguagePacksTest {
         assertEquals("Перевод", decoded.strings[key])
     }
 
+
+    @Test
+    fun acceptsNamedPlaceholdersInJapaneseTranslations() {
+        val raw = """{"format_version":1,"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Community","app_version":"0.0.7-beta","catalog_version":"procraft-ui-source-3","base_locale":"en","strings":{"{count} artworks":"作品数: {count}"}}"""
+
+        val decoded = LanguagePacks.decode(raw)
+        assertEquals("作品数: {count}", decoded.strings["{count} artworks"])
+    }
+
+    @Test
+    fun rejectsJapaneseTranslationsThatDropNamedPlaceholders() {
+        val raw = """{"format_version":1,"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Community","app_version":"0.0.7-beta","catalog_version":"procraft-ui-source-3","base_locale":"en","strings":{"{count} artworks":"作品数"}}"""
+
+        val error = runCatching { LanguagePacks.decode(raw) }.exceptionOrNull()
+        assertTrue(error?.message?.contains("Placeholder mismatch") == true)
+    }
+
 }
