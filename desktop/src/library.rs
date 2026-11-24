@@ -644,7 +644,8 @@ impl Library {
                 let painter = ui.painter_at(lists);
                 painter.rect_filled(at, 12, argb(pc::ACCENT).gamma_multiply(0.9));
                 self.preview_in(&painter, (b.set, b.index), at, true);
-                let name = one_line(ui, &b.name, 14.0, Weight::SemiBold, Color32::WHITE, at.width() - 28.0);
+                let translated_name = crate::translation::translate(&b.name);
+                let name = one_line(ui, translated_name.as_ref(), 14.0, Weight::SemiBold, Color32::WHITE, at.width() - 28.0);
                 painter.galley(at.min + vec2(18.0, 11.0), name, Color32::WHITE);
                 ctx.request_repaint();
             }
@@ -663,7 +664,8 @@ impl Library {
                 let icon = icons::SET_ICONS.get(set.icon as usize).unwrap_or(&icons::BRUSH_SET);
                 look.icon(ui, icon, pos2(at.left() + 24.0, at.center().y), 40.0, Color32::WHITE);
                 let left = at.left() + 4.0 + 40.0 + 1.0;
-                let name = one_line(ui, &set.name, 14.0, Weight::SemiBold, Color32::WHITE, at.right() - 8.0 - left);
+                let translated_name = crate::translation::translate(&set.name);
+                let name = one_line(ui, translated_name.as_ref(), 14.0, Weight::SemiBold, Color32::WHITE, at.right() - 8.0 - left);
                 painter.galley(pos2(left, at.center().y - name.size().y / 2.0), name, Color32::WHITE);
                 ctx.request_repaint();
             }
@@ -1368,7 +1370,8 @@ impl Library {
             return (response, rect);
         }
         let mut job = LayoutJob::default();
-        job.append(&set.name, 0.0, format(14.0, Weight::SemiBold, ink));
+        let translated_name = crate::translation::translate(&set.name);
+        job.append(translated_name.as_ref(), 0.0, format(14.0, Weight::SemiBold, ink));
         job.wrap = TextWrapping {
             max_width: rect.right() - 8.0 - left,
             max_rows: 2,
@@ -1446,7 +1449,8 @@ impl Library {
             let field = Rect::from_min_size(name_at, vec2(at.width() - 18.0 - 12.0, 18.0));
             self.brush_name_field(ui, session, field, ink);
         } else {
-            let galley = one_line(ui, &b.name, 14.0, Weight::SemiBold, ink, at.width() - 18.0 - 10.0);
+            let translated_name = crate::translation::translate(&b.name);
+            let galley = one_line(ui, translated_name.as_ref(), 14.0, Weight::SemiBold, ink, at.width() - 18.0 - 10.0);
             if shaded {
                 let pill = Rect::from_min_size(name_at, galley.size()).expand2(vec2(6.0, 2.0));
                 painter.rect_filled(pill, pill.height() / 2.0, argb(NAME_PILL).gamma_multiply(alpha));
@@ -1644,7 +1648,8 @@ impl Library {
                             painter.rect_filled(tile, 12, if selected { argb(pc::ACCENT) } else { argb(RESULT_FILL) });
                             let shaded = self.preview_in(&painter, key, tile, selected);
                             let ink = if selected { Color32::WHITE } else { argb(PANEL_TITLE) };
-                            let galley = one_line(ui, &b.name, 14.0, Weight::SemiBold, ink, tile.width() - 14.0 - 10.0);
+                            let translated_name = crate::translation::translate(&b.name);
+                            let galley = one_line(ui, translated_name.as_ref(), 14.0, Weight::SemiBold, ink, tile.width() - 14.0 - 10.0);
                             let name_at = tile.min + vec2(14.0, 11.0);
                             if shaded {
                                 let pill = Rect::from_min_size(name_at, galley.size()).expand2(vec2(6.0, 2.0));
