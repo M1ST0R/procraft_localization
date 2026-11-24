@@ -1078,7 +1078,7 @@ impl Interface {
                     self.language_packs = true;
                     crate::language_packs::open();
                 }
-                Some(Said::Done => self.settings = false,
+                Some(Said::Done) => self.settings = false,
                 None => {}
             }
         }
