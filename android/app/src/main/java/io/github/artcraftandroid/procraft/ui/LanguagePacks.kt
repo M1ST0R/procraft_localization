@@ -771,8 +771,11 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
             color = PackDim,
             fontSize = 13.sp,
         )
+        Button(
+            onClick = { showHub = true },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Browse Community Hub") }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { showHub = true }) { Text("Community Hub") }
             Button(onClick = { createDialog = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
         }
