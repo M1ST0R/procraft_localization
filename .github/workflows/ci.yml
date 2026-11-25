@@ -32,6 +32,8 @@ jobs:
           persist-credentials: false
       - name: Validate dictionaries and sample pack
         run: python3 tools/check_translation_coverage.py
+      - name: Validate Community Translation Hub index and packages
+        run: python3 tools/check_community_hub.py
 
 
   rust-quality:
