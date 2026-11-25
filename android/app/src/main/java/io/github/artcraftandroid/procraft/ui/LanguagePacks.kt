@@ -679,12 +679,25 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
     val context = LocalContext.current
     var packs by remember { mutableStateOf(LanguagePacks.installed(context)) }
     var selected by remember { mutableStateOf(LanguagePacks.currentId()) }
+    var showHub by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<TranslationPack?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var createDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf("") }
     var newLocale by remember { mutableStateOf("") }
     var newAuthor by remember { mutableStateOf("") }
+
+    if (showHub) {
+        CommunityHubPage(
+            installedPacks = packs,
+            onBack = { showHub = false },
+            onInstalled = { pack ->
+                packs = LanguagePacks.installed(context)
+                selected = pack.id
+            },
+        )
+        return
+    }
 
     val importPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
@@ -759,6 +772,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
             fontSize = 13.sp,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { showHub = true }) { Text("Community Hub") }
             Button(onClick = { createDialog = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
         }
@@ -888,6 +902,171 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
             },
             dismissButton = {
                 Button(onClick = { createDialog = false }) { Text("Cancel") }
+            },
+        )
+    }
+}
+
+
+@Composable
+private fun CommunityHubPage(
+    installedPacks: List<TranslationPack>,
+    onBack: () -> Unit,
+    onInstalled: (TranslationPack) -> Unit,
+) {
+    val context = LocalContext.current
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    var entries by remember { mutableStateOf<List<CommunityTranslation>>(emptyList()) }
+    var loading by remember { mutableStateOf(false) }
+    var installingId by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var pendingReplacement by remember { mutableStateOf<CommunityTranslation?>(null) }
+
+    fun refreshCatalog() {
+        if (loading) return
+        loading = true
+        error = null
+        CommunityHubExecutor.execute {
+            val result = runCatching { CommunityTranslationHub.fetchCatalog() }
+            mainHandler.post {
+                result.onSuccess { entries = it }
+                    .onFailure { error = it.message ?: "Could not load the community catalogue." }
+                loading = false
+            }
+        }
+    }
+
+    fun install(entry: CommunityTranslation) {
+        if (installingId != null) return
+        installingId = entry.id
+        error = null
+        CommunityHubExecutor.execute {
+            val result = runCatching { CommunityTranslationHub.download(entry) }
+            mainHandler.post {
+                result.onSuccess { pack ->
+                    runCatching {
+                        LanguagePacks.save(context, pack)
+                        LanguagePacks.activate(context, pack.id)
+                    }.onSuccess {
+                        onInstalled(pack)
+                    }.onFailure {
+                        error = it.message ?: "Could not install this translation."
+                    }
+                }.onFailure {
+                    error = it.message ?: "Could not download this translation."
+                }
+                installingId = null
+            }
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) { refreshCatalog() }
+
+    Column(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF000000)).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "‹ Language packs",
+                color = PackBlue,
+                fontSize = 16.sp,
+                modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
+            )
+            Text(
+                "Community Hub",
+                color = PackInk,
+                fontSize = 23.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Button(onClick = { refreshCatalog() }, enabled = !loading) {
+                Text(if (loading) "Loading…" else "Refresh")
+            }
+        }
+        Text(
+            "Reviewed community translations. Packages are checked before installation.",
+            color = PackDim,
+            fontSize = 13.sp,
+        )
+        if (loading && entries.isEmpty()) {
+            Text("Connecting to the community catalogue…", color = PackDim, fontSize = 14.sp)
+        } else if (entries.isEmpty()) {
+            Text(
+                "No community translations have been published yet. New languages will appear here after review.",
+                color = PackDim,
+                fontSize = 14.sp,
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.weight(1f, fill = true),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(entries, key = { it.id }) { entry ->
+                val isInstalled = installedPacks.any { it.id == entry.id }
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(Color(0xFF1C1C1E), RoundedCornerShape(12.dp))
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            entry.name,
+                            color = PackInk,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(entry.locale, color = PackBlue, fontSize = 12.sp)
+                    }
+                    Text("by " + entry.author + " · v" + entry.version, color = PackDim, fontSize = 12.sp)
+                    Text(entry.description, color = PackInk, fontSize = 14.sp)
+                    Text(
+                        entry.stringsCount.toString() + " translated strings · Updated " + entry.updatedAt,
+                        color = PackDim,
+                        fontSize = 12.sp,
+                    )
+                    Button(
+                        onClick = {
+                            if (isInstalled) pendingReplacement = entry else install(entry)
+                        },
+                        enabled = installingId == null,
+                    ) {
+                        Text(
+                            when {
+                                installingId == entry.id -> "Installing…"
+                                isInstalled -> "Update / reinstall"
+                                else -> "Install"
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        error?.let {
+            AlertDialog(
+                onDismissRequest = { error = null },
+                title = { Text("Community Hub") },
+                text = { Text(it) },
+                confirmButton = { Button(onClick = { error = null }) { Text("OK") } },
+            )
+        }
+    }
+
+    pendingReplacement?.let { entry ->
+        AlertDialog(
+            onDismissRequest = { pendingReplacement = null },
+            title = { Text("Replace installed translation?") },
+            text = { Text("Your local edits to this pack will be overwritten by the reviewed Hub version.") },
+            confirmButton = {
+                Button(onClick = {
+                    pendingReplacement = null
+                    install(entry)
+                }) { Text("Replace") }
+            },
+            dismissButton = {
+                Button(onClick = { pendingReplacement = null }) { Text("Cancel") }
             },
         )
     }
