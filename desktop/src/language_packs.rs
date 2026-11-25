@@ -1032,7 +1032,7 @@ mod tests {
 
     #[test]
     fn community_hub_rejects_downloads_outside_the_official_repository() {
-        let raw = br#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://example.com/ja-jp.procraft-lang","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}"#;
+        let raw = r#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://example.com/ja-jp.procraft-lang","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}"#.as_bytes();
         assert!(parse_hub_catalog(raw).is_err());
     }
 
@@ -1044,7 +1044,7 @@ mod tests {
 
     #[test]
     fn community_hub_requires_a_sha256_digest() {
-        let raw = br#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/ja-jp.procraft-lang","sha256":"not-a-digest"}]}"#;
+        let raw = r#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/ja-jp.procraft-lang","sha256":"not-a-digest"}]}"#.as_bytes();
         assert!(parse_hub_catalog(raw).is_err());
     }
 
