@@ -83,4 +83,25 @@ class LanguagePacksTest {
         assertTrue(error?.message?.contains("Placeholder mismatch") == true)
     }
 
+
+    @Test
+    fun acceptsAnEmptyCommunityHubCatalogue() {
+        val raw = """{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[]}"""
+        assertTrue(CommunityTranslationHub.decodeCatalog(raw).isEmpty())
+    }
+
+    @Test
+    fun rejectsCommunityPacksFromUntrustedHosts() {
+        val raw = """{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://example.com/ja-jp.procraft-lang","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}"""
+        val error = runCatching { CommunityTranslationHub.decodeCatalog(raw) }.exceptionOrNull()
+        assertTrue(error?.message?.contains("unsafe download URL") == true)
+    }
+
+    @Test
+    fun rejectsCommunityCataloguesForDifferentSourceRevisions() {
+        val raw = """{"schema_version":1,"catalog_version":"old-revision","updated_at":"2026-11-25","packs":[]}"""
+        val error = runCatching { CommunityTranslationHub.decodeCatalog(raw) }.exceptionOrNull()
+        assertTrue(error?.message?.contains("different source-string catalogue") == true)
+    }
+
 }
