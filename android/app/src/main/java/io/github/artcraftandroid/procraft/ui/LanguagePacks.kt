@@ -4,6 +4,8 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.AtomicFile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,8 +42,179 @@ import java.io.File
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
+import java.net.HttpURLConnection
+import java.net.URI
+import java.net.URL
+import java.security.MessageDigest
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.Executors
+
+
+private const val COMMUNITY_HUB_INDEX_URL =
+    "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/index.json"
+private const val COMMUNITY_HUB_RAW_PREFIX =
+    "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/"
+private const val MAX_HUB_INDEX_BYTES = 512 * 1024
+
+internal data class CommunityTranslation(
+    val id: String,
+    val locale: String,
+    val name: String,
+    val author: String,
+    val description: String,
+    val version: String,
+    val catalogVersion: String,
+    val stringsCount: Int,
+    val updatedAt: String,
+    val downloadUrl: String,
+    val sha256: String,
+)
+
+private object CommunityTranslationHub {
+    fun fetchCatalog(): List<CommunityTranslation> {
+        val raw = String(fetchBytes(COMMUNITY_HUB_INDEX_URL, MAX_HUB_INDEX_BYTES), Charsets.UTF_8)
+        return decodeCatalog(raw)
+    }
+
+    internal fun decodeCatalog(raw: String): List<CommunityTranslation> {
+        require(raw.toByteArray(Charsets.UTF_8).size <= MAX_HUB_INDEX_BYTES) {
+            "The community catalogue is larger than 512 KB."
+        }
+        val root = JSONObject(raw)
+        require(root.optInt("schema_version", -1) == 1) {
+            "Unsupported community catalogue version."
+        }
+        require(root.optString("catalog_version") == PACK_CATALOG_VERSION) {
+            "The community catalogue targets a different source-string catalogue. Update ProCraft first."
+        }
+        require(Regex("""\d{4}-\d{2}-\d{2}""").matches(root.optString("updated_at"))) {
+            "The community catalogue has an invalid update date."
+        }
+        val array = root.optJSONArray("packs") ?: error("The community catalogue has no packs list.")
+        require(array.length() <= 100) { "The community catalogue contains too many translations." }
+
+        val ids = HashSet<String>()
+        return (0 until array.length()).map { index ->
+            val item = array.optJSONObject(index) ?: error("A community catalogue entry is not an object.")
+            val entry = CommunityTranslation(
+                id = item.getString("id"),
+                locale = item.getString("locale"),
+                name = item.getString("name"),
+                author = item.optString("author"),
+                description = item.getString("description"),
+                version = item.getString("version"),
+                catalogVersion = item.getString("catalog_version"),
+                stringsCount = item.getInt("strings_count"),
+                updatedAt = item.getString("updated_at"),
+                downloadUrl = item.getString("download_url"),
+                sha256 = item.getString("sha256"),
+            )
+            require(PackIdPattern.matches(entry.id) && ids.add(entry.id)) {
+                "The community catalogue contains an invalid or duplicate pack ID."
+            }
+            require(PackLocalePattern.matches(entry.locale) && entry.locale.length <= 35) {
+                "Invalid locale for " + entry.id + "."
+            }
+            require(entry.name.isNotBlank() && entry.name.length <= 80 && entry.author.length <= 120) {
+                "Invalid metadata for " + entry.id + "."
+            }
+            require(entry.description.isNotBlank() && entry.description.length <= 240) {
+                "Invalid description for " + entry.id + "."
+            }
+            require(Regex("""\d+\.\d+\.\d+""").matches(entry.version)) {
+                "Invalid version for " + entry.id + "."
+            }
+            require(entry.catalogVersion == PACK_CATALOG_VERSION) {
+                "Translation " + entry.id + " targets a different source-string catalogue."
+            }
+            require(entry.stringsCount in 1..MAX_PACK_STRINGS) {
+                "Invalid translated-string count for " + entry.id + "."
+            }
+            require(Regex("""\d{4}-\d{2}-\d{2}""").matches(entry.updatedAt)) {
+                "Invalid update date for " + entry.id + "."
+            }
+            validateDownloadUrl(entry.downloadUrl)
+            require(Regex("""[a-f0-9]{64}""").matches(entry.sha256)) {
+                "Invalid SHA-256 digest for " + entry.id + "."
+            }
+            entry
+        }
+    }
+
+    fun download(entry: CommunityTranslation): TranslationPack {
+        validateDownloadUrl(entry.downloadUrl)
+        val bytes = fetchBytes(entry.downloadUrl, MAX_PACK_BYTES)
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+        require(digest == entry.sha256) {
+            "The downloaded translation failed its SHA-256 integrity check."
+        }
+        val pack = LanguagePacks.decode(LanguagePacks.decodeUtf8Strict(bytes))
+        require(
+            pack.id == entry.id &&
+                pack.locale == entry.locale &&
+                pack.name == entry.name &&
+                pack.author == entry.author &&
+                pack.catalogVersion == entry.catalogVersion &&
+                pack.strings.size == entry.stringsCount
+        ) {
+            "The downloaded package metadata does not match the community catalogue."
+        }
+        return pack
+    }
+
+    private fun validateDownloadUrl(value: String) {
+        val uri = URI(value)
+        require(
+            uri.scheme == "https" &&
+                uri.host == "raw.githubusercontent.com" &&
+                uri.userInfo == null &&
+                uri.port == -1 &&
+                uri.query == null &&
+                uri.fragment == null &&
+                value.startsWith(COMMUNITY_HUB_RAW_PREFIX) &&
+                uri.path.endsWith(".procraft-lang")
+        ) {
+            "A community translation contains an unsafe download URL."
+        }
+    }
+
+    private fun fetchBytes(value: String, limit: Int): ByteArray {
+        val connection = URL(value).openConnection() as? HttpURLConnection
+            ?: error("Unsupported network connection.")
+        connection.connectTimeout = 10_000
+        connection.readTimeout = 20_000
+        connection.instanceFollowRedirects = false
+        connection.setRequestProperty("User-Agent", "ProCraft-Translation-Hub/1")
+        connection.setRequestProperty("Accept", "application/json, application/octet-stream")
+        try {
+            require(connection.responseCode == HttpURLConnection.HTTP_OK) {
+                "The community server returned HTTP " + connection.responseCode + "."
+            }
+            val output = ByteArrayOutputStream(minOf(limit, 64 * 1024))
+            connection.inputStream.use { input ->
+                val buffer = ByteArray(8 * 1024)
+                var total = 0
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    if (count == 0) continue
+                    total += count
+                    require(total <= limit) { "The downloaded file is larger than the allowed limit." }
+                    output.write(buffer, 0, count)
+                }
+            }
+            return output.toByteArray()
+        } finally {
+            connection.disconnect()
+        }
+    }
+}
+
+private val CommunityHubExecutor = Executors.newSingleThreadExecutor { runnable ->
+    Thread(runnable, "procraft-community-hub").apply { isDaemon = true }
+}
 
 private const val MAX_PACK_BYTES = 5 * 1024 * 1024
 private const val MAX_PACK_STRINGS = 20_000
