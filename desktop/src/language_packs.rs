@@ -8,8 +8,12 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::io::Read;
+use std::process::Command;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc::{self, Receiver};
 use std::sync::{Arc, OnceLock, RwLock};
+use std::thread;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
@@ -421,6 +425,259 @@ fn empty_pack(name: &str, locale: &str, author: &str) -> Result<LanguagePack, St
     Ok(pack)
 }
 
+
+const HUB_INDEX_URL: &str = "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/index.json";
+const HUB_RAW_PREFIX: &str = "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/";
+const MAX_HUB_INDEX_BYTES: usize = 512 * 1024;
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HubCatalog {
+    schema_version: u32,
+    catalog_version: String,
+    updated_at: String,
+    packs: Vec<HubEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HubEntry {
+    id: String,
+    locale: String,
+    name: String,
+    author: String,
+    description: String,
+    version: String,
+    catalog_version: String,
+    strings_count: usize,
+    updated_at: String,
+    download_url: String,
+    sha256: String,
+}
+
+fn valid_hub_date(value: &str) -> bool {
+    if value.len() != 10 {
+        return false;
+    }
+    let mut parts = value.split('-');
+    let year = parts.next().and_then(|part| part.parse::<u32>().ok());
+    let month = parts.next().and_then(|part| part.parse::<u32>().ok());
+    let day = parts.next().and_then(|part| part.parse::<u32>().ok());
+    year.is_some_and(|year| year >= 2020)
+        && month.is_some_and(|month| (1..=12).contains(&month))
+        && day.is_some_and(|day| (1..=31).contains(&day))
+        && parts.next().is_none()
+}
+
+fn validate_hub_url(url: &str) -> Result<(), String> {
+    if url.len() > 512
+        || !url.starts_with(HUB_RAW_PREFIX)
+        || !url.ends_with(".procraft-lang")
+        || url.contains(['?', '#', '\\'])
+    {
+        return Err("The catalogue contains an unsafe download URL.".to_owned());
+    }
+    Ok(())
+}
+
+fn parse_hub_catalog(raw: &[u8]) -> Result<Vec<HubEntry>, String> {
+    if raw.len() > MAX_HUB_INDEX_BYTES {
+        return Err("The community catalogue is larger than 512 KB.".to_owned());
+    }
+    let catalog: HubCatalog = serde_json::from_slice(raw)
+        .map_err(|error| format!("Invalid community catalogue: {error}"))?;
+    if catalog.schema_version != 1 {
+        return Err("Unsupported community catalogue version.".to_owned());
+    }
+    if catalog.catalog_version != catalog_version() {
+        return Err("The community catalogue targets a different source-string catalogue. Update ProCraft first.".to_owned());
+    }
+    if !valid_hub_date(&catalog.updated_at) {
+        return Err("The community catalogue has an invalid update date.".to_owned());
+    }
+    if catalog.packs.len() > 100 {
+        return Err("The community catalogue contains too many translations.".to_owned());
+    }
+
+    let mut ids = std::collections::HashSet::new();
+    for entry in &catalog.packs {
+        if !valid_id(&entry.id) || !ids.insert(entry.id.as_str()) {
+            return Err("The community catalogue contains an invalid or duplicate pack ID.".to_owned());
+        }
+        if !valid_locale(&entry.locale) || entry.locale.len() > 35 {
+            return Err(format!("Invalid locale for {}.", entry.id));
+        }
+        if entry.name.trim().is_empty() || entry.name.len() > 80 || entry.author.len() > 120 {
+            return Err(format!("Invalid metadata for {}.", entry.id));
+        }
+        if entry.description.trim().is_empty() || entry.description.len() > 240 {
+            return Err(format!("Invalid description for {}.", entry.id));
+        }
+        let mut version_parts = entry.version.split('.');
+        let valid_version = version_parts.clone().count() == 3
+            && version_parts.all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
+        if !valid_version {
+            return Err(format!("Invalid version for {}.", entry.id));
+        }
+        if entry.catalog_version != catalog_version() {
+            return Err(format!("Translation {} targets a different source-string catalogue.", entry.id));
+        }
+        if !(1..=MAX_STRINGS).contains(&entry.strings_count) {
+            return Err(format!("Invalid translated-string count for {}.", entry.id));
+        }
+        if !valid_hub_date(&entry.updated_at) {
+            return Err(format!("Invalid update date for {}.", entry.id));
+        }
+        validate_hub_url(&entry.download_url)?;
+        if entry.sha256.len() != 64
+            || !entry.sha256.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        {
+            return Err(format!("Invalid SHA-256 digest for {}.", entry.id));
+        }
+    }
+    Ok(catalog.packs)
+}
+
+fn fetch_hub_bytes(url: &str, max_bytes: usize) -> Result<Vec<u8>, String> {
+    if url != HUB_INDEX_URL {
+        validate_hub_url(url)?;
+    }
+    let max_filesize = max_bytes.to_string();
+    let output = Command::new("curl")
+        .args([
+            "--fail",
+            "--location",
+            "--silent",
+            "--show-error",
+            "--connect-timeout",
+            "10",
+            "--max-time",
+            "25",
+            "--max-filesize",
+            &max_filesize,
+            "--proto",
+            "=https",
+            "--tlsv1.2",
+            "--user-agent",
+            "ProCraft-Translation-Hub/1",
+            url,
+        ])
+        .output()
+        .map_err(|error| format!("Could not start curl to access the Translation Hub: {error}"))?;
+    if !output.status.success() {
+        let detail = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Could not download from the Translation Hub: {}", detail.trim()));
+    }
+    if output.stdout.len() > max_bytes {
+        return Err("A downloaded Hub file exceeds the allowed size.".to_owned());
+    }
+    Ok(output.stdout)
+}
+
+fn digest_from_command_output(output: &[u8], spaced: bool) -> Option<String> {
+    let text = String::from_utf8_lossy(output);
+    for line in text.lines() {
+        let candidate = if spaced {
+            line.chars().filter(char::is_ascii_hexdigit).collect::<String>()
+        } else {
+            line.split_whitespace().next().unwrap_or_default().to_owned()
+        };
+        if candidate.len() == 64 && candidate.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Some(candidate.to_ascii_lowercase());
+        }
+    }
+    None
+}
+
+fn sha256_file(path: &Path) -> Result<String, String> {
+    #[cfg(windows)]
+    let output = Command::new("certutil")
+        .arg("-hashfile")
+        .arg(path)
+        .arg("SHA256")
+        .output()
+        .map_err(|error| format!("Could not start certutil for SHA-256 verification: {error}"))?;
+    #[cfg(windows)]
+    let digest = digest_from_command_output(&output.stdout, true);
+
+    #[cfg(not(windows))]
+    let digest = {
+        let primary = Command::new("sha256sum").arg(path).output();
+        let primary_digest = primary.ok().filter(|result| result.status.success())
+            .and_then(|result| digest_from_command_output(&result.stdout, false));
+        primary_digest.or_else(|| {
+            Command::new("shasum").arg("-a").arg("256").arg(path).output().ok()
+                .filter(|result| result.status.success())
+                .and_then(|result| digest_from_command_output(&result.stdout, false))
+        })
+    };
+
+    digest.ok_or_else(|| "No supported SHA-256 utility is available (certutil, sha256sum or shasum).".to_owned())
+}
+
+fn verify_hub_pack(entry: &HubEntry) -> Result<LanguagePack, String> {
+    validate_hub_url(&entry.download_url)?;
+    let bytes = fetch_hub_bytes(&entry.download_url, MAX_PACK_BYTES as usize)?;
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)
+        .map_err(|error| format!("System clock error: {error}"))?.as_nanos();
+    let temp_path = std::env::temp_dir().join(format!("procraft-hub-{}-{timestamp}.tmp", std::process::id()));
+    std::fs::write(&temp_path, &bytes).map_err(|error| format!("Could not verify the downloaded package: {error}"))?;
+    let digest_result = sha256_file(&temp_path);
+    let _ = std::fs::remove_file(&temp_path);
+    let digest = digest_result?;
+    if digest != entry.sha256 {
+        return Err("The downloaded translation failed its SHA-256 integrity check.".to_owned());
+    }
+    let raw = String::from_utf8(bytes).map_err(|error| format!("The translation is not valid UTF-8: {error}"))?;
+    let pack: LanguagePack = serde_json::from_str(&raw)
+        .map_err(|error| format!("Invalid language-pack file: {error}"))?;
+    validate(&pack)?;
+    if pack.id != entry.id
+        || pack.locale != entry.locale
+        || pack.name != entry.name
+        || pack.author != entry.author
+        || pack.catalog_version != entry.catalog_version
+        || pack.strings.len() != entry.strings_count
+    {
+        return Err("The downloaded package metadata does not match the community catalogue.".to_owned());
+    }
+    Ok(pack)
+}
+
+enum HubEvent {
+    Catalogue(Result<Vec<HubEntry>, String>),
+    Installed(Result<LanguagePack, String>),
+}
+
+fn start_hub_refresh(state: &mut ManagerState) {
+    if state.hub_receiver.is_some() {
+        return;
+    }
+    let (sender, receiver) = mpsc::channel();
+    state.hub_receiver = Some(receiver);
+    state.hub_loading = true;
+    state.hub_error = None;
+    thread::spawn(move || {
+        let result = fetch_hub_bytes(HUB_INDEX_URL, MAX_HUB_INDEX_BYTES)
+            .and_then(|raw| parse_hub_catalog(&raw));
+        let _ = sender.send(HubEvent::Catalogue(result));
+    });
+}
+
+fn start_hub_install(state: &mut ManagerState, entry: HubEntry) {
+    if state.hub_receiver.is_some() {
+        return;
+    }
+    let (sender, receiver) = mpsc::channel();
+    state.hub_receiver = Some(receiver);
+    state.hub_downloading = Some(entry.id.clone());
+    state.hub_error = None;
+    thread::spawn(move || {
+        let result = verify_hub_pack(&entry);
+        let _ = sender.send(HubEvent::Installed(result));
+    });
+}
+
 fn catalog() -> Vec<String> {
     serde_json::from_str(include_str!("../../assets/localization/ui-catalog.json")).unwrap_or_default()
 }
@@ -435,6 +692,13 @@ struct ManagerState {
     new_author: String,
     making_new: bool,
     error: Option<String>,
+    hub_open: bool,
+    hub_entries: Vec<HubEntry>,
+    hub_loading: bool,
+    hub_downloading: Option<String>,
+    hub_error: Option<String>,
+    hub_confirm: Option<HubEntry>,
+    hub_receiver: Option<Receiver<HubEvent>>,
 }
 
 thread_local! {
