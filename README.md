@@ -43,8 +43,9 @@ The main-branch Android APK is debug-signed and may not update an earlier instal
 
 The Community Language Packs manager is included in the maintained `main` edition:
 
-- Android: **Settings → Language packs**
-- Windows/Linux: **Preferences → Language Packs**
+- Android: **Settings → Language packs → Community Hub**
+- Windows/Linux: **Preferences → Language Packs → Community Hub**
+- [Published translation catalogue](community-translations/index.json) · [How to publish a reviewed translation](community-translations/README.md)
 
 - [Public feature walkthrough and discussion draft](docs/COMMUNITY_LANGUAGE_PACKS_DISCUSSION.md)
 - [Detailed user and translator guide](docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
