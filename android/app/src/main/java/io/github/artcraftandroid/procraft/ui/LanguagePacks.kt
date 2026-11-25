@@ -71,7 +71,7 @@ internal data class CommunityTranslation(
     val sha256: String,
 )
 
-private object CommunityTranslationHub {
+internal object CommunityTranslationHub {
     fun fetchCatalog(): List<CommunityTranslation> {
         val raw = String(fetchBytes(COMMUNITY_HUB_INDEX_URL, MAX_HUB_INDEX_BYTES), Charsets.UTF_8)
         return decodeCatalog(raw)
