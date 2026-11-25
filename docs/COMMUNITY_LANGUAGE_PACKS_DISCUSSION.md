@@ -6,7 +6,7 @@
 
 Community Language Packs lets users translate ProCraft's interface without compiling the app or editing source code. Translations are stored locally as portable files that can be exchanged. It is intended for users, volunteer translators and developers.
 
-Features: create a translation; search/edit source strings; save and reopen; activate English, built-in Russian or a custom pack; import/export; share; delete. It works offline and has no marketplace or automatic cloud synchronization.
+Features: create a translation; search/edit source strings; save and reopen; activate English, built-in Russian or a custom pack; browse the curated Community Hub; install and update verified packs; import/export; share; delete. Local editing works offline; Hub browsing requires an internet connection.
 
 ## Open the manager
 
@@ -99,11 +99,11 @@ Validation limits include 5 MiB file size, 20,000 entries, source keys up to 512
 
 ## Limitations
 
-This is an MVP, not a complete official localization. Some generated strings, plugins, user content or UI outside the translation boundary may not be editable. English source text is the v1 key; upstream wording changes may require translation updates. Translation quality/layout fit require human review. No cloud sync, marketplace, moderation or automatic updates are included.
+This is an MVP, not a complete official localization. Some generated strings, plugins, user content or UI outside the translation boundary may not be editable. English source text is the v1 key; upstream wording changes may require translation updates. Translation quality/layout fit require human review. The Hub is a curated catalogue with verified manual installs; it is not an open upload portal, collaborative editor, background updater or cloud sync service.
 
 ## Developer/contributor
 
-Catalog: `assets/localization/ui-catalog.json` and identical Android copy under `android/app/src/main/assets/localization/ui-catalog.json`. Pack UI/validation is in Android `LanguagePacks.kt` and Desktop `language_packs.rs`; translation lookup is in `Translation.kt` and `translation.rs`. Add exact source keys, platform dictionary entries and regression tests; bump catalog revision when catalog content changes, not format version unless the file contract changes.
+Catalog: `assets/localization/ui-catalog.json` and identical Android copy under `android/app/src/main/assets/localization/ui-catalog.json`. The reviewed Hub index is `community-translations/index.json`. Pack UI/validation is in Android `LanguagePacks.kt` and Desktop `language_packs.rs`; translation lookup is in `Translation.kt` and `translation.rs`. Add exact source keys, platform dictionary entries and regression tests; bump catalog revision when catalog content changes, not format version unless the file contract changes.
 
 ## Security/privacy
 
