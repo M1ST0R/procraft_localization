@@ -545,6 +545,7 @@ fn fetch_hub_bytes(url: &str, max_bytes: usize) -> Result<Vec<u8>, String> {
     let max_filesize = max_bytes.to_string();
     let output = Command::new("curl")
         .args([
+            "--disable",
             "--fail",
             "--location",
             "--silent",
@@ -556,6 +557,8 @@ fn fetch_hub_bytes(url: &str, max_bytes: usize) -> Result<Vec<u8>, String> {
             "--max-filesize",
             &max_filesize,
             "--proto",
+            "=https",
+            "--proto-redir",
             "=https",
             "--tlsv1.2",
             "--user-agent",
