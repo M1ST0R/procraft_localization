@@ -473,7 +473,7 @@ fn validate_hub_url(url: &str) -> Result<(), String> {
     if url.len() > 512
         || !url.starts_with(HUB_RAW_PREFIX)
         || !url.ends_with(".procraft-lang")
-        || url.contains(['?', '#', '\\'])
+        || url.chars().any(|character| matches!(character, '?' | '#' | '\\'))
     {
         return Err("The catalogue contains an unsafe download URL.".to_owned());
     }
@@ -698,6 +698,8 @@ struct ManagerState {
     hub_downloading: Option<String>,
     hub_error: Option<String>,
     hub_confirm: Option<HubEntry>,
+    hub_error: Option<String>,
+    hub_status: Option<String>,
     hub_receiver: Option<Receiver<HubEvent>>,
 }
 
@@ -716,6 +718,46 @@ pub fn show(ctx: &egui::Context) {
         let mut state = state.borrow_mut();
         if !state.open {
             return;
+        }
+        let event = state.hub_receiver.as_ref().and_then(|receiver| receiver.try_recv().ok());
+        if event.is_some() {
+            state.hub_receiver = None;
+        }
+        if let Some(event) = event {
+            match event {
+                HubEvent::Catalogue(Ok(entries)) => {
+                    state.hub_entries = entries;
+                    state.hub_loading = false;
+                    state.hub_error = None;
+                    state.hub_status = Some("Community catalogue updated.".to_owned());
+                }
+                HubEvent::Catalogue(Err(error)) => {
+                    state.hub_loading = false;
+                    state.hub_error = Some(error);
+                    state.hub_status = None;
+                }
+                HubEvent::Installed(Ok(pack)) => {
+                    state.hub_downloading = None;
+                    match activate_pack(&pack) {
+                        Ok(()) => {
+                            state.hub_error = None;
+                            state.hub_status = Some(format!("{} is installed and active.", pack.name));
+                        }
+                        Err(error) => {
+                            state.hub_error = Some(error);
+                            state.hub_status = None;
+                        }
+                    }
+                }
+                HubEvent::Installed(Err(error)) => {
+                    state.hub_downloading = None;
+                    state.hub_error = Some(error);
+                    state.hub_status = None;
+                }
+            }
+        }
+        if state.hub_receiver.is_some() {
+            ctx.request_repaint_after(std::time::Duration::from_millis(250));
         }
         let mut open = state.open;
         egui::Window::new(tr("Community language packs"))
@@ -779,9 +821,86 @@ pub fn show(ctx: &egui::Context) {
                     if !close_editor {
                         state.editor = Some(pack);
                     }
+                } else if state.hub_open {
+                    ui.horizontal_wrapped(|ui| {
+                        if ui.button(tr("← Installed packs")).clicked() {
+                            state.hub_open = false;
+                        }
+                        if ui.add_enabled(state.hub_receiver.is_none(), egui::Button::new(tr("Refresh catalogue"))).clicked() {
+                            start_hub_refresh(&mut state);
+                        }
+                        if state.hub_loading {
+                            ui.spinner();
+                            ui.label(tr("Loading community catalogue…"));
+                        }
+                    });
+                    if let Some(error) = state.hub_error.as_ref() {
+                        ui.colored_label(egui::Color32::LIGHT_RED, error);
+                    }
+                    if let Some(status) = state.hub_status.as_ref() {
+                        ui.colored_label(egui::Color32::LIGHT_GREEN, status);
+                    }
+                    if let Some(entry) = state.hub_confirm.clone() {
+                        ui.group(|ui| {
+                            ui.label(format!("Replace the installed copy of {}?", entry.name));
+                            ui.label(tr("Your local edits will be overwritten by the reviewed Hub version."));
+                            ui.horizontal(|ui| {
+                                if ui.button(tr("Replace")).clicked() && state.hub_receiver.is_none() {
+                                    state.hub_confirm = None;
+                                    start_hub_install(&mut state, entry.clone());
+                                }
+                                if ui.button(tr("Cancel")).clicked() {
+                                    state.hub_confirm = None;
+                                }
+                            });
+                        });
+                    }
+                    let entries = state.hub_entries.clone();
+                    let installed_packs = installed();
+                    if entries.is_empty() && !state.hub_loading && state.hub_error.is_none() {
+                        ui.label(tr("No community translations have been published yet. New languages will appear here after review."));
+                    }
+                    egui::ScrollArea::vertical().max_height(480.0).show(ui, |ui| {
+                        for entry in &entries {
+                            ui.group(|ui| {
+                                ui.horizontal(|ui| {
+                                    ui.heading(&entry.name);
+                                    ui.label(&entry.locale);
+                                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                        ui.label(format!("v{}", entry.version));
+                                    });
+                                });
+                                ui.label(format!("{} · {} strings · updated {}", entry.author, entry.strings_count, entry.updated_at));
+                                ui.label(&entry.description);
+                                let is_installed = installed_packs.iter().any(|pack| pack.id == entry.id);
+                                let is_downloading = state.hub_downloading.as_deref() == Some(entry.id.as_str());
+                                ui.horizontal(|ui| {
+                                    if is_downloading {
+                                        ui.spinner();
+                                        ui.label(tr("Verifying and installing…"));
+                                    } else if is_installed {
+                                        if ui.add_enabled(state.hub_receiver.is_none(), egui::Button::new(tr("Update / reinstall"))).clicked() {
+                                            state.hub_confirm = Some(entry.clone());
+                                        }
+                                    } else if ui.add_enabled(state.hub_receiver.is_none(), egui::Button::new(tr("Install"))).clicked() {
+                                        start_hub_install(&mut state, entry.clone());
+                                    }
+                                });
+                            });
+                        }
+                    });
+                    if state.hub_receiver.is_some() {
+                        ctx.request_repaint_after(std::time::Duration::from_millis(250));
+                    }
                 } else {
                     ui.label(tr("Create, edit, import and export translations. Missing strings fall back to English."));
                     ui.horizontal_wrapped(|ui| {
+                        if ui.button(tr("Community Hub")).clicked() {
+                            state.hub_open = true;
+                            if state.hub_entries.is_empty() && !state.hub_loading {
+                                start_hub_refresh(&mut state);
+                            }
+                        }
                         if ui.button(tr("New translation")).clicked() {
                             state.making_new = !state.making_new;
                         }
