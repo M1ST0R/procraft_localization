@@ -76,7 +76,19 @@ Select/tap the language row to activate it. The selection is saved.
 
 Custom packs do **not** inherit Russian. Missing or empty entries show English.
 
-## 5. Import a pack shared by another person
+## 5. Browse and install from the Community Hub
+
+1. Open **Language packs** and choose **Community Hub**.
+2. Refresh the catalogue when online.
+3. Review the language, author, version, translated-string count and description.
+4. Choose **Install**. The app downloads the package, verifies its SHA-256 digest and metadata, then runs the regular `.procraft-lang` validator before activating it.
+5. To replace an installed copy, choose **Update / reinstall** and confirm. This overwrites local edits in that pack.
+
+The Hub contains only translations reviewed and published by project maintainers. Its catalogue is currently empty while the first community submissions are being prepared. You can still import a file manually as described below.
+
+Desktop downloads use the system `curl` command and a system SHA-256 utility (`certutil` on Windows, `sha256sum` or `shasum` on Unix-like systems). When these utilities are unavailable, use manual import.
+
+## 6. Import a pack shared by another person
 
 1. Open Language Packs.
 2. On Android tap **Import**; on Desktop click **Import .procraft-lang**.
@@ -86,7 +98,7 @@ Custom packs do **not** inherit Russian. Missing or empty entries show English.
 
 If the pack ID already exists locally with different content, the app rejects the import rather than overwriting your installed pack silently. Keep a backup/export before changing an existing translation.
 
-## 6. Export and share
+## 7. Export and share
 
 Select an installed custom pack.
 
@@ -95,7 +107,7 @@ Select an installed custom pack.
 
 Send the exported file to another translator or user. The file can be imported on Android or Desktop. Built-in English and Russian choices are not custom files and cannot be exported from these buttons.
 
-## 7. Edit, update or delete a pack
+## 8. Edit, update or delete a pack
 
 - **Edit:** reopen the editor, search for entries and change translations.
 - **Save:** stores your changes and activates the pack.
@@ -103,7 +115,7 @@ Send the exported file to another translator or user. The file can be imported o
 
 Export a backup before making large edits.
 
-## 8. File format
+## 9. File format
 
 A `.procraft-lang` file is UTF-8 JSON. Example:
 
@@ -129,7 +141,7 @@ The `strings` object maps exact English UI keys to translation values. Catalog r
 
 The importer limits the file to 5 MiB, 20,000 strings, source keys up to 512 characters, values up to 4,000 characters and 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. The [JSON Schema](../schemas/procraft-language-pack.schema.json) documents the contract.
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 **A label is still English**
 1. Confirm your custom pack is active.
@@ -146,9 +158,9 @@ Check that the file is a valid `.procraft-lang` pack, UTF-8 JSON, within size/en
 **I expected my pack to inherit Russian**
 Custom packs intentionally fall back to English, not to the built-in Russian dictionary.
 
-## 10. Contributing and sharing
+## 11. Contributing and sharing
 
-There is no online pack marketplace, automatic update service or remote translation sync. Community sharing is file-based. You can report missing strings or propose translations through GitHub Issues or Pull Requests.
+The Community Hub provides a curated online catalogue and manual verified installs/updates. It is not a collaborative editor, automatic background updater or open upload service. You can propose new translations through GitHub Issues or Pull Requests.
 
 For translation reports, include:
 
@@ -157,7 +169,7 @@ For translation reports, include:
 - screenshot;
 - proposed translation, if available.
 
-## 11. Developer/contributor notes
+## 12. Developer/contributor notes
 
 Source files:
 
@@ -169,6 +181,8 @@ Source files:
 | Android pack parser/storage/UI | `android/app/src/main/java/io/github/artcraftandroid/procraft/ui/LanguagePacks.kt` |
 | Desktop dictionary/rendering lookup | `desktop/src/translation.rs` |
 | Desktop pack parser/storage/UI | `desktop/src/language_packs.rs` |
+| Hub catalogue | `community-translations/index.json` |
+| Hub catalogue schema | `schemas/community-translation-index.schema.json` |
 | Format schema | `schemas/procraft-language-pack.schema.json` |
 | Sample pack | `examples/ru-community.procraft-lang` |
 | Readable JSON preview | `examples/ru-community-preview.json` |
@@ -183,7 +197,7 @@ When adding a source label:
 6. Do not bump `format_version` unless the pack serialization/validation contract changes.
 7. Update this guide and the public discussion document if the UI workflow changes.
 
-## 12. Security
+## 13. Security
 
 Packs are untrusted data. Import validation bounds file size, entry counts and lengths; validates IDs/metadata; and checks placeholders. Imported text is not executable code and does not grant plugin permissions. Still, import packs from sources you trust: a malicious or offensive translation can mislead users even if it cannot execute code.
 
