@@ -578,7 +578,7 @@ fn digest_from_command_output(output: &[u8], spaced: bool) -> Option<String> {
     let text = String::from_utf8_lossy(output);
     for line in text.lines() {
         let candidate = if spaced {
-            line.chars().filter(char::is_ascii_hexdigit).collect::<String>()
+            line.chars().filter(|character| character.is_ascii_hexdigit()).collect::<String>()
         } else {
             line.split_whitespace().next().unwrap_or_default().to_owned()
         };
@@ -657,6 +657,7 @@ fn start_hub_refresh(state: &mut ManagerState) {
     state.hub_receiver = Some(receiver);
     state.hub_loading = true;
     state.hub_error = None;
+    state.hub_status = None;
     thread::spawn(move || {
         let result = fetch_hub_bytes(HUB_INDEX_URL, MAX_HUB_INDEX_BYTES)
             .and_then(|raw| parse_hub_catalog(&raw));
@@ -672,6 +673,7 @@ fn start_hub_install(state: &mut ManagerState, entry: HubEntry) {
     state.hub_receiver = Some(receiver);
     state.hub_downloading = Some(entry.id.clone());
     state.hub_error = None;
+    state.hub_status = None;
     thread::spawn(move || {
         let result = verify_hub_pack(&entry);
         let _ = sender.send(HubEvent::Installed(result));
@@ -698,7 +700,6 @@ struct ManagerState {
     hub_downloading: Option<String>,
     hub_error: Option<String>,
     hub_confirm: Option<HubEntry>,
-    hub_error: Option<String>,
     hub_status: Option<String>,
     hub_receiver: Option<Receiver<HubEvent>>,
 }
@@ -719,9 +720,21 @@ pub fn show(ctx: &egui::Context) {
         if !state.open {
             return;
         }
-        let event = state.hub_receiver.as_ref().and_then(|receiver| receiver.try_recv().ok());
-        if event.is_some() {
+        let (event, disconnected) = match state.hub_receiver.as_ref() {
+            Some(receiver) => match receiver.try_recv() {
+                Ok(event) => (Some(event), false),
+                Err(std::sync::mpsc::TryRecvError::Empty) => (None, false),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => (None, true),
+            },
+            None => (None, false),
+        };
+        if event.is_some() || disconnected {
             state.hub_receiver = None;
+        }
+        if disconnected {
+            state.hub_loading = false;
+            state.hub_downloading = None;
+            state.hub_error = Some("The Translation Hub task stopped unexpectedly.".to_owned());
         }
         if let Some(event) = event {
             match event {
@@ -1009,6 +1022,31 @@ pub fn show(ctx: &egui::Context) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+
+    #[test]
+    fn empty_community_hub_catalogue_is_valid() {
+        let raw = br#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[]}"#;
+        assert!(parse_hub_catalog(raw).is_ok_and(|packs| packs.is_empty()));
+    }
+
+    #[test]
+    fn community_hub_rejects_downloads_outside_the_official_repository() {
+        let raw = br#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://example.com/ja-jp.procraft-lang","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}"#;
+        assert!(parse_hub_catalog(raw).is_err());
+    }
+
+    #[test]
+    fn community_hub_rejects_stale_catalogue_revisions() {
+        let raw = br#"{"schema_version":1,"catalog_version":"old-revision","updated_at":"2026-11-25","packs":[]}"#;
+        assert!(parse_hub_catalog(raw).is_err());
+    }
+
+    #[test]
+    fn community_hub_requires_a_sha256_digest() {
+        let raw = br#"{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[{"id":"ja-jp.community","locale":"ja-JP","name":"日本語","author":"Contributor","description":"Japanese community translation.","version":"1.0.0","catalog_version":"procraft-ui-source-3","strings_count":1200,"updated_at":"2026-11-25","download_url":"https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/ja-jp.procraft-lang","sha256":"not-a-digest"}]}"#;
+        assert!(parse_hub_catalog(raw).is_err());
+    }
 
     #[test]
     fn shared_android_sample_is_a_valid_desktop_language_pack() {
