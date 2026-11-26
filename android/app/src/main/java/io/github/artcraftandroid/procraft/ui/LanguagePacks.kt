@@ -748,7 +748,11 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF000000)).padding(20.dp),
+        modifier = Modifier.fillMaxSize()
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
+            .imePadding()
+            .background(Color(0xFF000000))
+            .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -966,7 +970,11 @@ private fun CommunityHubPage(
     androidx.compose.runtime.LaunchedEffect(Unit) { refreshCatalog() }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF000000)).padding(20.dp),
+        modifier = Modifier.fillMaxSize()
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
+            .imePadding()
+            .background(Color(0xFF000000))
+            .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1120,7 +1128,10 @@ private fun PackEditorPage(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF000000))
+        modifier = Modifier.fillMaxSize()
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
+            .imePadding()
+            .background(Color(0xFF000000))
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1176,6 +1187,22 @@ private fun PackEditorPage(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Translation") },
                         minLines = 1,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = PackInk,
+                            textDirection = androidx.compose.ui.text.style.TextDirection.ContentOrRtl,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                        ),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = PackInk,
+                            unfocusedTextColor = PackInk,
+                            focusedContainerColor = Color(0xFF252529),
+                            unfocusedContainerColor = Color(0xFF252529),
+                            focusedBorderColor = PackBlue,
+                            unfocusedBorderColor = PackDim,
+                            focusedLabelColor = PackBlue,
+                            unfocusedLabelColor = PackDim,
+                            cursorColor = PackBlue,
+                        ),
                     )
                 }
             }
