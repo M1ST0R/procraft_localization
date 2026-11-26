@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -225,9 +229,41 @@ private const val MAX_TEMPLATE_STRINGS = 128
 private const val PACK_CATALOG_VERSION = "procraft-ui-source-3"
 private const val PACK_APP_VERSION = "0.0.7-beta"
 
-private val PackInk = Color(0xFFFFFFFF)
-private val PackDim = Color(0xFF8E8E93)
+private val PackInk get() = Pc.Text
+private val PackDim get() = Pc.TextDim
 private val PackBlue = Color(0xFF0A84FF)
+private val PackBackground get() = if (Pc.light) Color(0xFFF7F7F7) else Color(0xFF000000)
+private val PackSurface get() = Pc.Row
+private val PackFieldContainer get() = if (Pc.light) Color(0xFFFFFFFF) else Color(0xFF252529)
+
+private fun packTextDirection(locale: String): TextDirection =
+    if (locale.lowercase(Locale.ROOT).substringBefore('-').substringBefore('_') in setOf("ar", "fa", "he", "ur", "yi")) {
+        TextDirection.ContentOrRtl
+    } else {
+        TextDirection.ContentOrLtr
+    }
+
+private fun packEditorTextStyle(locale: String) = TextStyle(
+    color = PackInk,
+    textDirection = packTextDirection(locale),
+    textAlign = if (packTextDirection(locale) == TextDirection.ContentOrRtl) TextAlign.End else TextAlign.Start,
+)
+
+private fun packFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = PackInk,
+    unfocusedTextColor = PackInk,
+    disabledTextColor = PackDim,
+    focusedContainerColor = PackFieldContainer,
+    unfocusedContainerColor = PackFieldContainer,
+    disabledContainerColor = PackFieldContainer,
+    cursorColor = PackBlue,
+    focusedLabelColor = PackBlue,
+    unfocusedLabelColor = PackDim,
+    focusedBorderColor = PackBlue,
+    unfocusedBorderColor = PackDim,
+    focusedPlaceholderColor = PackDim,
+    unfocusedPlaceholderColor = PackDim,
+)
 private val PackIdPattern = Regex("[a-z0-9][a-z0-9._-]{2,95}")
 private val PackLocalePattern = Regex("[A-Za-z]{2,8}([_-][A-Za-z0-9]{2,8})*")
 private val PackPlaceholderPattern = Regex("""\{([A-Za-z][A-Za-z0-9_]*)\}""")
@@ -262,6 +298,7 @@ internal object LanguagePacks {
 
     private val revisionState = mutableIntStateOf(0)
     private var activeId = "builtin:ru"
+    private var activeLocale = "ru"
     private var activeStrings: Map<String, String>? = null
     private var activeTemplates: List<CompiledPackTemplate> = emptyList()
 
@@ -284,6 +321,11 @@ internal object LanguagePacks {
         if (!activeId.startsWith("builtin:") && activeStrings == null) {
             activeId = "builtin:ru"
             prefs.edit().putString(ACTIVE, activeId).apply()
+        }
+        activeLocale = when (activeId) {
+            "builtin:en" -> "en"
+            "builtin:ru" -> "ru"
+            else -> runCatching { readPack(packFile(context, activeId)).locale }.getOrDefault("ru")
         }
         refreshTemplates()
         revisionState.intValue++
@@ -308,6 +350,8 @@ internal object LanguagePacks {
 
     fun currentId(): String = activeId
 
+    fun currentLocale(): String = activeLocale
+
     fun activate(context: Context, id: String) {
         require(id == "builtin:ru" || id == "builtin:en" || PackIdPattern.matches(id)) {
             "Invalid language-pack ID."
@@ -319,6 +363,11 @@ internal object LanguagePacks {
         }
         activeId = id
         activeStrings = nextStrings
+        activeLocale = when (id) {
+            "builtin:en" -> "en"
+            "builtin:ru" -> "ru"
+            else -> runCatching { readPack(packFile(context, id)).locale }.getOrDefault("ru")
+        }
         refreshTemplates()
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putString(ACTIVE, id).apply()
@@ -753,7 +802,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         modifier = Modifier.fillMaxSize()
             .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
             .imePadding()
-            .background(Color(0xFF000000))
+            .background(PackBackground)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -875,18 +924,24 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
                         onValueChange = { newName = it },
                         label = { Text("Name") },
                         singleLine = true,
+                        textStyle = packEditorTextStyle(LanguagePacks.currentLocale()),
+                        colors = packFieldColors(),
                     )
                     OutlinedTextField(
                         value = newLocale,
                         onValueChange = { newLocale = it },
                         label = { Text("Language code (e.g. es-ES)") },
                         singleLine = true,
+                        textStyle = packEditorTextStyle("en"),
+                        colors = packFieldColors(),
                     )
                     OutlinedTextField(
                         value = newAuthor,
                         onValueChange = { newAuthor = it },
                         label = { Text("Author (optional)") },
                         singleLine = true,
+                        textStyle = packEditorTextStyle(LanguagePacks.currentLocale()),
+                        colors = packFieldColors(),
                     )
                 }
             },
@@ -975,7 +1030,7 @@ private fun CommunityHubPage(
         modifier = Modifier.fillMaxSize()
             .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
             .imePadding()
-            .background(Color(0xFF000000))
+            .background(PackBackground)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -1019,7 +1074,7 @@ private fun CommunityHubPage(
                 val isInstalled = installedPacks.any { it.id == entry.id }
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .background(Color(0xFF1C1C1E), RoundedCornerShape(12.dp))
+                        .background(PackSurface, RoundedCornerShape(12.dp))
                         .padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -1091,7 +1146,7 @@ private fun PackChoice(label: String, active: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (active) Color(0xFF222C3D) else Color(0xFF1C1C1E),
+                if (active) (if (Pc.light) Color(0xFFB7D7FF) else Color(0xFF222C3D)) else PackSurface,
                 RoundedCornerShape(10.dp),
             )
             .clickable(onClick = onClick)
@@ -1140,7 +1195,7 @@ private fun PackEditorPage(
         modifier = Modifier.fillMaxSize()
             .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
             .imePadding()
-            .background(Color(0xFF000000))
+            .background(PackBackground)
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1168,6 +1223,8 @@ private fun PackEditorPage(
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Search source strings") },
             singleLine = true,
+            textStyle = packEditorTextStyle(pack.locale),
+            colors = packFieldColors(),
         )
         Text(
             "Translate the English source below. Leave a field empty to use English fallback.",
@@ -1182,10 +1239,10 @@ private fun PackEditorPage(
             items(visible, key = { it }) { source ->
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .background(Color(0xFF1C1C1E), RoundedCornerShape(10.dp))
+                        .background(PackSurface, RoundedCornerShape(10.dp))
                         .padding(10.dp),
                 ) {
-                    Text(source, color = Color(0xFFD0D0D0), fontSize = 13.sp)
+                    Text(source, color = PackDim, fontSize = 13.sp)
                     OutlinedTextField(
                         value = changed[source] ?: "",
                         onValueChange = { value ->
@@ -1196,22 +1253,8 @@ private fun PackEditorPage(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Translation") },
                         minLines = 1,
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = PackInk,
-                            textDirection = androidx.compose.ui.text.style.TextDirection.ContentOrRtl,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Start,
-                        ),
-                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = PackInk,
-                            unfocusedTextColor = PackInk,
-                            focusedContainerColor = Color(0xFF252529),
-                            unfocusedContainerColor = Color(0xFF252529),
-                            focusedBorderColor = PackBlue,
-                            unfocusedBorderColor = PackDim,
-                            focusedLabelColor = PackBlue,
-                            unfocusedLabelColor = PackDim,
-                            cursorColor = PackBlue,
-                        ),
+                        textStyle = packEditorTextStyle(pack.locale),
+                        colors = packFieldColors(),
                     )
                 }
             }
