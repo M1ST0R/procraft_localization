@@ -833,7 +833,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         Button(
             onClick = { showHub = true },
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Browse Community Hub") }
+        ) { Text("Browse community translations") }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { createDialog = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
@@ -1046,7 +1046,7 @@ private fun CommunityHubPage(
                 modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp),
             )
             Text(
-                "Community Hub",
+                "Community translations",
                 color = PackInk,
                 fontSize = 23.sp,
                 fontWeight = FontWeight.Bold,
@@ -1119,7 +1119,7 @@ private fun CommunityHubPage(
         error?.let {
             AlertDialog(
                 onDismissRequest = { error = null },
-                title = { Text("Community Hub") },
+                title = { Text("Community translations") },
                 text = { Text(it) },
                 confirmButton = { Button(onClick = { error = null }) { Text("OK") } },
             )
