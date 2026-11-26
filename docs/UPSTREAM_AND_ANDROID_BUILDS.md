@@ -44,27 +44,55 @@ Secrets, if release signing is configured:
 
 Keep the keystore and passwords in secure offline backups. Losing the key prevents updating installs signed with that key.
 
-## Update from upstream
+## Update from upstream — safe procedure
 
-Do not replace either community branch with a fresh upstream checkout. Preserve community changes and merge upstream changes into the branch being maintained.
+Do not replace either community branch with a fresh upstream checkout, and do not merge `main` into `russian` or vice versa. Preserve community changes and merge the exact upstream release tag into each maintained branch separately.
 
-One-time clone setup:
+The repository includes `tools/merge_upstream_release.sh` on both branches. It requires a clean working tree, checks the selected branch, fetches the exact upstream tag `v0.0.8-beta` and stages a no-commit merge. It does not push, create a branch or resolve conflicts automatically.
 
-```bash
-git remote add upstream https://github.com/artcraft-android/procraft.git
-git fetch upstream
-```
+Run this locally from a clone of the repository.
 
-Update the selected branch:
+**Community Language Packs — main**
 
 ```bash
-git switch main       # or: git switch russian
-git fetch upstream
-git merge upstream/main
+git switch main
+git pull --ff-only origin main
+bash tools/merge_upstream_release.sh main
 ```
 
-For the ProCraft v0.0.7-beta baseline, upstream consolidated several standalone plugins into larger plugins (including Krita Brushes, ColorDrop tools, Interface, Effects, Layer fills and Layer tools). Keep upstream plugin manifests and bundled files. Do not restore obsolete standalone plugin folders when carrying community changes forward.
+Resolve conflicts manually. Keep upstream engine/brush/plugin behavior, then reapply the relevant localization changes in the existing wrappers and preserve the Language Manager, catalogue, built-in Russian, Hub validation and pack schemas.
 
-Resolve conflicts by keeping upstream functional changes and reapplying the relevant Russian translation changes only where needed. On `main`, also update both translation dictionaries, the sample pack and its readable preview when the source catalog changes. Run the CI workflow and the package workflows for the branch you updated; test APKs on an Android tablet and Desktop packages on their target OS.
+Run the checks before committing:
 
-For a larger update, create a short-lived branch and PR into `main` or `russian` so conflicts and regressions are visible.
+```bash
+python3 tools/check_translation_coverage.py
+python3 tools/check_community_hub.py
+cargo fmt --all -- --check
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo test --locked -p procraft-desktop translation::tests
+cargo test --locked -p procraft-desktop language_packs::tests
+cargo test --locked -p procraft-core --lib project::signature_tests
+```
+
+Then run the Android unit tests/lint, build the APK and run Windows/Linux Desktop packaging. Update the shared Android/Desktop source catalog and `catalog_version` only after reviewing the upstream UI strings. Revalidate every published pack and preserve the format-v1 contract unless its serialization actually changes.
+
+Commit and push only after all checks pass:
+
+```bash
+git commit -m "Merge upstream v0.0.8-beta"
+git push origin main
+```
+
+**Russian Edition — russian**
+
+Repeat the procedure from a clean `russian` checkout:
+
+```bash
+git switch russian
+git pull --ff-only origin russian
+bash tools/merge_upstream_release.sh russian
+```
+
+Preserve the Russian-only build and its dictionary; do not copy the Community Language Packs demo or editor into this edition. Run Russian CI, Android APK and Desktop packaging before committing and pushing.
+
+The upstream release changes brush importing, default brushes, dual/mixing brushes, rendering and plugin code. After builds pass, manually smoke-test brush imports (including Krita), default brush loading, pressure/smoothing, dual/mixing brushes, brush sounds, export/import and plugin loading on Android and Desktop. The upstream iPad IPA is not a build produced by this fork.
