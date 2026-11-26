@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -245,6 +245,7 @@ private fun packEditorTextStyle(locale: String) = TextStyle(
     textAlign = if (packTextDirection(locale) == TextDirection.ContentOrRtl) TextAlign.End else TextAlign.Start,
 )
 
+@Composable
 private fun packFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = PackInk,
     unfocusedTextColor = PackInk,
@@ -803,7 +804,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
 
     Column(
         modifier = Modifier.fillMaxSize()
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
+            .systemBarsPadding()
             .imePadding()
             .background(PackBackground)
             .padding(20.dp),
@@ -1031,7 +1032,7 @@ private fun CommunityHubPage(
 
     Column(
         modifier = Modifier.fillMaxSize()
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
+            .systemBarsPadding()
             .imePadding()
             .background(PackBackground)
             .padding(20.dp),
@@ -1195,7 +1196,7 @@ private fun PackEditorPage(
     ) {
     Column(
         modifier = Modifier.fillMaxSize()
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
+            .systemBarsPadding()
             .imePadding()
             .background(PackBackground)
             .padding(horizontal = 16.dp, vertical = 10.dp),
