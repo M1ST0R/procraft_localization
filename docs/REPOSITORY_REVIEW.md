@@ -66,6 +66,7 @@ The workflows request read-only `contents` permissions. Checkout steps disable c
 ## Repository governance
 
 - Branch metadata reports both `main` and `russian` as unprotected.
+- GitHub Issues and Discussions are both disabled (`has_issues=false`, `has_discussions=false`). Contributor documentation must point users to Discord or Pull Requests unless these features are enabled in repository settings.
 - The GitHub rulesets endpoint returned an empty list. The branch-protection endpoint was inaccessible to this connection (403), so required checks/reviews cannot be independently confirmed beyond the unprotected metadata.
 - Release tag `0.0.4` points to commit `07f48c17ee32fd65244edee35c6b8c23e7a7259a`. GitHub marks the release non-immutable; tag protection was not verified.
 

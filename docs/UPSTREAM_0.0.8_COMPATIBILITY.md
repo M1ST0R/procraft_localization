@@ -43,6 +43,10 @@ The fork currently contains custom localization wrappers and translation editor 
 - Both `main` and `russian` need an upstream merge/rebase review. They are separate editions and must retain their edition-specific localization.
 - The source-string catalog and `catalog_version` need to be regenerated/reviewed after upstream changes. Existing packs must then be audited for removed, changed and new source strings.
 
+## iOS packaging status
+
+The fork contains an `ios/` source tree, but neither maintained branch currently has an iOS build workflow. The unsigned `.ipa` mentioned in the upstream v0.0.8-beta announcement is an upstream asset, not a package produced by this fork. Do not list iPadOS builds as available from this fork until a macOS workflow, signing/distribution approach and device smoke tests exist.
+
 ## Required merge and regression checks
 
 1. Merge upstream v0.0.8-beta into `main`, preserving community translation editor, catalog, Russian dictionary, Hub and security/CI changes.
@@ -62,12 +66,12 @@ The available GitHub connector can inspect repository trees, files, commits and 
 
 The merge cannot be performed from this session: GitHub's connector exposes read/write file and ref operations but no checkout/merge workflow, and the execution environment cannot resolve GitHub for a clone. Creating a temporary branch is also avoided because branch deletion is unavailable and the repository is intentionally kept to exactly `main` and `russian`.
 
-A checked-in helper, [`tools/merge_upstream_release.sh`](../tools/merge_upstream_release.sh), fetches the exact upstream release tag and stages a no-commit merge only on the selected clean `main` or `russian` branch. It does not push or create temporary branches, and it does not auto-resolve conflicts. Run it locally, resolve conflicts while preserving localization, execute the listed checks, and commit only after validation.
+The same checked-in helper, [`tools/merge_upstream_release.sh`](../tools/merge_upstream_release.sh), is present on both maintained branches. It fetches the exact upstream release tag and stages a no-commit merge only on the selected clean `main` or `russian` branch. It does not push or create temporary branches, and it does not auto-resolve conflicts. Both branch CI workflows are configured to run `bash -n` on the helper. Run it locally, resolve conflicts while preserving localization, execute the listed checks, and commit only after validation.
 
-## Current Actions verification (2026-11-26)
+## Current Actions verification (2026-11-26; code snapshot)
 
-- [CI run 45875338091](https://github.com/M1ST0R/procraft_localization/actions/runs/45875338091): all four jobs passed (Clippy, Android unit tests, translation/Hub audit, Desktop translation and core tests).
-- [Android APK run 45873773336](https://github.com/M1ST0R/procraft_localization/actions/runs/45873773336): arm64 build, APK verification and artifact upload passed.
-- [Desktop build run 45874381328](https://github.com/M1ST0R/procraft_localization/actions/runs/45874381328): Windows MSI/portable ZIP and Linux AppImage/DEB/tar.gz packaging, checksum generation and upload passed.
+- [Main CI run 45881028803](https://github.com/M1ST0R/procraft_localization/actions/runs/45881028803) on code commit `f406fd1`: all four jobs passed (Clippy, Android unit tests, translation/Hub validation, Desktop translation/runtime/core tests).
+- [Main Desktop build 45881028823](https://github.com/M1ST0R/procraft_localization/actions/runs/45881028823) on the same commit: Windows MSI/portable ZIP and Linux AppImage/DEB/tar.gz packaging, checksum generation and upload passed.
+- On `russian`, [Android APK run 45880975875](https://github.com/M1ST0R/procraft_localization/actions/runs/45880975875) on commit `16a569d` passed. [Russian CI run 45880975817](https://github.com/M1ST0R/procraft_localization/actions/runs/45880975817) was still in progress when this snapshot was written. The previous full Russian CI, Android and Desktop baseline succeeded at commit `844c3628` on 2026-11-24.
 
-These runs validate the current fork based on the previous upstream baseline. They are **not** tests of the v0.0.8-beta merge.
+These runs validate the fork's current code against its previous upstream baseline. They are **not** tests of the v0.0.8-beta merge.

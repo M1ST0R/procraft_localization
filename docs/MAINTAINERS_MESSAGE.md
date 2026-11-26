@@ -14,4 +14,6 @@ I would appreciate feedback on:
 
 The current demo is not presented as a final production localization architecture. Feedback can guide whether it should remain a community-maintained implementation or evolve into an upstream PR.
 
+For community feedback, use the [ProCraft Discord](https://discord.gg/gypGes3Uca) or submit a Pull Request. This fork currently has GitHub Issues and Discussions disabled.
+
 Thank you for your work on ProCraft.

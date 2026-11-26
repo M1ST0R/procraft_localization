@@ -128,3 +128,5 @@ Language packs are data-only text. Import does not grant plugin permissions, exe
 ## Discussion
 
 Feedback is welcome about the in-app workflow, exact-English-key v1 and its limitations, missing strings, the future stable-message-ID design, and the preferred contribution/review process. The goal is to make translation accessible without requiring users to build the app or maintain a full fork.
+
+For feedback, use the [ProCraft Discord](https://discord.gg/gypGes3Uca) or submit a Pull Request to this repository. GitHub Issues and Discussions are disabled for this fork at the moment.

@@ -46,8 +46,8 @@ Run on Android and Windows Desktop where available:
 
 The workflows are:
 
-- **CI:** Rust format, Clippy, tests and Android lint/unit/build checks.
-- **Android APK:** ARM64 community APK.
+- **CI:** translation/catalog validation, workspace Clippy, Desktop translation/runtime/core tests and Android unit tests.
+- **Android APK:** ARM64 release build, Android lint, package/signature verification and upload.
 - **Desktop builds:** Windows MSI + portable ZIP; Linux AppImage, DEB and tar.gz.
 
 Live workflow pages (choose a successful run and its Artifacts section):

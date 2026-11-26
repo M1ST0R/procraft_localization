@@ -162,7 +162,7 @@ Custom packs intentionally fall back to English, not to the built-in Russian dic
 
 ## 11. Contributing and sharing
 
-The Community Hub provides a curated online catalogue and manual verified installs/updates. It is not a collaborative editor, automatic background updater or open upload service. You can propose new translations through GitHub Issues or Pull Requests.
+The Community Hub provides a curated online catalogue and manual verified installs/updates. It is not a collaborative editor, automatic background updater or open upload service. You can propose new translations through a Pull Request or discuss them in the [ProCraft Discord](https://discord.gg/gypGes3Uca). GitHub Issues and Discussions are currently disabled for this fork.
 
 For translation reports, include:
 
