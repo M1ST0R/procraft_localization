@@ -78,9 +78,51 @@ internal data class CommunityTranslation(
 )
 
 internal object CommunityTranslationHub {
-    fun fetchCatalog(): List<CommunityTranslation> {
+    private const val CHECK_PREFS = "community-language-packs-hub"
+    private const val LAST_CHECK_KEY = "last_catalog_check_ms"
+    private const val CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L
+
+    private fun cacheFile(context: Context) =
+        File(File(context.filesDir, "language-packs/.hub"), "index.json")
+
+    fun shouldCheck(context: Context): Boolean {
+        val lastCheck = context.getSharedPreferences(CHECK_PREFS, Context.MODE_PRIVATE)
+            .getLong(LAST_CHECK_KEY, 0L)
+        val now = System.currentTimeMillis()
+        return lastCheck == 0L || now < lastCheck || now - lastCheck >= CHECK_INTERVAL_MS
+    }
+
+    fun cachedCatalog(context: Context): List<CommunityTranslation> = runCatching {
+        val file = cacheFile(context)
+        require(file.isFile && file.length() <= MAX_HUB_INDEX_BYTES) {
+            "No valid cached community catalogue is available."
+        }
+        decodeCatalog(file.readText(Charsets.UTF_8))
+    }.getOrDefault(emptyList())
+
+    fun fetchCatalog(context: Context): List<CommunityTranslation> {
         val raw = String(fetchBytes(COMMUNITY_HUB_INDEX_URL, MAX_HUB_INDEX_BYTES), Charsets.UTF_8)
-        return decodeCatalog(raw)
+        val entries = decodeCatalog(raw)
+        val file = cacheFile(context)
+        val parent = file.parentFile
+        require(parent != null && (parent.isDirectory || parent.mkdirs())) {
+            "Could not create the translation catalogue cache."
+        }
+        val atomic = AtomicFile(file)
+        var output: java.io.FileOutputStream? = null
+        try {
+            val stream = atomic.startWrite()
+            output = stream
+            stream.write(raw.toByteArray(Charsets.UTF_8))
+            atomic.finishWrite(stream)
+            output = null
+        } catch (error: Throwable) {
+            output?.let { atomic.failWrite(it) }
+            throw error
+        }
+        context.getSharedPreferences(CHECK_PREFS, Context.MODE_PRIVATE)
+            .edit().putLong(LAST_CHECK_KEY, System.currentTimeMillis()).apply()
+        return entries
     }
 
     internal fun decodeCatalog(raw: String): List<CommunityTranslation> {
@@ -282,6 +324,13 @@ internal data class TranslationPack(
     val strings: LinkedHashMap<String, String>,
 )
 
+internal data class CommunityPackInstallResult(
+    val pack: TranslationPack,
+    val localChangesPreserved: Int,
+    val conflictsKeptLocal: Int,
+    val backupName: String?,
+)
+
 /**
  * Data-only .procraft-lang reader, editor storage and runtime.
  *
@@ -415,19 +464,177 @@ internal object LanguagePacks {
             "Could not create the language-pack folder."
         }
 
-        val atomic = AtomicFile(packFile(context, pack.id))
+        writeAtomic(packFile(context, pack.id), encode(pack).toByteArray(Charsets.UTF_8))
+        revisionState.intValue++
+        return pack
+    }
+
+    private data class HubMetadata(val version: String, val sha256: String)
+
+    private fun hubDirectory(context: Context) = File(packsDirectory(context), ".hub")
+
+    private fun hubBaselineFile(context: Context, id: String) =
+        File(hubDirectory(context), "$id.baseline.procraft-lang")
+
+    private fun hubMetadataFile(context: Context, id: String) =
+        File(hubDirectory(context), "$id.json")
+
+    private fun hubBackupDirectory(context: Context) =
+        File(hubDirectory(context), "backups")
+
+    private fun writeAtomic(file: File, bytes: ByteArray) {
+        val parent = file.parentFile
+        require(parent != null && (parent.isDirectory || parent.mkdirs())) {
+            "Could not create the language-pack data folder."
+        }
+        val atomic = AtomicFile(file)
         var output: java.io.FileOutputStream? = null
         try {
             val stream = atomic.startWrite()
             output = stream
-            stream.write(encode(pack).toByteArray(Charsets.UTF_8))
+            stream.write(bytes)
             atomic.finishWrite(stream)
+            output = null
         } catch (error: Throwable) {
             output?.let { atomic.failWrite(it) }
             throw error
         }
-        revisionState.intValue++
-        return pack
+    }
+
+    private fun readHubMetadata(context: Context, id: String): HubMetadata? = runCatching {
+        val file = hubMetadataFile(context, id)
+        if (!file.isFile || file.length() > 4096L) return@runCatching null
+        val json = JSONObject(file.readText(Charsets.UTF_8))
+        val version = json.getString("version")
+        val digest = json.getString("sha256")
+        require(Regex("""\d+\.\d+\.\d+""").matches(version))
+        require(Regex("""[a-f0-9]{64}""").matches(digest))
+        HubMetadata(version, digest)
+    }.getOrNull()
+
+    private fun compareHubVersions(left: String, right: String): Int {
+        val a = left.split('.').map { it.toLongOrNull() ?: 0L }
+        val b = right.split('.').map { it.toLongOrNull() ?: 0L }
+        for (index in 0..2) {
+            val comparison = a[index].compareTo(b[index])
+            if (comparison != 0) return comparison
+        }
+        return 0
+    }
+
+    fun communityUpdateAvailable(context: Context, entry: CommunityTranslation): Boolean {
+        val installed = readHubMetadata(context, entry.id) ?: return true
+        return compareHubVersions(entry.version, installed.version) > 0 ||
+            entry.sha256 != installed.sha256
+    }
+
+    fun hasCommunityLocalChanges(context: Context, id: String): Boolean {
+        if (!PackIdPattern.matches(id)) return false
+        val installed = runCatching { readPack(packFile(context, id)) }.getOrNull() ?: return false
+        val baseline = runCatching { readPack(hubBaselineFile(context, id)) }.getOrNull()
+            ?: return installed.strings.isNotEmpty()
+        return installed.strings != baseline.strings
+    }
+
+    private data class PackMerge(
+        val pack: TranslationPack,
+        val localChangesPreserved: Int,
+        val conflictsKeptLocal: Int,
+    )
+
+    private fun mergeCommunityPack(
+        baseline: TranslationPack?,
+        local: TranslationPack,
+        remote: TranslationPack,
+    ): PackMerge {
+        val keys = LinkedHashSet<String>().apply {
+            baseline?.strings?.keys?.let(::addAll)
+            addAll(local.strings.keys)
+            addAll(remote.strings.keys)
+        }
+        val merged = LinkedHashMap<String, String>()
+        var localChanges = 0
+        var conflicts = 0
+
+        for (key in keys) {
+            val baseValue = baseline?.strings?.get(key)
+            val localValue = local.strings[key]
+            val remoteValue = remote.strings[key]
+            if (localValue != baseValue) localChanges++
+
+            val selected = when {
+                localValue == baseValue -> remoteValue
+                remoteValue == baseValue || localValue == remoteValue -> localValue
+                else -> {
+                    conflicts++
+                    localValue
+                }
+            }
+            if (selected != null) merged[key] = selected
+        }
+        return PackMerge(
+            pack = remote.copy(strings = merged),
+            localChangesPreserved = localChanges,
+            conflictsKeptLocal = conflicts,
+        )
+    }
+
+    fun installCommunityPack(
+        context: Context,
+        entry: CommunityTranslation,
+        downloaded: TranslationPack,
+    ): CommunityPackInstallResult {
+        require(entry.id == downloaded.id && entry.sha256.matches(Regex("""[a-f0-9]{64}"""))) {
+            "Community package metadata is inconsistent."
+        }
+        validate(downloaded)
+        val previousMetadata = readHubMetadata(context, entry.id)
+        if (previousMetadata != null && compareHubVersions(entry.version, previousMetadata.version) < 0) {
+            error("A downgrade of this community translation was blocked.")
+        }
+
+        val destination = packFile(context, entry.id)
+        val existing = if (destination.isFile) readPack(destination) else null
+        val baseline = runCatching { readPack(hubBaselineFile(context, entry.id)) }.getOrNull()
+        val merge = if (existing == null) {
+            PackMerge(downloaded, 0, 0)
+        } else {
+            mergeCommunityPack(baseline, existing, downloaded)
+        }
+
+        var backupName: String? = null
+        if (existing != null && existing != merge.pack) {
+            val backupDirectory = hubBackupDirectory(context)
+            require(backupDirectory.isDirectory || backupDirectory.mkdirs()) {
+                "Could not create a backup for the local translation."
+            }
+            val backup = File(
+                backupDirectory,
+                "${entry.id}-${System.currentTimeMillis()}.procraft-lang",
+            )
+            writeAtomic(backup, encode(existing).toByteArray(Charsets.UTF_8))
+            backupName = backup.name
+        }
+
+        save(context, merge.pack)
+        writeAtomic(
+            hubBaselineFile(context, entry.id),
+            encode(downloaded).toByteArray(Charsets.UTF_8),
+        )
+        writeAtomic(
+            hubMetadataFile(context, entry.id),
+            JSONObject()
+                .put("version", entry.version)
+                .put("sha256", entry.sha256)
+                .toString()
+                .toByteArray(Charsets.UTF_8),
+        )
+        return CommunityPackInstallResult(
+            pack = merge.pack,
+            localChangesPreserved = merge.localChangesPreserved,
+            conflictsKeptLocal = merge.conflictsKeptLocal,
+            backupName = backupName,
+        )
     }
 
     fun import(context: Context, uri: Uri): TranslationPack {
@@ -732,6 +939,7 @@ internal object LanguagePacks {
 @Composable
 internal fun LanguagePacksPage(onBack: () -> Unit) {
     val context = LocalContext.current
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
     var packs by remember { mutableStateOf(LanguagePacks.installed(context)) }
     var selected by remember { mutableStateOf(LanguagePacks.currentId()) }
     var showHub by remember { mutableStateOf(false) }
@@ -741,10 +949,30 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
     var newName by remember { mutableStateOf("") }
     var newLocale by remember { mutableStateOf("") }
     var newAuthor by remember { mutableStateOf("") }
+    var hubEntries by remember { mutableStateOf(CommunityTranslationHub.cachedCatalog(context)) }
+    var catalogChecking by remember { mutableStateOf(false) }
+    var catalogCheckFailed by remember { mutableStateOf(false) }
+
+    fun checkCatalogIfDue() {
+        if (catalogChecking || !CommunityTranslationHub.shouldCheck(context)) return
+        catalogChecking = true
+        CommunityHubExecutor.execute {
+            val result = runCatching { CommunityTranslationHub.fetchCatalog(context) }
+            mainHandler.post {
+                result.onSuccess { hubEntries = it; catalogCheckFailed = false }
+                    .onFailure { catalogCheckFailed = true }
+                catalogChecking = false
+            }
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) { checkCatalogIfDue() }
 
     if (showHub) {
         CommunityHubPage(
             installedPacks = packs,
+            initialEntries = hubEntries,
+            onCatalogUpdated = { hubEntries = it },
             onBack = { showHub = false },
             onInstalled = { pack ->
                 packs = LanguagePacks.installed(context)
@@ -834,6 +1062,28 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
             onClick = { showHub = true },
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Community translations") }
+        val installedIds = packs.mapTo(HashSet()) { it.id }
+        val updateCount = hubEntries.count { it.id in installedIds && LanguagePacks.communityUpdateAvailable(context, it) }
+        val newTranslationCount = hubEntries.count { it.id !in installedIds }
+        if (catalogChecking) {
+            Text("Checking the translation catalogue…", color = PackDim, fontSize = 12.sp)
+        }
+        if (updateCount > 0) {
+            Text(
+                "$updateCount translation update(s) available. Open Community translations to review them.",
+                color = PackBlue,
+                fontSize = 13.sp,
+            )
+        } else if (newTranslationCount > 0) {
+            Text(
+                "$newTranslationCount new community translation(s) available.",
+                color = PackDim,
+                fontSize = 12.sp,
+            )
+        }
+        if (catalogCheckFailed) {
+            Text("Could not check for updates. The last cached catalogue is still available.", color = PackDim, fontSize = 12.sp)
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { createDialog = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
@@ -979,12 +1229,14 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
 @Composable
 private fun CommunityHubPage(
     installedPacks: List<TranslationPack>,
+    initialEntries: List<CommunityTranslation>,
+    onCatalogUpdated: (List<CommunityTranslation>) -> Unit,
     onBack: () -> Unit,
     onInstalled: (TranslationPack) -> Unit,
 ) {
     val context = LocalContext.current
     val mainHandler = remember { Handler(Looper.getMainLooper()) }
-    var entries by remember { mutableStateOf<List<CommunityTranslation>>(emptyList()) }
+    var entries by remember { mutableStateOf(initialEntries) }
     var loading by remember { mutableStateOf(false) }
     var installingId by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -995,10 +1247,12 @@ private fun CommunityHubPage(
         loading = true
         error = null
         CommunityHubExecutor.execute {
-            val result = runCatching { CommunityTranslationHub.fetchCatalog() }
+            val result = runCatching { CommunityTranslationHub.fetchCatalog(context) }
             mainHandler.post {
-                result.onSuccess { entries = it }
-                    .onFailure { error = it.message ?: "Could not load the community catalogue." }
+                result.onSuccess {
+                    entries = it
+                    onCatalogUpdated(it)
+                }.onFailure { error = it.message ?: "Could not load the community catalogue." }
                 loading = false
             }
         }
@@ -1009,17 +1263,18 @@ private fun CommunityHubPage(
         installingId = entry.id
         error = null
         CommunityHubExecutor.execute {
-            val result = runCatching { CommunityTranslationHub.download(entry) }
+            val result = runCatching {
+                val downloaded = CommunityTranslationHub.download(entry)
+                LanguagePacks.installCommunityPack(context, entry, downloaded)
+            }
             mainHandler.post {
-                result.onSuccess { pack ->
-                    runCatching {
-                        LanguagePacks.save(context, pack)
-                        LanguagePacks.activate(context, pack.id)
-                    }.onSuccess {
-                        onInstalled(pack)
-                    }.onFailure {
-                        error = it.message ?: "Could not install this translation."
-                    }
+                result.onSuccess { installed ->
+                    runCatching { LanguagePacks.activate(context, installed.pack.id) }
+                        .onSuccess {
+                            onInstalled(installed.pack)
+                            error = null
+                        }
+                        .onFailure { error = it.message ?: "Could not activate this translation." }
                 }.onFailure {
                     error = it.message ?: "Could not download this translation."
                 }
@@ -1028,7 +1283,9 @@ private fun CommunityHubPage(
         }
     }
 
-    androidx.compose.runtime.LaunchedEffect(Unit) { refreshCatalog() }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (entries.isEmpty() || CommunityTranslationHub.shouldCheck(context)) refreshCatalog()
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -1075,7 +1332,10 @@ private fun CommunityHubPage(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(entries, key = { it.id }) { entry ->
-                val isInstalled = installedPacks.any { it.id == entry.id }
+                val installedPack = installedPacks.firstOrNull { it.id == entry.id }
+                val isInstalled = installedPack != null
+                val updateAvailable = isInstalled && LanguagePacks.communityUpdateAvailable(context, entry)
+                val hasLocalChanges = isInstalled && LanguagePacks.hasCommunityLocalChanges(context, entry.id)
                 Column(
                     modifier = Modifier.fillMaxWidth()
                         .background(PackSurface, RoundedCornerShape(12.dp))
@@ -1099,6 +1359,18 @@ private fun CommunityHubPage(
                         color = PackDim,
                         fontSize = 12.sp,
                     )
+                    if (updateAvailable) {
+                        Text("Update available", color = PackBlue, fontSize = 12.sp)
+                    } else if (isInstalled) {
+                        Text("Installed version is up to date", color = PackDim, fontSize = 12.sp)
+                    }
+                    if (hasLocalChanges) {
+                        Text(
+                            "Local edits detected. Updates preserve them and keep a backup.",
+                            color = PackDim,
+                            fontSize = 12.sp,
+                        )
+                    }
                     Button(
                         onClick = {
                             if (isInstalled) pendingReplacement = entry else install(entry)
@@ -1108,7 +1380,8 @@ private fun CommunityHubPage(
                         Text(
                             when {
                                 installingId == entry.id -> "Installing…"
-                                isInstalled -> "Update / reinstall"
+                                isInstalled && updateAvailable -> "Update and merge"
+                                isInstalled -> "Reinstall safely"
                                 else -> "Install"
                             },
                         )
@@ -1129,13 +1402,18 @@ private fun CommunityHubPage(
     pendingReplacement?.let { entry ->
         AlertDialog(
             onDismissRequest = { pendingReplacement = null },
-            title = { Text("Replace installed translation?") },
-            text = { Text("Your local edits to this pack will be overwritten by the reviewed Hub version.") },
+            title = { Text("Update installed translation?") },
+            text = {
+                Text(
+                    "The app compares your installed pack with its previous Hub version. " +
+                        "Your local changes are preserved, conflicting local values win, and a backup is created before changed content is saved.",
+                )
+            },
             confirmButton = {
                 Button(onClick = {
                     pendingReplacement = null
                     install(entry)
-                }) { Text("Replace") }
+                }) { Text("Update and merge") }
             },
             dismissButton = {
                 Button(onClick = { pendingReplacement = null }) { Text("Cancel") }
