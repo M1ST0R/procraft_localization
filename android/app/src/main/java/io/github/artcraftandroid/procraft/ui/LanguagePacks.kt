@@ -1129,6 +1129,13 @@ private fun PackEditorPage(
         }
     }
 
+    val isRtl = pack.locale.substringBefore('-').lowercase(Locale.ROOT) in
+        setOf("ar", "fa", "he", "ur", "ps", "sd", "ug")
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalLayoutDirection provides
+            if (isRtl) androidx.compose.ui.unit.LayoutDirection.Rtl
+            else androidx.compose.ui.unit.LayoutDirection.Ltr,
+    ) {
     Column(
         modifier = Modifier.fillMaxSize()
             .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing)
@@ -1209,5 +1216,6 @@ private fun PackEditorPage(
                 }
             }
         }
+    }
     }
 }
