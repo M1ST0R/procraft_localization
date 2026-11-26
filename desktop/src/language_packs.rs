@@ -878,10 +878,10 @@ fn hub_has_local_changes(id: &str) -> bool {
 
 fn install_hub_entry(entry: &HubEntry) -> Result<HubInstallResult, String> {
     let remote = verify_hub_pack(entry)?;
-    if let Some(previous) = read_hub_metadata(&entry.id) {
-        if compare_hub_versions(&entry.version, &previous.version).is_lt() {
-            return Err("A downgrade of this community translation was blocked.".to_owned());
-        }
+    if let Some(previous) = read_hub_metadata(&entry.id)
+        && compare_hub_versions(&entry.version, &previous.version).is_lt()
+    {
+        return Err("A downgrade of this community translation was blocked.".to_owned());
     }
 
     let existing = if pack_path(&entry.id).is_file() {
@@ -902,15 +902,15 @@ fn install_hub_entry(entry: &HubEntry) -> Result<HubInstallResult, String> {
     let installed = LanguagePack { strings: merge.strings, ..remote.clone() };
 
     let mut backup_name = None;
-    if let Some(local) = existing.as_ref() {
-        if local != &installed {
-            let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)
-                .map_err(|error| format!("System clock error: {error}"))?.as_nanos();
-            let backup = hub_backups_dir().join(format!("{}-{timestamp}.procraft-lang", entry.id));
-            let backup_data = serde_json::to_vec_pretty(local).map_err(|error| error.to_string())?;
-            write_atomic(&backup, &backup_data)?;
-            backup_name = backup.file_name().and_then(|name| name.to_str()).map(str::to_owned);
-        }
+    if let Some(local) = existing.as_ref()
+        && local != &installed
+    {
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)
+            .map_err(|error| format!("System clock error: {error}"))?.as_nanos();
+        let backup = hub_backups_dir().join(format!("{}-{timestamp}.procraft-lang", entry.id));
+        let backup_data = serde_json::to_vec_pretty(local).map_err(|error| error.to_string())?;
+        write_atomic(&backup, &backup_data)?;
+        backup_name = backup.file_name().and_then(|name| name.to_str()).map(str::to_owned);
     }
 
     save_pack(&installed)?;
@@ -933,7 +933,7 @@ fn install_hub_entry(entry: &HubEntry) -> Result<HubInstallResult, String> {
 
 enum HubEvent {
     Catalogue(Result<Vec<HubEntry>, String>),
-    Installed(Result<HubInstallResult, String>),
+    Installed(Result<Box<HubInstallResult>, String>),
 }
 
 fn start_hub_refresh(state: &mut ManagerState) {
@@ -961,7 +961,7 @@ fn start_hub_install(state: &mut ManagerState, entry: HubEntry) {
     state.hub_error = None;
     state.hub_status = None;
     thread::spawn(move || {
-        let result = install_hub_entry(&entry);
+        let result = install_hub_entry(&entry).map(Box::new);
         let _ = sender.send(HubEvent::Installed(result));
     });
 }
