@@ -1,6 +1,6 @@
-# Community Translation Hub
+# Community translations catalogue
 
-This directory is the source of truth for the public ProCraft translation catalogue.
+This directory is the source of truth for the public ProCraft community translations catalogue. The catalogue is accessed from the built-in Language Packs manager; users do not install a separate plugin or marketplace.
 
 - Catalogue: [index.json](index.json)
 - Catalogue schema: [community-translation-index.schema.json](../schemas/community-translation-index.schema.json)
@@ -48,4 +48,4 @@ The Hub is a curated catalogue, not an unrestricted upload service. A listing me
 
 Clients accept HTTPS downloads only from this repository's `raw.githubusercontent.com` path. Before installation they verify the SHA-256 digest, parse the package, validate limits and placeholders, and compare the package metadata against the catalogue. Packs remain plain text data and cannot execute code.
 
-The initial catalogue is intentionally empty. The first community-submitted translations will be added after review.
+The catalogue is currently empty. Community-submitted packs are added after review and compatibility checks.
