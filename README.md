@@ -24,7 +24,9 @@ Download artifacts from successful Actions runs; temporary artifacts expire afte
 
 ## Translations
 
-- [Community translation catalogue](community-translations/index.json)
+- [Available community translations](community-translations/index.json)
+- [Japanese translation — 707 strings](community-translations/ja-jp.procraft-lang)
+- [Japanese contributor review notes](docs/JAPANESE_TRANSLATION_REVIEW.md)
 - [Publishing a reviewed community translation](community-translations/README.md)
 - [User, translator and developer guide](docs/COMMUNITY_LANGUAGE_PACKS_GUIDE.md)
 - [Pack format, validation and limitations](docs/COMMUNITY_LANGUAGE_PACKS.md)

@@ -82,9 +82,11 @@ Custom packs do **not** inherit Russian. Missing or empty entries show English.
 2. Refresh the catalogue when online.
 3. Review the language, author, version, translated-string count and description.
 4. Choose **Install**. The app downloads the package, verifies its SHA-256 digest and metadata, then runs the regular `.procraft-lang` validator before activating it.
-5. To replace an installed copy, choose **Update / reinstall** and confirm. This overwrites local edits in that pack.
+5. If the pack is already installed, choose **Update / reinstall** and confirm. This replaces the installed file, including local edits.
 
-Community translations are a built-in part of the existing Language Packs manager, not a separate plugin or marketplace. The catalogue is curated by maintainers. It is currently empty while submissions are being prepared. Updates are checked manually in the catalogue and must be confirmed before replacing an installed pack; they are not silently applied. You can still import a file manually as described below.
+**Available now:** the reviewed Japanese pack (`ja-JP`, 707 translated strings) is published in the catalogue.
+
+Community translations are a built-in part of the existing Language Packs manager, not a separate plugin or marketplace. The catalogue is curated by maintainers. Pack updates are currently manual: refresh the catalogue and use **Update / reinstall**. Background auto-updates are not implemented yet; they should be added with protection for locally edited packs so updates cannot silently destroy a user's work.
 
 Desktop downloads use the system `curl` command and a system SHA-256 utility (`certutil` on Windows, `sha256sum` or `shasum` on Unix-like systems). When these utilities are unavailable, use manual import.
 

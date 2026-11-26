@@ -6,7 +6,7 @@
 
 Community Language Packs lets users translate ProCraft's interface without compiling the app or editing source code. Translations are stored locally as portable files that can be exchanged. It is intended for users, volunteer translators and developers.
 
-Features: create a translation; search/edit source strings; save and reopen; activate English, built-in Russian or a custom pack; browse curated community translations inside the built-in manager; install and update verified packs; import/export; share; delete. Local editing works offline; Hub browsing requires an internet connection.
+Features: create a translation; search/edit source strings; save and reopen; activate English, built-in Russian or a custom pack; browse curated community translations inside the built-in manager; install and update verified packs; import/export; share; delete. The catalogue currently contains a reviewed Japanese pack with 707 strings. Local editing works offline; catalogue browsing and downloads require an internet connection.
 
 ## Open the manager
 
@@ -93,13 +93,13 @@ Format v1 is UTF-8 JSON. Exact English source phrases are keys, including case, 
 }
 ```
 
-The source catalog has 1,377 entries. Keep placeholders such as `{count}`, `{used}` and `{maximum}` exactly; they may move within the translated sentence, but cannot be removed or renamed.
+The source catalog has 1,377 entries. The published Japanese pack currently translates 707 strings. Keep placeholders such as `{count}`, `{used}` and `{maximum}` exactly; they may move within the translated sentence, but cannot be removed or renamed.
 
 Validation limits include 5 MiB file size, 20,000 entries, source keys up to 512 characters, values up to 4,000 characters and up to 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. See the JSON Schema linked below.
 
 ## Limitations
 
-This is an MVP, not a complete official localization. Some generated strings, plugins, user content or UI outside the translation boundary may not be editable. English source text is the v1 key; upstream wording changes may require translation updates. Translation quality/layout fit require human review. The Hub is a curated catalogue with verified manual installs; it is not an open upload portal, collaborative editor, background updater or cloud sync service.
+This is an MVP, not a complete official localization. Some generated strings, plugins, user content or UI outside the translation boundary may not be editable. English source text is the v1 key; upstream wording changes may require translation updates. Translation quality/layout fit require human review. The Community translations catalogue is curated and installed from inside the app; it is not an open upload portal, collaborative editor or cloud sync service. Updates currently require a manual catalogue refresh and confirmation; background auto-updates are planned but not implemented.
 
 ## Developer/contributor
 

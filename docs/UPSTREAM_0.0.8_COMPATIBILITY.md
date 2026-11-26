@@ -56,3 +56,18 @@ The fork currently contains custom localization wrappers and translation editor 
 ## Why the merge is not performed in this review
 
 The available GitHub connector can inspect repository trees, files, commits and Actions, but it does not provide a local clone/checkout/merge workflow or an import of the upstream release tag into this repository. The local execution environment also cannot resolve GitHub for a clone/download. Performing a fake merge commit or overwriting the fork tree with upstream would discard localization changes and is unsafe. The merge therefore remains explicitly blocked rather than being reported as complete.
+
+
+## Safe local merge procedure
+
+The merge cannot be performed from this session: GitHub's connector exposes read/write file and ref operations but no checkout/merge workflow, and the execution environment cannot resolve GitHub for a clone. Creating a temporary branch is also avoided because branch deletion is unavailable and the repository is intentionally kept to exactly `main` and `russian`.
+
+A checked-in helper, [`tools/merge_upstream_release.sh`](../tools/merge_upstream_release.sh), fetches the exact upstream release tag and stages a no-commit merge only on the selected clean `main` or `russian` branch. It does not push or create temporary branches, and it does not auto-resolve conflicts. Run it locally, resolve conflicts while preserving localization, execute the listed checks, and commit only after validation.
+
+## Current Actions verification (2026-11-26)
+
+- [CI run 45875338091](https://github.com/M1ST0R/procraft_localization/actions/runs/45875338091): all four jobs passed (Clippy, Android unit tests, translation/Hub audit, Desktop translation and core tests).
+- [Android APK run 45873773336](https://github.com/M1ST0R/procraft_localization/actions/runs/45873773336): arm64 build, APK verification and artifact upload passed.
+- [Desktop build run 45874381328](https://github.com/M1ST0R/procraft_localization/actions/runs/45874381328): Windows MSI/portable ZIP and Linux AppImage/DEB/tar.gz packaging, checksum generation and upload passed.
+
+These runs validate the current fork based on the previous upstream baseline. They are **not** tests of the v0.0.8-beta merge.

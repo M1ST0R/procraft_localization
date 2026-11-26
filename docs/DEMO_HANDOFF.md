@@ -7,7 +7,7 @@
 
 ## What the demo delivers
 
-Android and Desktop users can browse the curated community translations catalogue inside the built-in Language Packs manager (no separate plugin or marketplace), install and update verified translations, and create, edit, save, activate, import, export, share and delete local packs. Format v1 is data-only JSON, uses exact English UI text as keys and falls back to English for missing values. The built-in Russian dictionary remains selectable alongside installed custom packs.
+Android and Desktop users can browse the curated community translations catalogue inside the built-in Language Packs manager (no separate plugin or marketplace). The catalogue currently publishes Japanese (`ja-JP`, 707 strings). Users can install and manually update verified translations, and create, edit, save, activate, import, export, share and delete local packs. Format v1 is data-only JSON, uses exact English UI text as keys and falls back to English for missing values. The built-in Russian dictionary remains selectable alongside installed custom packs.
 
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
@@ -62,7 +62,7 @@ Artifacts expire after 30 days. A completed build proves that the workflow compi
 
 - Source text is the key in format v1. Upstream wording changes can require translation updates.
 - Some generated text, plugin strings and UI text outside the wrappers may not be editable.
-- The catalogue is curated, not an open upload portal or collaborative editor. Pack discovery and updates are user-initiated; update replacement requires confirmation and there is no background auto-update or cloud editing.
+- The catalogue is curated, not an open upload portal or collaborative editor. Pack discovery and updates are user-initiated; update replacement requires confirmation. Background auto-updates and cloud editing are not implemented
 - The source catalog contains 1,377 entries; CI verifies Android/Desktop coverage, the intentional compact Desktop labels and the complete sample pack.
 - [Readable full pack preview](../examples/ru-community-preview.json)
 - The future stable-message-ID proposal is in `LOCALIZATION_PROPOSAL.md`; do not confuse it with the current v1 format.

@@ -7,7 +7,7 @@
 
 ## What the feature does
 
-The main branch contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The manager works offline for local packs and includes a built-in community translations catalogue for discovering and installing reviewed translations. It is not a separate plugin or marketplace.
+The main branch contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The manager works offline for local packs and includes a built-in community translations catalogue for discovering, installing and updating reviewed translations. The catalogue currently includes Japanese (`ja-JP`, 707 strings). It is not a separate plugin or marketplace.
 
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
@@ -61,7 +61,7 @@ The JSON Schema is in [`schemas/procraft-language-pack.schema.json`](../schemas/
 - English text is used as the key; upstream wording changes can break matching.
 - Some generated/parameterized text, plugin text or UI text outside the translation boundary may not be included in the editor catalog.
 - The Hub is a curated catalogue, not an open upload service or a cloud editor. Maintainers review submissions and publish them through `community-translations/index.json`.
-- Hub updates are user-initiated. Replacing an installed pack requires confirmation because local edits would be lost.
+- Hub updates are currently user-initiated. Replacing an installed pack requires confirmation because local edits would be lost. Background auto-updates are not implemented yet.
 - The built-in Russian dictionary is a separate built-in choice and is not exported as a custom pack.
 - Translation quality, terminology consistency and layout fit require human review.
 
