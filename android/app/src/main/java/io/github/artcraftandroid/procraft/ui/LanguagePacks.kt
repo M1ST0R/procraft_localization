@@ -236,12 +236,15 @@ private val PackBackground get() = if (Pc.light) Color(0xFFF7F7F7) else Color(0x
 private val PackSurface get() = Pc.Row
 private val PackFieldContainer get() = if (Pc.light) Color(0xFFFFFFFF) else Color(0xFF252529)
 
+internal fun isRtlLocale(locale: String): Boolean {
+    val subtags = locale.lowercase(Locale.ROOT).replace('_', '-').split('-')
+    val script = subtags.firstOrNull { it.length == 4 }
+    if (script != null) return script in setOf("arab", "hebr", "thaa", "nkoo", "adlm", "syrc")
+    return subtags.firstOrNull() in setOf("ar", "fa", "he", "ur", "ps", "sd", "ug", "yi", "dv", "ckb", "nqo", "syr")
+}
+
 private fun packTextDirection(locale: String): TextDirection =
-    if (locale.lowercase(Locale.ROOT).substringBefore('-').substringBefore('_') in setOf("ar", "fa", "he", "ur", "yi")) {
-        TextDirection.ContentOrRtl
-    } else {
-        TextDirection.ContentOrLtr
-    }
+    if (LanguagePacks.isRtlLocale(locale)) TextDirection.ContentOrRtl else TextDirection.ContentOrLtr
 
 private fun packEditorTextStyle(locale: String) = TextStyle(
     color = PackInk,
@@ -1184,8 +1187,7 @@ private fun PackEditorPage(
         }
     }
 
-    val isRtl = pack.locale.substringBefore('-').lowercase(Locale.ROOT) in
-        setOf("ar", "fa", "he", "ur", "ps", "sd", "ug")
+    val isRtl = LanguagePacks.isRtlLocale(pack.locale)
     androidx.compose.runtime.CompositionLocalProvider(
         androidx.compose.ui.platform.LocalLayoutDirection provides
             if (isRtl) androidx.compose.ui.unit.LayoutDirection.Rtl
