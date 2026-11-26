@@ -1147,6 +1147,16 @@ mod tests {
     }
 
     #[test]
+    fn rtl_locales_are_detected_for_editor_direction() {
+        for locale in ["ar", "ar-SA", "fa-IR", "ur-PK", "he", "yi", "ug-CN"] {
+            assert!(is_rtl_locale(locale), "{locale} should use RTL editor layout");
+        }
+        for locale in ["en", "ru-RU", "ja-JP", "zh-Hant"] {
+            assert!(!is_rtl_locale(locale), "{locale} should use LTR editor layout");
+        }
+    }
+
+    #[test]
     fn v1_pack_id_and_size_limits_are_checked() {
         let mut pack = LanguagePack {
             format_version: FORMAT_VERSION,
