@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
@@ -1562,6 +1563,13 @@ internal fun Text(
     style: TextStyle = LocalTextStyle.current,
 ) {
     val localizedText = remember(text, LanguagePacks.revision) { localizeUiText(text) }
+    val isRtl = remember(LanguagePacks.revision) {
+        LanguagePacks.currentLocale().lowercase(java.util.Locale.ROOT)
+            .substringBefore('-').substringBefore('_') in setOf("ar", "fa", "he", "ur", "yi")
+    }
+    val resolvedStyle = style.copy(
+        textDirection = if (isRtl) TextDirection.ContentOrRtl else TextDirection.ContentOrLtr,
+    )
     MaterialText(
         text = localizedText,
         modifier = modifier,
@@ -1572,14 +1580,14 @@ internal fun Text(
         fontFamily = fontFamily,
         letterSpacing = letterSpacing,
         textDecoration = textDecoration,
-        textAlign = textAlign,
+        textAlign = textAlign ?: if (isRtl) TextAlign.Start else null,
         lineHeight = lineHeight,
         overflow = overflow,
         softWrap = softWrap,
         maxLines = maxLines,
         minLines = minLines,
         onTextLayout = onTextLayout,
-        style = style,
+        style = resolvedStyle,
     )
 }
 
