@@ -6,7 +6,7 @@
 
 Community Language Packs lets users translate ProCraft's interface without compiling the app or editing source code. Translations are stored locally as portable files that can be exchanged. It is intended for users, volunteer translators and developers.
 
-Features: create a translation; search/edit source strings; save and reopen; activate English, built-in Russian or a custom pack; browse the curated Community Hub; install and update verified packs; import/export; share; delete. Local editing works offline; Hub browsing requires an internet connection.
+Features: create a translation; search/edit source strings; save and reopen; activate English, built-in Russian or a custom pack; browse curated community translations inside the built-in manager; install and update verified packs; import/export; share; delete. Local editing works offline; Hub browsing requires an internet connection.
 
 ## Open the manager
 
