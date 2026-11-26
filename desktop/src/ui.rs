@@ -481,12 +481,10 @@ impl Interface {
     pub fn show(&mut self, ui: &mut Ui, session: &std::sync::Arc<CanvasSession>, input: &mut Input) {
         let typing = self.typing;
         let rtl = crate::language_packs::is_rtl_active();
-        ui.style_mut(|style| {
-            style.layout = egui::Layout::top_down(if rtl {
-                egui::Align::Max
-            } else {
-                egui::Align::Min
-            });
+        ui.style_mut().layout = egui::Layout::top_down(if rtl {
+            egui::Align::Max
+        } else {
+            egui::Align::Min
         });
         self.show_frame(ui, session, input);
         let ctx = ui.ctx();
