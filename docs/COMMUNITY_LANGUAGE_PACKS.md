@@ -7,7 +7,7 @@
 
 ## What the feature does
 
-The main branch contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The manager works offline for local packs and includes an online, curated Community Hub for discovering and installing reviewed translations.
+The main branch contains a working community translation manager. A user can create a translation, search the source catalog, edit strings, save the pack locally, activate it, import/export a pack file, share it and delete it. The manager works offline for local packs and includes a built-in community translations catalogue for discovering and installing reviewed translations. It is not a separate plugin or marketplace.
 
 - Android: **Settings → Language packs**
 - Desktop: **Preferences → Language Packs**
@@ -20,7 +20,7 @@ The repository maintains one edition on `main`, with the Language Packs manager 
 - **Search:** find source UI strings.
 - **Edit:** reopen an installed custom pack.
 - **Save:** save changes locally and activate the saved pack.
-- **Community Hub:** refresh the remote catalogue, inspect published translations and install or update a reviewed pack. Downloads are restricted to this repository and checked against SHA-256, pack metadata, catalogue revision, size limits and placeholders.
+- **Community translations:** refresh the catalogue from inside the existing manager, inspect published translations and install or update a reviewed pack. Downloads are restricted to this repository and checked against SHA-256, pack metadata, catalogue revision, size limits and placeholders.
 - **Import:** validate and install a `.procraft-lang` file. A successfully imported pack is activated.
 - **Export:** write the selected custom pack to a portable file.
 - **Share:** Android opens the system share sheet; Desktop exports and reveals the file in the file manager where supported.
@@ -67,7 +67,7 @@ The JSON Schema is in [`schemas/procraft-language-pack.schema.json`](../schemas/
 
 ## Community Hub
 
-The remote catalogue is maintained in [`community-translations/index.json`](../community-translations/index.json). It is intentionally empty until a community translation is received and reviewed. See the [publishing instructions](../community-translations/README.md) before adding a pack.
+The remote catalogue is maintained in [`community-translations/index.json`](../community-translations/index.json). It is accessed from the built-in Language Packs manager, not through a separate plugin or marketplace. It is currently empty until a community translation is received and reviewed. See the [publishing instructions](../community-translations/README.md) before adding a pack.
 
 ## Sample pack
 
