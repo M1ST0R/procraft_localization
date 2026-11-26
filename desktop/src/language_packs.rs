@@ -351,16 +351,19 @@ fn valid_locale(locale: &str) -> bool {
 
 fn is_rtl_locale(locale: &str) -> bool {
     let parts: Vec<_> = locale.split(['-', '_']).filter(|part| !part.is_empty()).collect();
-    if let Some(script) = parts.iter().find(|part| part.len() == 4) {
-        if matches!(script.to_ascii_lowercase().as_str(), "arab" | "hebr" | "thaa" | "nkoo" | "adlm" | "syrc") {
-            return true;
-        }
-    }
+    let script_is_rtl = parts.iter().any(|script| {
+        script.len() == 4
+            && matches!(
+                script.to_ascii_lowercase().as_str(),
+                "arab" | "hebr" | "thaa" | "nkoo" | "adlm" | "syrc"
+            )
+    });
     let language = parts.first().copied().unwrap_or("").to_ascii_lowercase();
-    matches!(
-        language.as_str(),
-        "ar" | "he" | "fa" | "ur" | "ps" | "sd" | "ug" | "yi" | "dv" | "ku" | "ckb" | "nqo" | "syr"
-    )
+    script_is_rtl
+        || matches!(
+            language.as_str(),
+            "ar" | "he" | "fa" | "ur" | "ps" | "sd" | "ug" | "yi" | "dv" | "ku" | "ckb" | "nqo" | "syr"
+        )
 }
 
 pub fn is_rtl_active() -> bool {
