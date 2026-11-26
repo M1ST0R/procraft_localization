@@ -90,7 +90,7 @@ This is an ongoing community translation, not a claim that every visible string 
 
 ### Report a missing or incorrect translation
 
-Open an issue in this repository and include:
+GitHub Issues and Discussions are disabled for this fork. Share the report in the [ProCraft Discord](https://discord.gg/gypGes3Uca) or submit a Pull Request, and include:
 
 1. the exact English text shown by the app;
 2. the screen, panel or menu where it appears;
@@ -135,34 +135,39 @@ For local builds, follow the upstream Android build requirements and keep the Ru
 
 ## 4. Update from upstream ProCraft
 
-Do not replace this community branch with a fresh upstream checkout. Merge upstream changes into the existing `russian` branch so the Russian dictionaries, tests and community packaging remain intact.
+Do not replace this community branch with a fresh upstream checkout. Merge the exact upstream release tag into the existing `russian` branch so the Russian dictionaries, tests and packaging remain intact.
 
-One-time remote setup:
+The repository includes `tools/merge_upstream_release.sh`. It checks that the current branch is `russian`, requires a clean working tree, fetches the exact upstream tag `v0.0.8-beta` and stages a no-commit merge. It does not push, create a branch or resolve conflicts automatically.
 
-```bash
-git remote add upstream https://github.com/artcraft-android/procraft.git
-git fetch upstream
-```
-
-Update the existing branch:
+From a clean local clone:
 
 ```bash
 git switch russian
-git fetch upstream
-git merge upstream/main
+git pull --ff-only origin russian
+bash tools/merge_upstream_release.sh russian
 ```
 
-Before committing:
+Resolve conflicts manually. Keep upstream engine/brush/plugin behavior and preserve the Russian-only UI/build identity. Do not copy the Community Language Packs manager, editor or Hub from `main`.
 
-1. Resolve conflicts while preserving upstream functional changes.
-2. Reapply Russian UI changes only where upstream changed the relevant rendering code.
-3. Keep the current plugin manifests and bundled plugin layout. Do not restore obsolete standalone plugin folders that upstream has consolidated.
-4. Run the Russian CI, Android APK and Desktop builds.
-5. Test the APK on a physical ARM64 Android device.
-6. Test Windows MSI/Portable or Linux DEB/AppImage on the intended OS.
-7. Verify the generated `SHA256SUMS.txt` before distributing the artifact.
+Before committing, run:
 
-The upstream baseline currently tracked by this branch is ProCraft `v0.0.7-beta`. When updating to a later upstream version, update the baseline/version notes in the README and this guide as part of the same change.
+```bash
+cargo fmt --all -- --check
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo test --locked -p procraft-desktop translation::tests
+cargo test --locked -p procraft-core --lib project::signature_tests
+```
+
+Then run Russian CI, the Android APK workflow and Windows/Linux Desktop packaging. Smoke-test brush imports (including Krita), default brush loading, pressure/smoothing, dual/mixing brushes, brush sounds, export/import and plugin loading on Android and Desktop. Check MSI/Portable or DEB/AppImage can coexist with upstream ProCraft and the Lang Pack edition.
+
+Commit and push only after validation:
+
+```bash
+git commit -m "Merge upstream v0.0.8-beta"
+git push origin russian
+```
+
+The upstream iPad IPA is not a build produced by this fork. This branch currently targets Android, Windows and Linux.
 
 ## 5. Signing and secrets
 
