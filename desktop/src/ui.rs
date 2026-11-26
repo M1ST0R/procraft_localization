@@ -480,6 +480,14 @@ impl Interface {
     /// unless it only let go of a field (egui drops the field's keys as the frame begins).
     pub fn show(&mut self, ui: &mut Ui, session: &std::sync::Arc<CanvasSession>, input: &mut Input) {
         let typing = self.typing;
+        let rtl = crate::language_packs::is_rtl_active();
+        ui.ctx().style_mut(|style| {
+            style.layout = egui::Layout::top_down(if rtl {
+                egui::Align::Max
+            } else {
+                egui::Align::Min
+            });
+        });
         self.show_frame(ui, session, input);
         let ctx = ui.ctx();
         if !typing && escape_untaken(ctx) && self.canvas_shown() && input.idle() {

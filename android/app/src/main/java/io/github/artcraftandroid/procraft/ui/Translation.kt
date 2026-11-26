@@ -1581,7 +1581,7 @@ internal fun Text(
         fontFamily = fontFamily,
         letterSpacing = letterSpacing,
         textDecoration = textDecoration,
-        textAlign = textAlign ?: if (isRtl) TextAlign.Start else null,
+        textAlign = textAlign ?: if (isRtl) TextAlign.End else null,
         lineHeight = lineHeight,
         overflow = overflow,
         softWrap = softWrap,
@@ -1614,6 +1614,12 @@ internal fun Text(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current,
 ) {
+    val isRtl = remember(LanguagePacks.revision) {
+        LanguagePacks.isRtlLocale(LanguagePacks.currentLocale())
+    }
+    val resolvedStyle = style.copy(
+        textDirection = if (isRtl) TextDirection.ContentOrRtl else TextDirection.ContentOrLtr,
+    )
     MaterialText(
         text = text,
         modifier = modifier,
@@ -1624,7 +1630,7 @@ internal fun Text(
         fontFamily = fontFamily,
         letterSpacing = letterSpacing,
         textDecoration = textDecoration,
-        textAlign = textAlign,
+        textAlign = textAlign ?: if (isRtl) TextAlign.End else null,
         lineHeight = lineHeight,
         overflow = overflow,
         softWrap = softWrap,
@@ -1632,6 +1638,6 @@ internal fun Text(
         minLines = minLines,
         inlineContent = inlineContent,
         onTextLayout = onTextLayout,
-        style = style,
+        style = resolvedStyle,
     )
 }

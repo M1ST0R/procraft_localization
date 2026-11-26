@@ -833,7 +833,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         Button(
             onClick = { showHub = true },
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Browse community translations") }
+        ) { Text("Community translations") }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { createDialog = true }) { Text("New") }
             Button(onClick = { importPicker.launch(arrayOf("*/*")) }) { Text("Import") }
@@ -1065,7 +1065,7 @@ private fun CommunityHubPage(
             Text("Connecting to the community catalogue…", color = PackDim, fontSize = 14.sp)
         } else if (entries.isEmpty()) {
             Text(
-                "No community translations have been published yet. New languages will appear here after review.",
+                "No translations are currently listed. Check back after new packs are reviewed.",
                 color = PackDim,
                 fontSize = 14.sp,
             )

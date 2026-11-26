@@ -350,10 +350,24 @@ fn valid_locale(locale: &str) -> bool {
 }
 
 fn is_rtl_locale(locale: &str) -> bool {
+    let parts: Vec<_> = locale.split(['-', '_']).filter(|part| !part.is_empty()).collect();
+    if let Some(script) = parts.iter().find(|part| part.len() == 4) {
+        if matches!(script.to_ascii_lowercase().as_str(), "arab" | "hebr" | "thaa" | "nkoo" | "adlm" | "syrc") {
+            return true;
+        }
+    }
+    let language = parts.first().copied().unwrap_or("").to_ascii_lowercase();
     matches!(
-        locale.split(['-', '_']).next().unwrap_or("").to_ascii_lowercase().as_str(),
-        "ar" | "he" | "fa" | "ur" | "ps" | "sd" | "ug" | "yi" | "dv" | "ku" | "syr"
+        language.as_str(),
+        "ar" | "he" | "fa" | "ur" | "ps" | "sd" | "ug" | "yi" | "dv" | "ku" | "ckb" | "nqo" | "syr"
     )
+}
+
+pub fn is_rtl_active() -> bool {
+    match current() {
+        Active::Custom(pack, _) => is_rtl_locale(&pack.locale),
+        Active::Unloaded | Active::Russian | Active::English => false,
+    }
 }
 
 fn placeholders(text: &str) -> Vec<String> {
@@ -1147,12 +1161,12 @@ mod tests {
     }
 
     #[test]
-    fn rtl_locales_are_detected_for_editor_direction() {
-        for locale in ["ar", "ar-SA", "fa-IR", "ur-PK", "he", "yi", "ug-CN"] {
-            assert!(is_rtl_locale(locale), "{locale} should use RTL editor layout");
+    fn rtl_locales_are_detected_for_editor_and_app_direction() {
+        for locale in ["ar", "ar-SA", "fa-IR", "ur-PK", "he", "yi", "ug-CN", "az-Arab", "nqo", "ckb"] {
+            assert!(is_rtl_locale(locale), "{locale} should use RTL layout");
         }
-        for locale in ["en", "ru-RU", "ja-JP", "zh-Hant"] {
-            assert!(!is_rtl_locale(locale), "{locale} should use LTR editor layout");
+        for locale in ["en", "ru-RU", "ja-JP", "zh-Hant", "ar-Latn"] {
+            assert!(!is_rtl_locale(locale), "{locale} should use LTR layout");
         }
     }
 
