@@ -481,12 +481,12 @@ impl Interface {
     pub fn show(&mut self, ui: &mut Ui, session: &std::sync::Arc<CanvasSession>, input: &mut Input) {
         let typing = self.typing;
         let rtl = crate::language_packs::is_rtl_active();
-        ui.style_mut().layout = egui::Layout::top_down(if rtl {
+        let layout = egui::Layout::top_down(if rtl {
             egui::Align::Max
         } else {
             egui::Align::Min
         });
-        self.show_frame(ui, session, input);
+        ui.with_layout(layout, |ui| self.show_frame(ui, session, input));
         let ctx = ui.ctx();
         if !typing && escape_untaken(ctx) && self.canvas_shown() && input.idle() {
             session.settle_upright();
