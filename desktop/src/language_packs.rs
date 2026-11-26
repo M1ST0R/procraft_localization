@@ -6,8 +6,8 @@
 
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::io::Read;
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::{Read, Write};
 use std::process::Command;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
@@ -276,11 +276,47 @@ fn activate_pack(pack: &LanguagePack) -> Result<(), String> {
     Ok(())
 }
 
+fn write_atomic(path: &Path, content: &[u8]) -> Result<(), String> {
+    let parent = path.parent().ok_or_else(|| "Invalid storage path.".to_owned())?;
+    std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+    let nonce = SystemTime::now().duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?.as_nanos();
+    let temporary = path.with_extension(format!("tmp-{}-{nonce}", std::process::id()));
+    let rollback = path.with_extension(format!("rollback-{}-{nonce}", std::process::id()));
+
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)
+        .map_err(|error| format!("Could not create a temporary file: {error}"))?;
+    if let Err(error) = file.write_all(content).and_then(|()| file.sync_all()) {
+        let _ = std::fs::remove_file(&temporary);
+        return Err(format!("Could not write a temporary file: {error}"));
+    }
+    drop(file);
+
+    let had_previous = path.exists();
+    if had_previous {
+        std::fs::rename(path, &rollback)
+            .map_err(|error| format!("Could not preserve the previous file: {error}"))?;
+    }
+    if let Err(error) = std::fs::rename(&temporary, path) {
+        if had_previous {
+            let _ = std::fs::rename(&rollback, path);
+        }
+        let _ = std::fs::remove_file(&temporary);
+        return Err(format!("Could not replace the file: {error}"));
+    }
+    if had_previous {
+        let _ = std::fs::remove_file(rollback);
+    }
+    Ok(())
+}
+
 fn save_pack(pack: &LanguagePack) -> Result<(), String> {
     validate(pack)?;
-    std::fs::create_dir_all(packs_dir()).map_err(|e| e.to_string())?;
-    let content = serde_json::to_string_pretty(pack).map_err(|e| e.to_string())?;
-    std::fs::write(pack_path(&pack.id), content).map_err(|e| e.to_string())
+    let content = serde_json::to_vec_pretty(pack).map_err(|e| e.to_string())?;
+    write_atomic(&pack_path(&pack.id), &content)
 }
 
 fn export_pack(pack: &LanguagePack, reveal: bool) -> Result<(), String> {
@@ -455,6 +491,71 @@ fn empty_pack(name: &str, locale: &str, author: &str) -> Result<LanguagePack, St
 const HUB_INDEX_URL: &str = "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/index.json";
 const HUB_RAW_PREFIX: &str = "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/";
 const MAX_HUB_INDEX_BYTES: usize = 512 * 1024;
+const HUB_CHECK_INTERVAL_SECS: u64 = 6 * 60 * 60;
+
+fn hub_data_dir() -> PathBuf {
+    packs_dir().join(".hub")
+}
+
+fn hub_baselines_dir() -> PathBuf {
+    hub_data_dir().join("baselines")
+}
+
+fn hub_metadata_dir() -> PathBuf {
+    hub_data_dir().join("metadata")
+}
+
+fn hub_backups_dir() -> PathBuf {
+    hub_data_dir().join("backups")
+}
+
+fn hub_baseline_path(id: &str) -> PathBuf {
+    hub_baselines_dir().join(format!("{id}.procraft-lang"))
+}
+
+fn hub_metadata_path(id: &str) -> PathBuf {
+    hub_metadata_dir().join(format!("{id}.json"))
+}
+
+fn hub_catalog_cache_path() -> PathBuf {
+    hub_data_dir().join("index.json")
+}
+
+fn hub_last_check_path() -> PathBuf {
+    hub_data_dir().join("last-check")
+}
+
+fn hub_check_due() -> bool {
+    let last = std::fs::read_to_string(hub_last_check_path())
+        .ok()
+        .and_then(|value| value.trim().parse::<u64>().ok())
+        .unwrap_or(0);
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_secs());
+    last == 0 || now < last || now.saturating_sub(last) >= HUB_CHECK_INTERVAL_SECS
+}
+
+fn cached_hub_catalog() -> Vec<HubEntry> {
+    let path = hub_catalog_cache_path();
+    let Ok(metadata) = std::fs::metadata(&path) else { return Vec::new() };
+    if metadata.len() > MAX_HUB_INDEX_BYTES as u64 {
+        return Vec::new();
+    }
+    std::fs::read(path)
+        .ok()
+        .and_then(|raw| parse_hub_catalog(&raw).ok())
+        .unwrap_or_default()
+}
+
+fn fetch_and_cache_hub_catalog() -> Result<Vec<HubEntry>, String> {
+    let raw = fetch_hub_bytes(HUB_INDEX_URL, MAX_HUB_INDEX_BYTES)?;
+    let entries = parse_hub_catalog(&raw)?;
+    write_atomic(&hub_catalog_cache_path(), &raw)?;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)
+        .map_err(|error| format!("System clock error: {error}"))?.as_secs();
+    write_atomic(&hub_last_check_path(), now.to_string().as_bytes())?;
+    Ok(entries)
+}
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -673,9 +774,162 @@ fn verify_hub_pack(entry: &HubEntry) -> Result<LanguagePack, String> {
     Ok(pack)
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct HubInstallMetadata {
+    version: String,
+    sha256: String,
+}
+
+struct HubInstallResult {
+    pack: LanguagePack,
+    local_changes_preserved: usize,
+    conflicts_kept_local: usize,
+    backup_name: Option<String>,
+}
+
+struct HubStringMerge {
+    strings: BTreeMap<String, String>,
+    local_changes_preserved: usize,
+    conflicts_kept_local: usize,
+}
+
+fn merge_hub_strings(
+    baseline: Option<&BTreeMap<String, String>>,
+    local: &BTreeMap<String, String>,
+    remote: &BTreeMap<String, String>,
+) -> HubStringMerge {
+    let mut keys = BTreeSet::new();
+    if let Some(baseline) = baseline {
+        keys.extend(baseline.keys().cloned());
+    }
+    keys.extend(local.keys().cloned());
+    keys.extend(remote.keys().cloned());
+
+    let mut strings = BTreeMap::new();
+    let mut local_changes = 0;
+    let mut conflicts = 0;
+    for key in keys {
+        let base_value = baseline.and_then(|values| values.get(&key));
+        let local_value = local.get(&key);
+        let remote_value = remote.get(&key);
+        if local_value != base_value {
+            local_changes += 1;
+        }
+        let selected = if local_value == base_value {
+            remote_value
+        } else if remote_value == base_value || local_value == remote_value {
+            local_value
+        } else {
+            conflicts += 1;
+            local_value
+        };
+        if let Some(value) = selected {
+            strings.insert(key, value.clone());
+        }
+    }
+    HubStringMerge {
+        strings,
+        local_changes_preserved: local_changes,
+        conflicts_kept_local: conflicts,
+    }
+}
+
+fn read_hub_metadata(id: &str) -> Option<HubInstallMetadata> {
+    let path = hub_metadata_path(id);
+    let metadata = std::fs::metadata(&path).ok()?;
+    if metadata.len() > 4096 {
+        return None;
+    }
+    let raw = std::fs::read(path).ok()?;
+    let value: HubInstallMetadata = serde_json::from_slice(&raw).ok()?;
+    if value.version.split('.').count() != 3
+        || !value.version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.')
+        || value.sha256.len() != 64
+        || !value.sha256.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return None;
+    }
+    Some(value)
+}
+
+fn compare_hub_versions(left: &str, right: &str) -> std::cmp::Ordering {
+    let left_parts = left.split('.').map(|part| part.parse::<u64>().unwrap_or(0));
+    let right_parts = right.split('.').map(|part| part.parse::<u64>().unwrap_or(0));
+    left_parts.cmp(right_parts)
+}
+
+fn hub_update_available(entry: &HubEntry) -> bool {
+    let Some(installed) = read_hub_metadata(&entry.id) else { return true };
+    compare_hub_versions(&entry.version, &installed.version).is_gt() || entry.sha256 != installed.sha256
+}
+
+fn hub_has_local_changes(id: &str) -> bool {
+    let Ok(local) = read_pack(&pack_path(id)) else { return false };
+    let Ok(baseline) = read_pack(&hub_baseline_path(id)) else {
+        return !local.strings.is_empty();
+    };
+    local.strings != baseline.strings
+}
+
+fn install_hub_entry(entry: &HubEntry) -> Result<HubInstallResult, String> {
+    let remote = verify_hub_pack(entry)?;
+    if let Some(previous) = read_hub_metadata(&entry.id) {
+        if compare_hub_versions(&entry.version, &previous.version).is_lt() {
+            return Err("A downgrade of this community translation was blocked.".to_owned());
+        }
+    }
+
+    let existing = if pack_path(&entry.id).is_file() {
+        Some(read_pack(&pack_path(&entry.id))?)
+    } else {
+        None
+    };
+    let baseline = read_pack(&hub_baseline_path(&entry.id)).ok();
+    let merge = if let Some(local) = existing.as_ref() {
+        merge_hub_strings(baseline.as_ref().map(|pack| &pack.strings), &local.strings, &remote.strings)
+    } else {
+        HubStringMerge {
+            strings: remote.strings.clone(),
+            local_changes_preserved: 0,
+            conflicts_kept_local: 0,
+        }
+    };
+    let installed = LanguagePack { strings: merge.strings, ..remote.clone() };
+
+    let mut backup_name = None;
+    if let Some(local) = existing.as_ref() {
+        if local != &installed {
+            let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)
+                .map_err(|error| format!("System clock error: {error}"))?.as_nanos();
+            let backup = hub_backups_dir().join(format!("{}-{timestamp}.procraft-lang", entry.id));
+            let backup_data = serde_json::to_vec_pretty(local).map_err(|error| error.to_string())?;
+            write_atomic(&backup, &backup_data)?;
+            backup_name = backup.file_name().and_then(|name| name.to_str()).map(str::to_owned);
+        }
+    }
+
+    save_pack(&installed)?;
+    let baseline_data = serde_json::to_vec_pretty(&remote).map_err(|error| error.to_string())?;
+    write_atomic(&hub_baseline_path(&entry.id), &baseline_data)?;
+    let install_metadata = HubInstallMetadata {
+        version: entry.version.clone(),
+        sha256: entry.sha256.clone(),
+    };
+    let metadata_data = serde_json::to_vec_pretty(&install_metadata).map_err(|error| error.to_string())?;
+    write_atomic(&hub_metadata_path(&entry.id), &metadata_data)?;
+
+    Ok(HubInstallResult {
+        pack: installed,
+        local_changes_preserved: merge.local_changes_preserved,
+        conflicts_kept_local: merge.conflicts_kept_local,
+        backup_name,
+    })
+}
+
 enum HubEvent {
     Catalogue(Result<Vec<HubEntry>, String>),
-    Installed(Result<LanguagePack, String>),
+    Installed(Result<HubInstallResult, String>),
 }
 
 fn start_hub_refresh(state: &mut ManagerState) {
@@ -688,8 +942,7 @@ fn start_hub_refresh(state: &mut ManagerState) {
     state.hub_error = None;
     state.hub_status = None;
     thread::spawn(move || {
-        let result = fetch_hub_bytes(HUB_INDEX_URL, MAX_HUB_INDEX_BYTES)
-            .and_then(|raw| parse_hub_catalog(&raw));
+        let result = fetch_and_cache_hub_catalog();
         let _ = sender.send(HubEvent::Catalogue(result));
     });
 }
@@ -704,7 +957,7 @@ fn start_hub_install(state: &mut ManagerState, entry: HubEntry) {
     state.hub_error = None;
     state.hub_status = None;
     thread::spawn(move || {
-        let result = verify_hub_pack(&entry);
+        let result = install_hub_entry(&entry);
         let _ = sender.send(HubEvent::Installed(result));
     });
 }
@@ -740,7 +993,16 @@ thread_local! {
 /// Open the manager over the canvas/settings. The editor is deliberately data-only and can never
 /// execute plugins, scripts or arbitrary code from an imported pack.
 pub fn open() {
-    MANAGER.with(|state| state.borrow_mut().open = true);
+    MANAGER.with(|state| {
+        let mut state = state.borrow_mut();
+        state.open = true;
+        if state.hub_entries.is_empty() {
+            state.hub_entries = cached_hub_catalog();
+        }
+        if state.hub_receiver.is_none() && hub_check_due() {
+            start_hub_refresh(&mut state);
+        }
+    });
 }
 
 pub fn show(ctx: &egui::Context) {
@@ -778,12 +1040,22 @@ pub fn show(ctx: &egui::Context) {
                     state.hub_error = Some(error);
                     state.hub_status = None;
                 }
-                HubEvent::Installed(Ok(pack)) => {
+                HubEvent::Installed(Ok(result)) => {
                     state.hub_downloading = None;
-                    match activate_pack(&pack) {
+                    match activate_pack(&result.pack) {
                         Ok(()) => {
                             state.hub_error = None;
-                            state.hub_status = Some(format!("{} is installed and active.", pack.name));
+                            let mut message = format!("{} is installed and active.", result.pack.name);
+                            if result.local_changes_preserved > 0 {
+                                message.push_str(&format!(" Preserved {} local edit(s).", result.local_changes_preserved));
+                            }
+                            if result.conflicts_kept_local > 0 {
+                                message.push_str(&format!(" Kept {} conflicting local value(s).", result.conflicts_kept_local));
+                            }
+                            if let Some(backup) = result.backup_name {
+                                message.push_str(&format!(" Backup: {backup}."));
+                            }
+                            state.hub_status = Some(message);
                         }
                         Err(error) => {
                             state.hub_error = Some(error);
@@ -894,10 +1166,10 @@ pub fn show(ctx: &egui::Context) {
                     }
                     if let Some(entry) = state.hub_confirm.clone() {
                         ui.group(|ui| {
-                            ui.label(format!("Replace the installed copy of {}?", entry.name));
-                            ui.label(tr("Your local edits will be overwritten by the reviewed community version."));
+                            ui.label(format!("Update the installed copy of {}?", entry.name));
+                            ui.label(tr("Local changes are preserved. Conflicts keep your local text, and a backup is created before changed content is saved."));
                             ui.horizontal(|ui| {
-                                if ui.button(tr("Replace")).clicked() && state.hub_receiver.is_none() {
+                                if ui.button(tr("Update and merge")).clicked() && state.hub_receiver.is_none() {
                                     state.hub_confirm = None;
                                     start_hub_install(&mut state, entry.clone());
                                 }
@@ -925,13 +1197,24 @@ pub fn show(ctx: &egui::Context) {
                                 ui.label(format!("{} · {} strings · updated {}", entry.author, entry.strings_count, entry.updated_at));
                                 ui.label(&entry.description);
                                 let is_installed = installed_packs.iter().any(|pack| pack.id == entry.id);
+                                let update_available = is_installed && hub_update_available(entry);
+                                let has_local_changes = is_installed && hub_has_local_changes(&entry.id);
                                 let is_downloading = state.hub_downloading.as_deref() == Some(entry.id.as_str());
+                                if update_available {
+                                    ui.colored_label(egui::Color32::LIGHT_BLUE, tr("Update available"));
+                                } else if is_installed {
+                                    ui.label(tr("Installed version is up to date"));
+                                }
+                                if has_local_changes {
+                                    ui.label(tr("Local edits detected; updates will preserve them and make a backup."));
+                                }
                                 ui.horizontal(|ui| {
                                     if is_downloading {
                                         ui.spinner();
-                                        ui.label(tr("Verifying and installing…"));
+                                        ui.label(tr("Verifying and merging…"));
                                     } else if is_installed {
-                                        if ui.add_enabled(state.hub_receiver.is_none(), egui::Button::new(tr("Update / reinstall"))).clicked() {
+                                        let label = if update_available { tr("Update and merge") } else { tr("Reinstall safely") };
+                                        if ui.add_enabled(state.hub_receiver.is_none(), egui::Button::new(label)).clicked() {
                                             state.hub_confirm = Some(entry.clone());
                                         }
                                     } else if ui.add_enabled(state.hub_receiver.is_none(), egui::Button::new(tr("Install"))).clicked() {
@@ -947,11 +1230,24 @@ pub fn show(ctx: &egui::Context) {
                 } else {
                     ui.label(tr("Create, edit, import and export translations. Missing strings fall back to English."));
                     ui.horizontal_wrapped(|ui| {
-                        if ui.button(tr("Community translations")).clicked() {
+                        let installed_for_updates = installed();
+                        let available_updates = state.hub_entries.iter()
+                            .filter(|entry| installed_for_updates.iter().any(|pack| pack.id == entry.id))
+                            .filter(|entry| hub_update_available(entry))
+                            .count();
+                        let hub_label = if available_updates > 0 {
+                            format!("{} · {} update(s)", tr("Community translations"), available_updates)
+                        } else {
+                            tr("Community translations")
+                        };
+                        if ui.button(hub_label).clicked() {
                             state.hub_open = true;
                             if state.hub_entries.is_empty() && !state.hub_loading {
                                 start_hub_refresh(&mut state);
                             }
+                        }
+                        if state.hub_loading {
+                            ui.label(tr("Checking the translation catalogue…"));
                         }
                         if ui.button(tr("New translation")).clicked() {
                             state.making_new = !state.making_new;
