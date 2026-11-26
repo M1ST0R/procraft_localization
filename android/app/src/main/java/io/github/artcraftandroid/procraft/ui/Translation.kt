@@ -1564,8 +1564,7 @@ internal fun Text(
 ) {
     val localizedText = remember(text, LanguagePacks.revision) { localizeUiText(text) }
     val isRtl = remember(LanguagePacks.revision) {
-        LanguagePacks.currentLocale().lowercase(java.util.Locale.ROOT)
-            .substringBefore('-').substringBefore('_') in setOf("ar", "fa", "he", "ur", "yi")
+        LanguagePacks.isRtlLocale(LanguagePacks.currentLocale())
     }
     val resolvedStyle = style.copy(
         textDirection = if (isRtl) TextDirection.ContentOrRtl else TextDirection.ContentOrLtr,
