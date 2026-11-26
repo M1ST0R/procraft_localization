@@ -35,6 +35,7 @@ Download artifacts from successful Actions runs; temporary artifacts expire afte
 ## Project review and security
 
 - [Repository review](docs/REPOSITORY_REVIEW.md)
+- [Upstream v0.0.8-beta compatibility review](docs/UPSTREAM_0.0.8_COMPATIBILITY.md)
 - [Supply-chain hardening](security/SUPPLY_CHAIN.md)
 - [Language-pack security report](security/language-packs-2026-11-23/REPORT.md)
 - [Security remediation checklist](security/language-packs-2026-11-23/ACTIONS.md)
