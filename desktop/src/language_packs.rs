@@ -349,6 +349,13 @@ fn valid_locale(locale: &str) -> bool {
         && parts.all(|part| (2..=8).contains(&part.len()) && part.chars().all(|ch| ch.is_ascii_alphanumeric()))
 }
 
+fn is_rtl_locale(locale: &str) -> bool {
+    matches!(
+        locale.split(['-', '_']).next().unwrap_or("").to_ascii_lowercase().as_str(),
+        "ar" | "he" | "fa" | "ur" | "ps" | "sd" | "ug" | "yi" | "dv" | "ku" | "syr"
+    )
+}
+
 fn placeholders(text: &str) -> Vec<String> {
     let mut values = Vec::new();
     let mut start = None;
@@ -776,7 +783,7 @@ pub fn show(ctx: &egui::Context) {
             ctx.request_repaint_after(std::time::Duration::from_millis(250));
         }
         let mut open = state.open;
-        egui::Window::new(tr("Community language packs"))
+        egui::Window::new(tr("Community translations"))
             .id(egui::Id::unique("community_language_packs_manager"))
             .open(&mut open)
             .order(egui::Order::Foreground)
@@ -792,12 +799,18 @@ pub fn show(ctx: &egui::Context) {
                 }
                 if let Some(mut pack) = state.editor.take() {
                     let mut close_editor = false;
-                    ui.horizontal(|ui| {
+                    let rtl = is_rtl_locale(&pack.locale);
+                    let editor_layout = if rtl {
+                        egui::Layout::right_to_left(egui::Align::Center)
+                    } else {
+                        egui::Layout::left_to_right(egui::Align::Center)
+                    };
+                    ui.with_layout(editor_layout, |ui| {
                         if ui.button(tr("← Packs")).clicked() {
                             close_editor = true;
                         }
                         ui.heading(format!("{} · {}", pack.name, pack.locale));
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.with_layout(editor_layout, |ui| {
                             if ui.button(tr("Save")).clicked() {
                                 match activate_pack(&pack) {
                                     Ok(()) => close_editor = true,
@@ -817,11 +830,15 @@ pub fn show(ctx: &egui::Context) {
                         for source in
                             entries.iter().filter(|source| search.is_empty() || source.to_lowercase().contains(&search))
                         {
-                            ui.horizontal(|ui| {
+                            ui.with_layout(editor_layout, |ui| {
                                 ui.add_sized([310.0, 28.0], egui::Label::new(source));
                                 let mut value = pack.strings.get(source).cloned().unwrap_or_default();
+                                let text_align = if rtl { egui::Align::RIGHT } else { egui::Align::LEFT };
                                 if ui
-                                    .add_sized([ui.available_width(), 28.0], egui::TextEdit::singleline(&mut value))
+                                    .add_sized(
+                                        [ui.available_width(), 28.0],
+                                        egui::TextEdit::singleline(&mut value).text_align(text_align),
+                                    )
                                     .changed()
                                 {
                                     if value.trim().is_empty() {
@@ -859,7 +876,7 @@ pub fn show(ctx: &egui::Context) {
                     if let Some(entry) = state.hub_confirm.clone() {
                         ui.group(|ui| {
                             ui.label(format!("Replace the installed copy of {}?", entry.name));
-                            ui.label(tr("Your local edits will be overwritten by the reviewed Hub version."));
+                            ui.label(tr("Your local edits will be overwritten by the reviewed community version."));
                             ui.horizontal(|ui| {
                                 if ui.button(tr("Replace")).clicked() && state.hub_receiver.is_none() {
                                     state.hub_confirm = None;
@@ -911,7 +928,7 @@ pub fn show(ctx: &egui::Context) {
                 } else {
                     ui.label(tr("Create, edit, import and export translations. Missing strings fall back to English."));
                     ui.horizontal_wrapped(|ui| {
-                        if ui.button(tr("Community Hub")).clicked() {
+                        if ui.button(tr("Community translations")).clicked() {
                             state.hub_open = true;
                             if state.hub_entries.is_empty() && !state.hub_loading {
                                 start_hub_refresh(&mut state);
