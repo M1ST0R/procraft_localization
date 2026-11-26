@@ -337,6 +337,8 @@ internal data class CommunityStringMergeResult(
     val conflictsKeptLocal: Int,
 )
 
+// Three-way merge: update keys the user did not edit, retain local-only values,
+// and keep the local value when both the user and Hub changed the same source key.
 internal fun mergeCommunityStrings(
     baseline: Map<String, String>?,
     local: Map<String, String>,
