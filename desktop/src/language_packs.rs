@@ -837,7 +837,7 @@ pub fn show(ctx: &egui::Context) {
                                 if ui
                                     .add_sized(
                                         [ui.available_width(), 28.0],
-                                        egui::TextEdit::singleline(&mut value).text_align(text_align),
+                                        egui::TextEdit::singleline(&mut value).align(text_align),
                                     )
                                     .changed()
                                 {
