@@ -236,13 +236,6 @@ private val PackBackground get() = if (Pc.light) Color(0xFFF7F7F7) else Color(0x
 private val PackSurface get() = Pc.Row
 private val PackFieldContainer get() = if (Pc.light) Color(0xFFFFFFFF) else Color(0xFF252529)
 
-internal fun isRtlLocale(locale: String): Boolean {
-    val subtags = locale.lowercase(Locale.ROOT).replace('_', '-').split('-')
-    val script = subtags.firstOrNull { it.length == 4 }
-    if (script != null) return script in setOf("arab", "hebr", "thaa", "nkoo", "adlm", "syrc")
-    return subtags.firstOrNull() in setOf("ar", "fa", "he", "ur", "ps", "sd", "ug", "yi", "dv", "ckb", "nqo", "syr")
-}
-
 private fun packTextDirection(locale: String): TextDirection =
     if (LanguagePacks.isRtlLocale(locale)) TextDirection.ContentOrRtl else TextDirection.ContentOrLtr
 
@@ -354,6 +347,13 @@ internal object LanguagePacks {
     fun currentId(): String = activeId
 
     fun currentLocale(): String = activeLocale
+
+    fun isRtlLocale(locale: String): Boolean {
+        val subtags = locale.lowercase(Locale.ROOT).replace('_', '-').split('-')
+        val script = subtags.firstOrNull { it.length == 4 }
+        if (script != null) return script in setOf("arab", "hebr", "thaa", "nkoo", "adlm", "syrc")
+        return subtags.firstOrNull() in setOf("ar", "fa", "he", "ur", "ps", "sd", "ug", "yi", "dv", "ckb", "nqo", "syr")
+    }
 
     fun activate(context: Context, id: String) {
         require(id == "builtin:ru" || id == "builtin:en" || PackIdPattern.matches(id)) {
