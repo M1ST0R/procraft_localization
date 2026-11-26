@@ -833,7 +833,7 @@ pub fn show(ctx: &egui::Context) {
                             ui.with_layout(editor_layout, |ui| {
                                 ui.add_sized([310.0, 28.0], egui::Label::new(source));
                                 let mut value = pack.strings.get(source).cloned().unwrap_or_default();
-                                let text_align = if rtl { egui::Align::RIGHT } else { egui::Align::LEFT };
+                                let text_align = if rtl { egui::Align2::RIGHT_CENTER } else { egui::Align2::LEFT_CENTER };
                                 if ui
                                     .add_sized(
                                         [ui.available_width(), 28.0],
