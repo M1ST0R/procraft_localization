@@ -8,6 +8,21 @@ import org.junit.Test
 
 class LanguagePacksTest {
     @Test
+    fun detectsRtlLanguagesAndScriptsWithoutMirroringLtrLanguages() {
+        assertTrue(LanguagePacks.isRtlLocale("ar-EG"))
+        assertTrue(LanguagePacks.isRtlLocale("fa_IR"))
+        assertTrue(LanguagePacks.isRtlLocale("az-Arab"))
+        assertTrue(LanguagePacks.isRtlLocale("he"))
+        assertTrue(LanguagePacks.isRtlLocale("ps-AF"))
+        assertTrue(LanguagePacks.isRtlLocale("ug-CN"))
+        assertTrue(LanguagePacks.isRtlLocale("dv-MV"))
+        assertTrue(LanguagePacks.isRtlLocale("nqo"))
+        assertTrue(!LanguagePacks.isRtlLocale("ar-Latn"))
+        assertTrue(!LanguagePacks.isRtlLocale("ja-JP"))
+        assertTrue(!LanguagePacks.isRtlLocale("ru-RU"))
+    }
+
+    @Test
     fun translatesASingleNamedPlaceholder() {
         val template = LanguagePacks.compileTemplate("{count} artworks", "{count} obras")
         assertEquals("12 obras", LanguagePacks.renderTemplate("12 artworks", requireNotNull(template)))
