@@ -1,6 +1,20 @@
 {
   "schema_version": 1,
   "catalog_version": "procraft-ui-source-3",
-  "updated_at": "2026-11-25",
-  "packs": []
+  "updated_at": "2026-11-26",
+  "packs": [
+    {
+      "id": "ja-jp.2f467c80",
+      "locale": "ja-JP",
+      "name": "日本語",
+      "author": "Helga (K_0w0)",
+      "description": "Japanese community translation.",
+      "version": "1.0.0",
+      "catalog_version": "procraft-ui-source-3",
+      "strings_count": 707,
+      "updated_at": "2026-11-26",
+      "download_url": "https://raw.githubusercontent.com/M1ST0R/procraft_localization/main/community-translations/ja-jp.procraft-lang",
+      "sha256": "b90f3d4e314e3ceb42107839b3505af0a0ee69914ef021847648a6fcb4114894"
+    }
+  ]
 }
