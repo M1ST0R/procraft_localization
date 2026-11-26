@@ -794,6 +794,8 @@ struct HubStringMerge {
     conflicts_kept_local: usize,
 }
 
+// A three-way merge keeps edits made after the last Hub baseline. Remote wording is
+// adopted for untouched keys; local values win when both sides diverged.
 fn merge_hub_strings(
     baseline: Option<&BTreeMap<String, String>>,
     local: &BTreeMap<String, String>,
