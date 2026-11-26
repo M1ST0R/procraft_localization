@@ -67,7 +67,7 @@ The JSON Schema is in [`schemas/procraft-language-pack.schema.json`](../schemas/
 
 ## Community Hub
 
-The remote catalogue is maintained in [`community-translations/index.json`](../community-translations/index.json). It is accessed from the built-in Language Packs manager, not through a separate plugin or marketplace. It is currently empty until a community translation is received and reviewed. See the [publishing instructions](../community-translations/README.md) before adding a pack.
+The remote catalogue is maintained in [`community-translations/index.json`](../community-translations/index.json). It is accessed from the built-in Language Packs manager, not through a separate plugin or marketplace. It currently includes the Japanese (`ja-JP`) community translation; additional packs are published after review. See the [publishing instructions](../community-translations/README.md) before adding a pack.
 
 ## Sample pack
 
