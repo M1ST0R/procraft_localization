@@ -481,7 +481,7 @@ impl Interface {
     pub fn show(&mut self, ui: &mut Ui, session: &std::sync::Arc<CanvasSession>, input: &mut Input) {
         let typing = self.typing;
         let rtl = crate::language_packs::is_rtl_active();
-        ui.ctx().style_mut(|style| {
+        ui.style_mut(|style| {
             style.layout = egui::Layout::top_down(if rtl {
                 egui::Align::Max
             } else {
