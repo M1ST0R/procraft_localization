@@ -293,6 +293,8 @@ private val russianUi = mapOf(
     "Comic Ink" to "Комиксные чернила",
     "Comics" to "Комиксы",
     "Community language packs" to "Языковые пакеты сообщества",
+    "Browse community translations" to "Переводы сообщества",
+    "Community translations" to "Переводы сообщества",
     "Compact" to "Компактный",
     "Complementary" to "Дополнительная",
     "Compressed Charcoal" to "Прессованный уголь",
