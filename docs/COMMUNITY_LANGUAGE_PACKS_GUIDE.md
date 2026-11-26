@@ -76,15 +76,15 @@ Select/tap the language row to activate it. The selection is saved.
 
 Custom packs do **not** inherit Russian. Missing or empty entries show English.
 
-## 5. Browse and install from the Community Hub
+## 5. Browse and install community translations
 
-1. Open **Language packs** and choose **Community Hub**.
+1. Open **Language packs** and choose **Community translations**.
 2. Refresh the catalogue when online.
 3. Review the language, author, version, translated-string count and description.
 4. Choose **Install**. The app downloads the package, verifies its SHA-256 digest and metadata, then runs the regular `.procraft-lang` validator before activating it.
 5. To replace an installed copy, choose **Update / reinstall** and confirm. This overwrites local edits in that pack.
 
-The Hub contains only translations reviewed and published by project maintainers. Its catalogue is currently empty while the first community submissions are being prepared. You can still import a file manually as described below.
+Community translations are a built-in part of the existing Language Packs manager, not a separate plugin or marketplace. The catalogue is curated by maintainers. It is currently empty while submissions are being prepared. Updates are checked manually in the catalogue and must be confirmed before replacing an installed pack; they are not silently applied. You can still import a file manually as described below.
 
 Desktop downloads use the system `curl` command and a system SHA-256 utility (`certutil` on Windows, `sha256sum` or `shasum` on Unix-like systems). When these utilities are unavailable, use manual import.
 
