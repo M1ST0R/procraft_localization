@@ -155,7 +155,7 @@ A `.procraft-lang` file is UTF-8 JSON. Example:
 }
 ```
 
-The `strings` object maps exact English UI keys to translation values. Catalog revision `procraft-ui-source-3` is metadata and does not change format v1.
+The `strings` object maps exact English UI keys to translation values. Catalog revision `procraft-ui-source-3` is metadata and does not change format v1. Stable message IDs and plural-form handling are not implemented in format v1; the current roadmap keeps exact source text as keys until a separately tested migration exists.
 
 The importer limits the file to 5 MiB, 20,000 strings, source keys up to 512 characters, values up to 4,000 characters and 128 dynamic-template keys. Metadata, IDs and locale codes are also checked. The [JSON Schema](../schemas/procraft-language-pack.schema.json) documents the contract.
 
@@ -175,17 +175,6 @@ Check that the file is a valid `.procraft-lang` pack, UTF-8 JSON, within size/en
 
 **I expected my pack to inherit Russian**
 Custom packs intentionally fall back to English, not to the built-in Russian dictionary.
-
-## 11. Contributing and sharing
-
-The Community Hub provides a curated online catalogue and manual verified installs/updates. It is not a collaborative editor, automatic background updater or open upload service. You can propose new translations through a Pull Request or discuss them in the [ProCraft Discord](https://discord.gg/gypGes3Uca). GitHub Issues and Discussions are currently disabled for this fork.
-
-For translation reports, include:
-
-- exact source text;
-- platform and screen/menu;
-- screenshot;
-- proposed translation, if available.
 
 ## 11. Contributing and publishing a community translation
 
