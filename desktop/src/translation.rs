@@ -273,6 +273,7 @@ pub fn translate<'a>(source: &'a str) -> Cow<'a, str> {
         "Comic Ink" => "Комиксные чернила",
         "Comics" => "Комиксы",
         "Community language packs" => "Языковые пакеты сообщества",
+        "Community translations" => "Переводы сообщества",
         "Compact" => "Компактный",
         "Complementary" => "Дополнительная",
         "Compressed Charcoal" => "Прессованный уголь",
