@@ -99,6 +99,58 @@ class LanguagePacksTest {
     }
 
 
+
+    @Test
+    fun communityUpdatesMergeRemoteChangesAndPreserveLocalConflicts() {
+        val baseline = linkedMapOf(
+            "Gallery" to "Galería",
+            "Layers" to "Capas",
+            "Removed remotely" to "Antiguo",
+        )
+        val local = linkedMapOf(
+            "Gallery" to "Galería local",
+            "Layers" to "Capas",
+            "Local-only" to "Mi texto",
+            "Removed remotely" to "Antiguo",
+        )
+        val remote = linkedMapOf(
+            "Gallery" to "Galería revisada",
+            "Layers" to "Capas nuevas",
+            "Remote-only" to "Nueva cadena",
+        )
+
+        val result = mergeCommunityStrings(baseline, local, remote)
+
+        assertEquals("Galería local", result.strings["Gallery"])
+        assertEquals("Capas nuevas", result.strings["Layers"])
+        assertEquals("Mi texto", result.strings["Local-only"])
+        assertEquals("Nueva cadena", result.strings["Remote-only"])
+        assertNull(result.strings["Removed remotely"])
+        assertEquals(2, result.localChangesPreserved)
+        assertEquals(1, result.conflictsKeptLocal)
+    }
+
+    @Test
+    fun firstHubUpdatePreservesExistingImportedStringsWithoutABaseline() {
+        val local = linkedMapOf("Gallery" to "Mi galería", "Local-only" to "Texto local")
+        val remote = linkedMapOf("Gallery" to "Galería", "Layers" to "Capas")
+
+        val result = mergeCommunityStrings(null, local, remote)
+
+        assertEquals("Mi galería", result.strings["Gallery"])
+        assertEquals("Texto local", result.strings["Local-only"])
+        assertEquals("Capas", result.strings["Layers"])
+        assertEquals(2, result.localChangesPreserved)
+        assertEquals(1, result.conflictsKeptLocal)
+    }
+
+    @Test
+    fun communityVersionComparisonIsNumericAndRejectsDowngradeOrdering() {
+        assertTrue(LanguagePacks.compareHubVersions("1.10.0", "1.9.9") > 0)
+        assertEquals(0, LanguagePacks.compareHubVersions("2.0.0", "2.0.0"))
+        assertTrue(LanguagePacks.compareHubVersions("1.0.9", "1.1.0") < 0)
+    }
+
     @Test
     fun acceptsAnEmptyCommunityHubCatalogue() {
         val raw = """{"schema_version":1,"catalog_version":"procraft-ui-source-3","updated_at":"2026-11-25","packs":[]}"""

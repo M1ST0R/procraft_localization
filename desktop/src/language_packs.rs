@@ -861,7 +861,11 @@ fn compare_hub_versions(left: &str, right: &str) -> std::cmp::Ordering {
 
 fn hub_update_available(entry: &HubEntry) -> bool {
     let Some(installed) = read_hub_metadata(&entry.id) else { return true };
-    compare_hub_versions(&entry.version, &installed.version).is_gt() || entry.sha256 != installed.sha256
+    match compare_hub_versions(&entry.version, &installed.version) {
+        std::cmp::Ordering::Greater => true,
+        std::cmp::Ordering::Equal => entry.sha256 != installed.sha256,
+        std::cmp::Ordering::Less => false,
+    }
 }
 
 fn hub_has_local_changes(id: &str) -> bool {
@@ -1469,6 +1473,61 @@ mod tests {
         for locale in ["en", "ru-RU", "ja-JP", "zh-Hant", "ar-Latn"] {
             assert!(!is_rtl_locale(locale), "{locale} should use LTR layout");
         }
+    }
+
+
+    #[test]
+    fn hub_update_merge_applies_remote_changes_and_preserves_local_conflicts() {
+        let baseline = BTreeMap::from([
+            ("Gallery".to_owned(), "Galería".to_owned()),
+            ("Layers".to_owned(), "Capas".to_owned()),
+            ("Removed remotely".to_owned(), "Antiguo".to_owned()),
+        ]);
+        let local = BTreeMap::from([
+            ("Gallery".to_owned(), "Galería local".to_owned()),
+            ("Layers".to_owned(), "Capas".to_owned()),
+            ("Local-only".to_owned(), "Mi texto".to_owned()),
+            ("Removed remotely".to_owned(), "Antiguo".to_owned()),
+        ]);
+        let remote = BTreeMap::from([
+            ("Gallery".to_owned(), "Galería revisada".to_owned()),
+            ("Layers".to_owned(), "Capas nuevas".to_owned()),
+            ("Remote-only".to_owned(), "Nueva cadena".to_owned()),
+        ]);
+
+        let result = merge_hub_strings(Some(&baseline), &local, &remote);
+        assert_eq!(result.strings.get("Gallery").map(String::as_str), Some("Galería local"));
+        assert_eq!(result.strings.get("Layers").map(String::as_str), Some("Capas nuevas"));
+        assert_eq!(result.strings.get("Local-only").map(String::as_str), Some("Mi texto"));
+        assert_eq!(result.strings.get("Remote-only").map(String::as_str), Some("Nueva cadena"));
+        assert!(!result.strings.contains_key("Removed remotely"));
+        assert_eq!(result.local_changes_preserved, 2);
+        assert_eq!(result.conflicts_kept_local, 1);
+    }
+
+    #[test]
+    fn first_hub_update_preserves_imported_strings_without_a_baseline() {
+        let local = BTreeMap::from([
+            ("Gallery".to_owned(), "Mi galería".to_owned()),
+            ("Local-only".to_owned(), "Texto local".to_owned()),
+        ]);
+        let remote = BTreeMap::from([
+            ("Gallery".to_owned(), "Galería".to_owned()),
+            ("Layers".to_owned(), "Capas".to_owned()),
+        ]);
+        let result = merge_hub_strings(None, &local, &remote);
+        assert_eq!(result.strings.get("Gallery").map(String::as_str), Some("Mi galería"));
+        assert_eq!(result.strings.get("Local-only").map(String::as_str), Some("Texto local"));
+        assert_eq!(result.strings.get("Layers").map(String::as_str), Some("Capas"));
+        assert_eq!(result.local_changes_preserved, 2);
+        assert_eq!(result.conflicts_kept_local, 1);
+    }
+
+    #[test]
+    fn hub_version_comparison_is_numeric_and_monotonic() {
+        assert!(compare_hub_versions("1.10.0", "1.9.9").is_gt());
+        assert_eq!(compare_hub_versions("2.0.0", "2.0.0"), std::cmp::Ordering::Equal);
+        assert!(compare_hub_versions("1.0.9", "1.1.0").is_lt());
     }
 
     #[test]

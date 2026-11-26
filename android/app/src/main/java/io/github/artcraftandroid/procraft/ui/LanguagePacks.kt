@@ -331,6 +331,43 @@ internal data class CommunityPackInstallResult(
     val backupName: String?,
 )
 
+internal data class CommunityStringMergeResult(
+    val strings: LinkedHashMap<String, String>,
+    val localChangesPreserved: Int,
+    val conflictsKeptLocal: Int,
+)
+
+internal fun mergeCommunityStrings(
+    baseline: Map<String, String>?,
+    local: Map<String, String>,
+    remote: Map<String, String>,
+): CommunityStringMergeResult {
+    val keys = LinkedHashSet<String>().apply {
+        baseline?.keys?.let(::addAll)
+        addAll(local.keys)
+        addAll(remote.keys)
+    }
+    val merged = LinkedHashMap<String, String>()
+    var localChanges = 0
+    var conflicts = 0
+    for (key in keys) {
+        val baseValue = baseline?.get(key)
+        val localValue = local[key]
+        val remoteValue = remote[key]
+        if (localValue != baseValue) localChanges++
+        val selected = when {
+            localValue == baseValue -> remoteValue
+            remoteValue == baseValue || localValue == remoteValue -> localValue
+            else -> {
+                conflicts++
+                localValue
+            }
+        }
+        if (selected != null) merged[key] = selected
+    }
+    return CommunityStringMergeResult(merged, localChanges, conflicts)
+}
+
 /**
  * Data-only .procraft-lang reader, editor storage and runtime.
  *
@@ -512,7 +549,7 @@ internal object LanguagePacks {
         HubMetadata(version, digest)
     }.getOrNull()
 
-    private fun compareHubVersions(left: String, right: String): Int {
+    internal fun compareHubVersions(left: String, right: String): Int {
         val a = left.split('.').map { it.toLongOrNull() ?: 0L }
         val b = right.split('.').map { it.toLongOrNull() ?: 0L }
         for (index in 0..2) {
@@ -524,8 +561,8 @@ internal object LanguagePacks {
 
     fun communityUpdateAvailable(context: Context, entry: CommunityTranslation): Boolean {
         val installed = readHubMetadata(context, entry.id) ?: return true
-        return compareHubVersions(entry.version, installed.version) > 0 ||
-            entry.sha256 != installed.sha256
+        val versionOrder = compareHubVersions(entry.version, installed.version)
+        return versionOrder > 0 || (versionOrder == 0 && entry.sha256 != installed.sha256)
     }
 
     fun hasCommunityLocalChanges(context: Context, id: String): Boolean {
@@ -547,35 +584,11 @@ internal object LanguagePacks {
         local: TranslationPack,
         remote: TranslationPack,
     ): PackMerge {
-        val keys = LinkedHashSet<String>().apply {
-            baseline?.strings?.keys?.let(::addAll)
-            addAll(local.strings.keys)
-            addAll(remote.strings.keys)
-        }
-        val merged = LinkedHashMap<String, String>()
-        var localChanges = 0
-        var conflicts = 0
-
-        for (key in keys) {
-            val baseValue = baseline?.strings?.get(key)
-            val localValue = local.strings[key]
-            val remoteValue = remote.strings[key]
-            if (localValue != baseValue) localChanges++
-
-            val selected = when {
-                localValue == baseValue -> remoteValue
-                remoteValue == baseValue || localValue == remoteValue -> localValue
-                else -> {
-                    conflicts++
-                    localValue
-                }
-            }
-            if (selected != null) merged[key] = selected
-        }
+        val merged = mergeCommunityStrings(baseline?.strings, local.strings, remote.strings)
         return PackMerge(
-            pack = remote.copy(strings = merged),
-            localChangesPreserved = localChanges,
-            conflictsKeptLocal = conflicts,
+            pack = remote.copy(strings = merged.strings),
+            localChangesPreserved = merged.localChangesPreserved,
+            conflictsKeptLocal = merged.conflictsKeptLocal,
         )
     }
 
@@ -972,7 +985,7 @@ internal fun LanguagePacksPage(onBack: () -> Unit) {
         CommunityHubPage(
             installedPacks = packs,
             initialEntries = hubEntries,
-            onCatalogUpdated = { hubEntries = it },
+            onCatalogUpdated = { hubEntries = it; catalogCheckFailed = false },
             onBack = { showHub = false },
             onInstalled = { pack ->
                 packs = LanguagePacks.installed(context)
@@ -1240,6 +1253,7 @@ private fun CommunityHubPage(
     var loading by remember { mutableStateOf(false) }
     var installingId by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    var status by remember { mutableStateOf<String?>(null) }
     var pendingReplacement by remember { mutableStateOf<CommunityTranslation?>(null) }
 
     fun refreshCatalog() {
@@ -1273,6 +1287,16 @@ private fun CommunityHubPage(
                         .onSuccess {
                             onInstalled(installed.pack)
                             error = null
+                            status = buildString {
+                                append("${installed.pack.name} is installed and active.")
+                                if (installed.localChangesPreserved > 0) {
+                                    append(" Preserved ${installed.localChangesPreserved} local edit(s).")
+                                }
+                                if (installed.conflictsKeptLocal > 0) {
+                                    append(" Kept ${installed.conflictsKeptLocal} conflicting local value(s).")
+                                }
+                                installed.backupName?.let { append(" Backup saved: $it.") }
+                            }
                         }
                         .onFailure { error = it.message ?: "Could not activate this translation." }
                 }.onFailure {
@@ -1318,6 +1342,7 @@ private fun CommunityHubPage(
             color = PackDim,
             fontSize = 13.sp,
         )
+        status?.let { Text(it, color = PackBlue, fontSize = 12.sp) }
         if (loading && entries.isEmpty()) {
             Text("Connecting to the community catalogue…", color = PackDim, fontSize = 14.sp)
         } else if (entries.isEmpty()) {
