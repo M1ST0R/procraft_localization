@@ -76,19 +76,35 @@ Select/tap the language row to activate it. The selection is saved.
 
 Custom packs do **not** inherit Russian. Missing or empty entries show English.
 
-## 5. Browse and install community translations
+## 5. Browse, install and update community translations
 
 1. Open **Language packs** and choose **Community translations**.
-2. Refresh the catalogue when online.
-3. Review the language, author, version, translated-string count and description.
-4. Choose **Install**. The app downloads the package, verifies its SHA-256 digest and metadata, then runs the regular `.procraft-lang` validator before activating it.
-5. If the pack is already installed, choose **Update / reinstall** and confirm. This replaces the installed file, including local edits.
+2. The Manager uses its locally cached catalogue immediately when available.
+3. When the Manager is opened, it checks the online catalogue automatically if the previous check is at least six hours old. The check runs while the app is open; it is not an operating-system background service.
+4. You can also press **Refresh** in Community translations to check immediately.
+5. Review the language, author, version, translated-string count and description.
+6. Choose **Install** for a new pack. The app downloads it, verifies SHA-256 and metadata, validates the `.procraft-lang` structure/placeholders and activates it.
+
+The Manager shows a notice when a new catalogue entry or an update for an installed Hub pack is available. The cached catalogue remains usable offline; downloads and refreshes require internet access.
+
+### Protecting local edits during a Hub update
+
+Hub-installed packages keep three pieces of update metadata in the app's private data: the last downloaded Hub version (baseline), its version/SHA-256 and a backup folder.
+
+When you confirm **Update and merge**, the Manager compares the previously downloaded Hub version, your currently installed pack and the newly published Hub version.
+
+- If you did not change a string locally, the new Hub wording is applied.
+- If the Hub did not change a string, your local wording is kept.
+- If both you and the Hub changed the same string, your local wording wins and the conflict is reported.
+- Local-only strings are retained.
+- A string removed upstream is removed only when you have not locally changed it.
+- A backup of the currently installed pack is written before a changed pack is saved.
+
+For an older pack installed before this update system existed, there is no previous Hub baseline. The first Hub update is deliberately conservative: existing strings are treated as local edits, new Hub strings are added, and existing local text is not silently replaced. Subsequent updates use the saved baseline and can apply three-way merging.
+
+Updates are never silently downloaded or installed. The catalogue check is automatic, but you review and confirm each pack update. This protects local wording and the user's control over changes.
 
 **Available now:** the reviewed Japanese pack (`ja-JP`, 707 translated strings) is published in the catalogue.
-
-Community translations are a built-in part of the existing Language Packs manager, not a separate plugin or marketplace. The catalogue is curated by maintainers. Pack updates are currently manual: refresh the catalogue and use **Update / reinstall**. Background auto-updates are not implemented yet; they should be added with protection for locally edited packs so updates cannot silently destroy a user's work.
-
-Desktop downloads use the system `curl` command and a system SHA-256 utility (`certutil` on Windows, `sha256sum` or `shasum` on Unix-like systems). When these utilities are unavailable, use manual import.
 
 ## 6. Import a pack shared by another person
 
@@ -171,6 +187,28 @@ For translation reports, include:
 - screenshot;
 - proposed translation, if available.
 
+## 11. Contributing and publishing a community translation
+
+The Hub is a curated catalogue, not an open upload service or a plugin marketplace. Contributors submit data-only `.procraft-lang` files; maintainers review them before publication. GitHub Issues and Discussions are disabled for this fork, so use a Pull Request or the [ProCraft Discord](https://discord.gg/gypGes3Uca).
+
+For a translation report or contribution, include the locale, author/credit approval, exact source strings, platform screenshots and any layout problems.
+
+To publish a reviewed pack on `main`:
+
+1. Confirm the contributor agrees to public distribution and attribution.
+2. Validate the pack against `schemas/procraft-language-pack.schema.json`, placeholder rules and the current source catalog.
+3. Test it in the Android and Desktop Manager, including RTL layout when applicable.
+4. Add the `.procraft-lang` file directly inside `community-translations/` with a stable lowercase filename.
+5. Calculate its SHA-256:
+   - PowerShell: `(Get-FileHash .\ja-jp.procraft-lang -Algorithm SHA256).Hash.ToLower()`
+   - Linux: `sha256sum ja-jp.procraft-lang`
+   - macOS: `shasum -a 256 ja-jp.procraft-lang`
+6. Add its exact metadata, version, catalogue revision, string count, raw GitHub download URL and digest to `community-translations/index.json`.
+7. Update the index and pack `updated_at` dates, then run `python3 tools/check_community_hub.py` and the main CI workflow.
+8. Test install and update from the in-app Hub on Android and Desktop.
+
+The pack ID, locale, name, author, version, catalogue revision, string count and SHA-256 in the index must match the package. Never publish placeholder digests, executable code, scripts, plugins, installers or arbitrary archives.
+
 ## 12. Developer/contributor notes
 
 Source files:
@@ -197,7 +235,7 @@ When adding a source label:
 4. Add/update regression tests.
 5. Bump `catalog_version` when catalog content changes.
 6. Do not bump `format_version` unless the pack serialization/validation contract changes.
-7. Update this guide and the public discussion document if the UI workflow changes.
+7. Update this guide when the Manager workflow or pack contract changes. Do not create a second feature guide or discussion document.
 
 ## 13. Security
 
